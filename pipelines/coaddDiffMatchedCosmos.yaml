@@ -1,0 +1,234 @@
+description: |
+  Matched difference (measured vs reference) plots/metrics
+parameters:
+  color_diff_min: -250
+  color_diff_max: 250
+  mag_x_min: 17
+  mag_x_max: 29
+  mag_diff_min: -1000
+  mag_diff_max: 1000
+  mag_chi_min: -5
+  mag_chi_max: 5
+  pos_diff_min: -200
+  pos_diff_max: 200
+  pos_chi_min: -5
+  pos_chi_max: 5
+tasks:
+  diff_matched_cosmos2020:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      bands: ["g", "r", "i", "z", "y"]
+      connections.inputName: matched_cosmos2020_classic_v2p2_objectTable_tract
+      connections.outputName: diff_matched_cosmos2020_classic_v2p2_objectTable_tract
+
+      #atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
+      #atools.matchedRefCModelColorChi.produce.buildActions.galaxySelector: selector_galaxy
+      #atools.matchedRefCModelColorChi.produce.buildActions.allSelector: selector_obj
+      #atools.matchedRefCModelColorChi.produce.buildActions.starSelector: selector_star
+      #atools.matchedRefCModelColorDiff.produce.plot.xLims: lims_mag_x
+      #atools.matchedRefCModelColorDiff.produce.plot.yLims: lims_color_diff
+      #
+      #atools.matchedRefCModelColorChi: MatchedRefCoaddDiffColorTool
+      #atools.matchedRefCModelColorChi.compute_chi: true
+      #atools.matchedRefCModelColorChi.process.buildActions.galaxySelector: selector_galaxy
+      #atools.matchedRefCModelColorChi.process.buildActions.allSelector: selector_obj
+      #atools.matchedRefCModelColorChi.process.buildActions.starSelector: selector_star
+      #atools.matchedRefCModelColorChi.produce.plot.xLims: lims_mag_x
+      #atools.matchedRefCModelColorChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagDiff.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefCModelMagDiff.process.buildActions.allSelector: selector_obj
+      atools.matchedRefCModelMagDiff.process.buildActions.starSelector: selector_star
+      atools.matchedRefCModelMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefCModelMagDiff.fluxes_default.ref_matched: ref_matched
+
+      atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefCModelMagChi.process.buildActions.allSelector: selector_obj
+      atools.matchedRefCModelMagChi.process.buildActions.starSelector: selector_star
+      atools.matchedRefCModelMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefPositionXDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionXDiff.coord_meas: coord_ra
+      atools.matchedRefPositionXDiff.coord_ref: refcat_ALPHA_J2000
+      atools.matchedRefPositionXDiff.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionXDiff.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionXDiff.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionXDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionXDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionXDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionXChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionXChi.coord_meas: coord_ra
+      atools.matchedRefPositionXChi.coord_ref: refcat_ALPHA_J2000
+      atools.matchedRefPositionXChi.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionXChi.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionXChi.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionXChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionXChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionXChi.scale_factor: 3600000
+      atools.matchedRefPositionXChi.compute_chi: true
+
+      atools.matchedRefPositionYDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionYDiff.coord_meas: coord_dec
+      atools.matchedRefPositionYDiff.coord_ref: refcat_DELTA_J2000
+      atools.matchedRefPositionYDiff.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionYDiff.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionYDiff.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionYDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionYDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionYDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionYChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionYChi.coord_meas: coord_dec
+      atools.matchedRefPositionYChi.coord_ref: refcat_DELTA_J2000
+      atools.matchedRefPositionYChi.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionYChi.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionYChi.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionYChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionYChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionYChi.scale_factor: 3600000
+      atools.matchedRefPositionYChi.compute_chi: true
+
+      python: |        
+        from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddDiffColorTool,
+          MatchedRefCoaddDiffMagTool,
+          MatchedRefCoaddDiffPositionTool,
+          ReferenceGalaxySelector,
+          ReferenceObjectSelector,
+          ReferenceStarSelector,
+        )
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        selector_galaxy = ReferenceGalaxySelector(
+          plotLabelKey="Selection: unflagged", vectorKey="refcat_FLAG_HSC",
+        )
+        selector_obj = ReferenceObjectSelector(vectorKey="refcat_FLAG_HSC")
+        selector_star = ReferenceStarSelector(
+          plotLabelKey="Selection: flagged", vectorKey="refcat_lp_type",
+        )
+        ref_matched = FluxConfig(
+            key_flux="refcat_HSC_{band}_FLUX_AUTO",
+            name_flux="HSC auto",
+            name_flux_short="HSC auto",
+            key_flux_error=None,
+        )
+        lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
+        lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
+        lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)
+        lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
+        lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
+        lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
+  diff_matched_cosmos_acs:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      bands: ["i"]
+      connections.inputName: matched_cosmos_acs_iphot_200709_objectTable_tract
+      connections.outputName: diff_matched_cosmos_acs_iphot_200709_objectTable_tract
+
+      #atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
+      #atools.matchedRefCModelColorChi.produce.buildActions.galaxySelector: selector_galaxy
+      #atools.matchedRefCModelColorChi.produce.buildActions.allSelector: selector_obj
+      #atools.matchedRefCModelColorChi.produce.buildActions.starSelector: selector_star
+      #atools.matchedRefCModelColorDiff.produce.plot.xLims: lims_mag_x
+      #atools.matchedRefCModelColorDiff.produce.plot.yLims: lims_color_diff
+      #
+      #atools.matchedRefCModelColorChi: MatchedRefCoaddDiffColorTool
+      #atools.matchedRefCModelColorChi.compute_chi: true
+      #atools.matchedRefCModelColorChi.process.buildActions.galaxySelector: selector_galaxy
+      #atools.matchedRefCModelColorChi.process.buildActions.allSelector: selector_obj
+      #atools.matchedRefCModelColorChi.process.buildActions.starSelector: selector_star
+      #atools.matchedRefCModelColorChi.produce.plot.xLims: lims_mag_x
+      #atools.matchedRefCModelColorChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagDiff.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefCModelMagDiff.process.buildActions.allSelector: selector_obj
+      atools.matchedRefCModelMagDiff.process.buildActions.starSelector: selector_star
+      atools.matchedRefCModelMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefCModelMagDiff.fluxes_default.ref_matched: ref_matched
+
+      atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefCModelMagChi.process.buildActions.allSelector: selector_obj
+      atools.matchedRefCModelMagChi.process.buildActions.starSelector: selector_star
+      atools.matchedRefCModelMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefPositionXDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionXDiff.coord_meas: coord_ra
+      atools.matchedRefPositionXDiff.coord_ref: refcat_ra
+      atools.matchedRefPositionXDiff.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionXDiff.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionXDiff.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionXDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionXDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionXDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionXChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionXChi.coord_meas: coord_ra
+      atools.matchedRefPositionXChi.coord_ref: refcat_ra
+      atools.matchedRefPositionXChi.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionXChi.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionXChi.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionXChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionXChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionXChi.scale_factor: 3600000
+      atools.matchedRefPositionXChi.compute_chi: true
+
+      atools.matchedRefPositionYDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionYDiff.coord_meas: coord_dec
+      atools.matchedRefPositionYDiff.coord_ref: refcat_dec
+      atools.matchedRefPositionYDiff.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionYDiff.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionYDiff.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionYDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionYDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionYDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionYChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionYChi.coord_meas: coord_dec
+      atools.matchedRefPositionYChi.coord_ref: refcat_dec
+      atools.matchedRefPositionYChi.process.buildActions.galaxySelector: selector_galaxy
+      atools.matchedRefPositionYChi.process.buildActions.allSelector: selector_obj
+      atools.matchedRefPositionYChi.process.buildActions.starSelector: selector_star
+      atools.matchedRefPositionYChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionYChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionYChi.scale_factor: 3600000
+      atools.matchedRefPositionYChi.compute_chi: true
+
+      python: |        
+        from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddDiffColorTool,
+          MatchedRefCoaddDiffMagTool,
+          MatchedRefCoaddDiffPositionTool,
+          ReferenceGalaxySelector,
+          ReferenceObjectSelector,
+          ReferenceStarSelector,
+        )
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        selector_galaxy = ReferenceGalaxySelector(
+          plotLabelKey="Selection: HST galaxies", vectorKey="refcat_mu_class", threshold=1,
+        )
+        selector_obj = ReferenceObjectSelector(vectorKey="refcat_mu_class", maximum=3)
+        selector_star = ReferenceStarSelector(
+          plotLabelKey="Selection: HST stars", vectorKey="refcat_mu_class", threshold=2,
+        )
+        ref_matched = FluxConfig(
+            key_flux="refcat_flux_auto",
+            name_flux="Reference",
+            name_flux_short="F814W",
+            key_flux_error=None,
+        )
+        lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
+        lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
+        lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)
+        lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
+        lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
+        lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
