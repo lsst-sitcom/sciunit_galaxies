@@ -23,8 +23,8 @@ import astropy.io.fits as fits
 from astropy.table import Table
 from astropy.wcs import WCS
 import glob
-import gauss2d as g2
-import gauss2d.fit as g2f
+import lsst.gauss2d as g2d
+import lsst.gauss2d.fit as g2f
 from itertools import chain
 import numpy as np
 import pydantic
