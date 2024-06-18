@@ -135,7 +135,7 @@ class CosmosTileTable(pydantic.BaseModel):
         """
 
         if paths is None:
-            paths = ["/sdf/group/rubin/ncsa-project/project/sr525/hstCosmosImages/tiles/"]
+            paths = ["/sdf/data/rubin/shared//hst/cosmos/images/tiles/"]
 
         filenames = tuple(sorted(chain.from_iterable(
             glob.glob(f"{path}/acs_I_030mas_*_wht.fits*") for path in paths
