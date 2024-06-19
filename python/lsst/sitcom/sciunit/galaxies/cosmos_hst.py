@@ -23,8 +23,8 @@ import astropy.io.fits as fits
 from astropy.table import Table
 from astropy.wcs import WCS
 import glob
-import gauss2d as g2
-import gauss2d.fit as g2f
+import lsst.gauss2d as g2d
+import lsst.gauss2d.fit as g2f
 from itertools import chain
 import numpy as np
 import pydantic
@@ -46,14 +46,51 @@ class CosmosTile(pydantic.BaseModel):
     def from_tile_table(cls, tile_name: str, tile_table: Table):
         row = tile_table[tile_table["tilename"] == tile_name][0]
         image = fits.open(row["path_science"])[0]
+        # Convert to little-endian. This must be do-able in place?
+        image.data = image.data.astype("float32")
         wcs = WCS(image)
         weight = fits.open(row["path_weight"])[0]
+        weight.data = weight.data.astype("float32")
         return cls(image=image, wcs=wcs, weight=weight)
 
-    def make_observation(self) -> g2f.Observation:
-        return g2f.Observation(
+    def make_observation(
+        self,
+        make_coordsys_radec: bool = False,
+        convert_to_sigma_inv: bool = False,
+        return_double: bool = False,
+    ) -> g2f.ObservationD | g2f.ObservationF:
+        """Make a gauss2d_fit Observation out of the tile.
+
+        Parameters
+        ----------
+        make_coordsys_radec
+            Whether to make a coordinate system in degrees instead of pixels.
+        convert_to_sigma_inv
+            Whether to convert the inverse variance to inverse sigma. This
+            should be True if the observation will be used for fitting, but
+            may be left False to avoid copying if return_double is False.
+        return_double
+            Whether to return double precision (float64) arrays, which
+            necessitates making new image and weight arrays.
+
+        Returns
+        -------
+        observation
+            An Observation of the desired precision.
+        """
+
+        radec_0 = self.wcs.pixel_to_world(-0.5, -0.5)
+        coordsys = g2d.CoordinateSystem(
+            dx1=self.wcs.wcs.cd[0, 0], dy2=self.wcs.wcs.cd[1, 1],
+            x_min=radec_0.ra.value, y_min=radec_0.dec.value,
+        ) if make_coordsys_radec else None
+        ImageClass = g2d.ImageD if return_double else g2d.ImageF
+        return g2f.ObservationD if return_double else g2f.ObservationF(
+            image=ImageClass(self.image.data, coordsys=coordsys),
+            sigma_inv=ImageClass(np.sqrt(self.weight.data) if convert_to_sigma_inv else self.weight.data,
+                                 coordsys=coordsys),
+            mask_inv=g2d.ImageB(self.weight.data > 0, coordsys=coordsys),
             channel=self.channel,
-            image=g2.ImageD(),
         )
 
 
@@ -98,7 +135,7 @@ class CosmosTileTable(pydantic.BaseModel):
         """
 
         if paths is None:
-            paths = ["/sdf/group/rubin/ncsa-project/project/sr525/hstCosmosImages/tiles/"]
+            paths = ["/sdf/data/rubin/shared//hst/cosmos/images/tiles/"]
 
         filenames = tuple(sorted(chain.from_iterable(
             glob.glob(f"{path}/acs_I_030mas_*_wht.fits*") for path in paths
