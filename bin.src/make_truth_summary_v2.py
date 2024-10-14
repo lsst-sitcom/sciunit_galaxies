@@ -63,8 +63,10 @@ other_keys = {
     'dec_true': 'dec_unlensed',
     'redshiftHubble': 'redshift_Hubble',
 }
+# Although there is a morphology/positionAngle column, it was not used in DC2
+# Instead, randomly-generated angles were used
 key_list = (
-    {"morphology/positionAngle": "positionAngle"},
+    {"position_angle_true_dc2": "positionAngle"},
     diskmorph_keys, spheroidmorph_keys,
     disklum_keys, spheroidlum_keys,
     mag_keys, other_keys
@@ -101,7 +103,7 @@ for band in bands:
     }
 truth_columninfo["id_string"] = {"description": "Original string id", "unit": None}
 cosmodc2_columninfo = {
-    "morphology/positionAngle": {
+    "position_angle_true_dc2": {
         "description": "Position angle relative to north (+Dec) towards east (+RA)",
         "unit": "deg",
     },
@@ -177,9 +179,9 @@ for tract in tracts:
     # Re-order columns
     cosmodc2 = cosmodc2[columns_load]
     for column in columns_load:
-        units = cosmodc2_cat.get_quantity_info(column)['units']
-        if units:
-            cosmodc2[column].units = units
+        if (quantinfo := cosmodc2_cat.get_quantity_info(column)) is not None:
+            if units := quantinfo.get('units'):
+                cosmodc2[column].units = units
     # Apply column info overrides
     for column_name, info in cosmodc2_columninfo.items():
         if (column := cosmodc2.columns.get(column_name)) is not None:
@@ -216,7 +218,7 @@ for tract in tracts:
 
     print("==== Populating patch column ====")
     tractinfo = skymap[tract]
-    radecs = [SpherePoint(ra, dec, degrees) for ra, dec in zip(truth["ra"], truth["dec"])]
+    radecs = [SpherePoint(ra, dec, degrees) for ra, dec in zip(merged_table["ra"], merged_table["dec"])]
     patches = [tractinfo.findPatch(radec).sequential_index for radec in radecs]
     merged_table["patch"] = patches
     merged_table["patch"].description = f"The patch number in {skymap=}"
@@ -224,9 +226,9 @@ for tract in tracts:
     filename_out = f"truth_summary_v2_{tract}_{name_skymap}_2_2i_truth_summary.parq"
     pq.write_table(astropy_to_arrow(merged_table), filename_out)
 
-    print("==== Done ====")
+    print(f"==== Wrote {filename_out} ====")
 
-    print("==== Read in new merged table file and check for units and descriptions ====")
+    print("==== Reading in new merged table file and check for units and descriptions ====")
 
     pa_table = pa.parquet.read_table(filename_out)
     ap_table = arrow_to_astropy(pa_table)
