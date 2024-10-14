@@ -5,6 +5,7 @@ import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import arrow_to_astropy, astropy_to_arrow, pa, pq
 from lsst.geom import SpherePoint, degrees
 import GCRCatalogs
+# This should be used but doesn't seem to work
 # from GCRCatalogs.helpers.tract_catalogs import tract_filter
 import numpy as np
 
@@ -21,7 +22,7 @@ butler = dafButler.Butler("/repo/dc2")
 name_skymap = "DC2_cells_v1"
 skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
 
-GCRCatalogs.set_root_dir('/sdf/data/rubin/user/combet')
+GCRCatalogs.set_root_dir('/sdf/data/rubin/shared')
 print(f"root dir={GCRCatalogs.get_root_dir()}")
 
 truth = GCRCatalogs.load_catalog('desc_dc2_run2.2i_dr6_truth')
@@ -140,7 +141,7 @@ for tract in tracts:
     print(f"==== Reading default truth catalog for tract={tract} ====")
     # These already have new integer ID columns
     truth = arrow_to_astropy(pq.read_table(
-        f"/sdf/group/rubin/ncsa-project/project/shared/DC2/truth_summary_v2/truth_tract{tract}.parquet")
+        f"/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_integer_ids/truth_tract{tract}.parquet")
     )
     filt = truth["is_unique_truth_entry"]
     truth = truth[filt]
