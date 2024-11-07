@@ -16,22 +16,50 @@ import numpy as np
 # astropy.__version__
 
 do_mags = False
+# Enable to write a catalog for ci_imsim's single patch
+is_ci_imsim = False
 
-butler = dafButler.Butler("/repo/dc2")
-name_skymap = "DC2_cells_v1"
-skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
+patches_tracts = {}
+tracts_out = {}
+if is_ci_imsim:
+    import os
+    butler = dafButler.Butler(f"{os.environ['CI_IMSIM_DIR']}/DATA")
+    name_skymap = "discrete/ci_imsim/4k"
+    name_out = "ci_imsim"
+    skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
+    tracts = (3828,)
+    patches_tracts[tracts[0]] = (24,)
+    tracts_out[tracts[0]] = 0
+else:
+    butler = dafButler.Butler("/repo/dc2")
+    name_skymap = "DC2_cells_v1"
+    name_out = name_skymap
+    skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
+    tracts = (3828, 3829)
+    patches_tracts = {}
+    tract_out = {}
 
+path_truth_old = "/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_cell"
 GCRCatalogs.set_root_dir('/sdf/data/rubin/shared')
 print(f"root dir={GCRCatalogs.get_root_dir()}")
 
 truth = GCRCatalogs.load_catalog('desc_dc2_run2.2i_dr6_truth')
-tracts = truth.available_tracts
-print(f"Available tracts: {tracts}")
+tracts_available = truth.available_tracts
+unavailable = set(tracts).difference(set(tracts_available))
+if unavailable:
+    raise RuntimeError(f"tracts={unavailable} not in {tracts_available}")
 
-truth_quantities = truth.list_all_quantities(include_native=True)
-truth_columninfo = {tq: truth.get_quantity_info(tq) for tq in truth_quantities}
+truth_columninfo = truth.list_all_quantities(include_native=True, with_info=True)
 truth_columninfo['av'] = {'unit': 'mag'}
 truth_columninfo['rv'] = {'unit': 'mag'}
+truth_columninfo['is_pointsource'] = {
+    'description': 'Whether the object is a point source (unresolved)',
+    'unit': '',
+}
+truth_columninfo['is_variable'] = {
+    'description': 'Whether the object is a point source (unresolved)',
+    'unit': '',
+}
 
 cosmodc2_cat = GCRCatalogs.load_catalog("desc_cosmodc2")
 cosmodc2_quantities = cosmodc2_cat.list_all_quantities(include_native=True)
@@ -135,14 +163,22 @@ cosmodc2_columninfo = {
     }
 }
 
-tracts = (3828, 3829)
-
 for tract in tracts:
     print(f"==== Reading default truth catalog for tract={tract} ====")
     # These already have new integer ID columns
     truth = arrow_to_astropy(pq.read_table(
         f"/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_integer_ids/truth_tract{tract}.parquet")
     )
+    # For some reason, is_pointsource and is_variable aren't in the newer tables
+    truth_old = arrow_to_astropy(pq.read_table(
+        f"{path_truth_old}/truth_summary_{tract}_DC2_cells_v1_2_2i_truth_summary.parq",
+        columns=["id", "is_pointsource", "is_variable"],
+    ))
+    truth_old.rename_column("id", "id_string")
+    # There are a few rows different between these tables so we can't just
+    # copy columns. Not sure why...
+    truth = join(truth, truth_old, keys="id_string", join_type="inner")
+
     filt = truth["is_unique_truth_entry"]
     truth = truth[filt]
     if not do_mags:
@@ -215,13 +251,22 @@ for tract in tracts:
     )
 
     print("==== Populating patch column ====")
-    tractinfo = skymap[tract]
+    tract_out = tracts_out.get(tract, tract)
+    tractinfo = skymap[tract_out]
     radecs = [SpherePoint(ra, dec, degrees) for ra, dec in zip(merged_table["ra"], merged_table["dec"])]
     patches = [tractinfo.findPatch(radec).sequential_index for radec in radecs]
     merged_table["patch"] = patches
     merged_table["patch"].description = f"The patch number in {skymap=}"
 
-    filename_out = f"truth_summary_v2_{tract}_{name_skymap}_2_2i_truth_summary.parq"
+    patches_tract = patches_tracts.get(tract)
+    if patches_tract:
+        patches = merged_table["patch"]
+        patch_good = np.zeros(len(merged_table), dtype=bool)
+        for patch in patches_tract:
+            patch_good |= patches == patch
+        merged_table = merged_table[patch_good]
+
+    filename_out = f"truth_summary_v2_{tract_out}_{name_out}_2_2i_truth_summary.parq"
     pq.write_table(astropy_to_arrow(merged_table), filename_out)
 
     print(f"==== Wrote {filename_out} ====")
