@@ -30,7 +30,7 @@ for idx in range(len(tab_ap.columns)):
     dtype = column.dtype
     if np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, np.unsignedinteger):
         if (np.nanmin(tab_ap[column.name]) == 0) and (np.nanmax(tab_ap[column.name]) == 1) and (
-                dtype != bool):
+                dtype != bool): # noqa E721
             msgs.append(f"changing flag column {dtype=} to bool")
             column.type = bool
 

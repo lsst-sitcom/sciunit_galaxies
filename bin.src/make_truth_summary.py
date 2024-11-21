@@ -1,7 +1,6 @@
 from lsst.daf.butler import Butler
 from lsst.daf.butler.formatters.parquet import astropy_to_arrow
 from lsst.geom import SpherePoint, degrees
-import numpy as np
 import pyarrow.parquet as pq
 
 butler = Butler("/repo/dc2")
