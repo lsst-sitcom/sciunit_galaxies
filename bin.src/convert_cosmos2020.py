@@ -32,6 +32,7 @@ for idx in range(len(tab_ap.columns)):
         if (np.nanmin(tab_ap[column.name]) == 0) and (np.nanmax(tab_ap[column.name]) == 1) and (
                 dtype != bool):
             msgs.append(f"changing flag column {dtype=} to bool")
+            column.type = bool
 
     if len(msgs) > 1:
         print(msgs[0] + "; ".join(msgs[1:]))
