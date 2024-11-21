@@ -5,6 +5,9 @@ import pyarrow.parquet as pq
 
 # from https://www.legacysurvey.org/viewer/ls-dr10/cat.fits?ralo=52.14077598745257&rahi=54.03427611473381&declo=-28.35063896360024&dechi=-26.684313552983653
 
+52.14077598745257, 54.03427611473381
+-28.35063896360024, -26.684313552983653
+
 name_tab = "decals_dr10_lsst_cells_v1_5063"
 
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
@@ -141,8 +144,7 @@ columns = (
     ("SERSIC", "", 'Power-law index for the Sersic profile model (TYPE="SER")'),
 )
 
-# Identical to (0*u.ABmag).to(u.Jy)
-nJy_per_nmgy = (1*u.nanomaggy).to(u.nJy, u.zero_point_flux((0*u.ABmag).to(u.Jy))).value
+nJy_per_nmgy = (22.5*u.ABmag).to(u.nJy)
 
 for values in columns:
     if len(values) != 3:
@@ -155,8 +157,10 @@ for values in columns:
         if unit == "nanomaggy":
             unit = "nJy"
             tab_ap[name_lower] *= nJy_per_nmgy
+            # The above line makes a new column object for some reason
+            column = tab_ap[name]
         column.unit = unit
-        column.desc = desc
+        column.description = desc
     else:
         print(f"{name_lower} column not found")
 

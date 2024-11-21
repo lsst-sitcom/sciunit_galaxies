@@ -1,0 +1,17 @@
+description: Import external catalogs
+version: 1.0.0
+data:
+- type: dataset_type
+  name: cosmos_acs_iphot_200709
+  dimensions: []
+  storage_class: ArrowAstropy
+  is_calibration: false
+- type: dataset
+  dataset_type: cosmos_acs_iphot_200709
+  run: u/dtaranu/DM-44000/cosmos_acs
+  records:
+  - dataset_id:
+    - !uuid 'da135476-6089-4e90-883f-1d9429574bcf'
+    data_id: {}
+    path: cosmos_acs_iphot_200709.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter

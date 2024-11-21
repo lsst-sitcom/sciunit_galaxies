@@ -1,3 +1,9 @@
+# Load a patch of LSST data, then PSF match the corresponding HST images
+# This was intended for difference imaging but does not work very well
+# Due to differences in image registration, there are large differences
+# between object centroids and therefore large-amplitude dipoles
+# Also the filters don't match anyway (F775W is close to i, but
+
 import math
 
 from astropy.coordinates import SkyCoord
@@ -11,6 +17,14 @@ import lsst.daf.butler as dafButler
 from lsst.geom import Point2D
 import numpy as np
 from skimage.transform import resize
+
+plot = True
+
+if plot:
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
+    mpl.rcParams.update({"image.origin": "lower", 'font.size': 13})
 
 
 def calibrate_exposure(exposure: lsst.afw.image.Exposure) -> lsst.afw.image.MaskedImageF:
@@ -47,29 +61,29 @@ shift_x, shift_y = -1.088*scale_hst/scale_lsst, 1.165*scale_hst/scale_lsst
 
 path_cdfs_hst = "/sdf/data/rubin/user/dtaranu/tickets/cdfs/"
 
-coadds_lsst_patch = {}
-coadds_hst_patch = {}
+for patch in patches:
+    patchInfo = tractInfo[patch]
+    bbox_outer = patchInfo.outer_bbox
 
-for band_hst, bands_lsst in bands_hst_lsst.items():
-    img_cdfs = fits.open(
-        f"{path_cdfs_hst}hlsp_hlf_hst_acs-30mas_goodss_{band_hst.lower()}_v2.0_sci.fits.gz"
-    )
-    wcs_cdfs = WCS(img_cdfs[0])
-
-    for patch in patches:
-        patchInfo = tractInfo[patch]
-        bbox_outer = patchInfo.outer_bbox
-
-        (ra_begin, dec_begin), (ra_end, dec_end) = (
-            (x.getRa().asDegrees(), x.getDec().asDegrees())
-            for x in (
-                wcs.pixelToSky(*(bbox_outer.getBegin())),
-                wcs.pixelToSky(*(bbox_outer.getEnd())),
-            )
+    (ra_begin, dec_begin), (ra_end, dec_end) = (
+        (x.getRa().asDegrees(), x.getDec().asDegrees())
+        for x in (
+            wcs.pixelToSky(*(bbox_outer.getBegin())),
+            wcs.pixelToSky(*(bbox_outer.getEnd())),
         )
+    )
 
-        center = SkyCoord((ra_end + ra_begin) / 2., (dec_end + dec_begin) / 2., unit=u.degree)
-        height_pix, width_pix = bbox_outer.getHeight(), bbox_outer.getWidth()
+    center = SkyCoord((ra_end + ra_begin) / 2., (dec_end + dec_begin) / 2., unit=u.degree)
+    height_pix, width_pix = bbox_outer.getHeight(), bbox_outer.getWidth()
+
+    coadds_lsst_patch = {}
+    coadds_hst = {}
+
+    for band_hst, bands_lsst in bands_hst_lsst.items():
+        img_cdfs = fits.open(
+            f"{path_cdfs_hst}hlsp_hlf_hst_acs-30mas_goodss_{band_hst.lower()}_v2.0_sci.fits.gz"
+        )
+        wcs_cdfs = WCS(img_cdfs[0])
 
         coadd_hst_full = Cutout2D(
             img_cdfs[0].data,
@@ -84,13 +98,19 @@ for band_hst, bands_lsst in bands_hst_lsst.items():
         coadd_hst_full.data *= 10**(((u.nJy).to(u.ABmag) - img_cdfs[0].header["ZEROPNT"])/2.5)
 
         coadds_lsst = {
-            band: butler.get("deepCoadd_calexp", tract=tract, patch=patch, band=band, skymap=name_skymap)
+            band: coadds_lsst_patch.get(
+                band,
+                butler.get("deepCoadd_calexp", tract=tract, patch=patch, band=band, skymap=name_skymap),
+            )
             for band in bands_lsst
         }
         psfs_lsst = {}
         for band, coadd in coadds_lsst.items():
             psfs_lsst[band] = coadd.psf
-            coadds_lsst[band] = calibrate_exposure(coadd)
+            if band not in coadds_lsst_patch:
+                coadd_calib = calibrate_exposure(coadd)
+                coadds_lsst[band] = coadd_calib
+                coadds_lsst_patch[band] = coadd_calib
 
         n_bands_lsst = len(coadds_lsst)
         coadd_lsst = coadds_lsst[bands_lsst[0]].image.array
@@ -152,47 +172,38 @@ for band_hst, bands_lsst in bands_hst_lsst.items():
             x_begin += cell_iter
             x_begin_hst += cell_iter_hst
             y_begin, y_begin_hst = 0, 0
-            print(x_begin)
 
+        fig, ax = plt.subplots(ncols=3, figsize=(15, 16))
+        # this needs to be clipped and/or scale (asinh or log)
+        ax[0].imshow(coadd_hst)
+        ax[1].imshow(coadd_lsst)
+        # Definitely needs to be clipped to e.g. +/- 50
+        ax[0].imshow(coadd_lsst - coadd_hst)
 
+    plot_rgb = False
+    if plot_rgb:
+        from lsst.multiprofit.plotting.reference_data import bands_weights_lsst
+        bands = ("i", "r", "g")
+        bands_hst = {
+            "F435W": ("g",),
+            "F606W": ("r",),
+            "F775W": ("i",),
+        }
+        weight_mean = np.mean([bands_weights_lsst[band] for band in bands])
+        for band in bands:
+            bands_weights_lsst[band] /= weight_mean
+        abs_mag_hst = {
+            "F435W": 5.35,
+            "F606W": 4.72,
+            "F775W": 4.52,
+            "F814W": 4.52,
+        }
+        weights_hst = 1/(u.ABmag.to(u.Jy, [abs_mag_hst[band] for band in bands_hst]))
+        weights_hst_mean = np.mean(weights_hst)
+        bands_weights_hst = {
+            band: weight_hst/weights_hst_mean for band, weight_hst in zip(bands_hst, weights_hst)
+        }
+        kwargs_lup = dict(minimum=-1, Q=8, stretch=100)
+        kwargs_lup_hst = dict(minimum=-0.3, Q=8, stretch=4)
 
-"""
-    if plot:
-        coadd_lsst = calibrate_exposure(
-            butler.get("deepCoadd_calexp", tract=tract, patch=patch, band="i", skymap=name_skymap),
-        )
-        x_start_lsst = patchInfo.outer_bbox.getHeight() - patchInfo.inner_bbox.getHeight()
-
-        psf = coadd_lsst.psf.computeKernelImage(patchInfo.outer_bbox.getCenter())
-        img_psf = gs.InterpolatedImage(gs.Image(psf.array, scale=scale_lsst))
-        cutout_hst_gs = gs.InterpolatedImage(gs.Image(cutout.data, scale=scale_hst))
-        img_convolved = gs.Convolve(cutout_hst_gs, img_psf).drawImage(
-            nx=cutout.data.shape[1], ny=cutout.data.shape[0])
-
-bands = ("i", "r", "g")
-if plot:
-
-import galsim as gs
-from lsst.multiprofit.plotting.reference_data import bands_weights_lsst
-import matplotlib as mpl
-
-mpl.rcParams.update({"image.origin": "lower", 'font.size': 13})
-
-    weight_mean = np.mean([bands_weights_lsst[band] for band in bands])
-    for band in bands:
-        bands_weights_lsst[band] /= weight_mean
-    abs_mag_hst = {
-        "F435W": 5.35,
-        "F606W": 4.72,
-        "F775W": 4.52,
-        "F814W": 4.52,
-    }
-    weights_hst = 1/(u.ABmag.to(u.Jy, [abs_mag_hst[band] for band in bands_hst]))
-    weights_hst_mean = np.mean(weights_hst)
-    bands_weights_hst = {
-        band: weight_hst/weights_hst_mean for band, weight_hst in zip(bands_hst, weights_hst)
-    }
-    kwargs_lup = dict(minimum=-1, Q=8, stretch=100)
-    kwargs_lup_hst = dict(minimum=-0.3, Q=8, stretch=4)
-
-"""
+        # call make_lupton_rgb here, etc.
