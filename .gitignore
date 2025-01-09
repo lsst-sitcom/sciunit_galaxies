@@ -2,6 +2,7 @@
 .sconsign.dblite
 config.log
 *.pyc
+python/*.dist-info/
 
 # Built by sconsUtils
 version.py
@@ -13,3 +14,4 @@ pytest_session.txt
 .cache/
 .pytest_cache
 .coverage
+
