@@ -5,19 +5,15 @@ import pyarrow.parquet as pq
 
 # from https://www.legacysurvey.org/viewer/ls-dr10/cat.fits?ralo=52.14077598745257&rahi=54.03427611473381&declo=-28.35063896360024&dechi=-26.684313552983653
 
-52.14077598745257, 54.03427611473381
--28.35063896360024, -26.684313552983653
-
 name_tab = "decals_dr10_lsst_cells_v1_5063"
-
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
 
 columns = (
     ("RELEASE", "", "Integer denoting the camera and filter set used, which will be unique for a given processing run of the data (RELEASE is documented here)"),
     ("BRICKID", "", "A unique Brick ID (in the range [1, 662174])"),
-    ("BRICKNAME", "None",'Name of brick, encoding the brick sky position, eg "1126p222" near RA=112.6, Dec=+22.2'),
+    ("BRICKNAME", "None", 'Name of brick, encoding the brick sky position, eg "1126p222" near RA=112.6, Dec=+22.2'),
     ("OBJID", "", "Catalog object number within this brick; a unique identifier hash is RELEASE,BRICKID,OBJID; OBJID spans [0,N-1] and is contiguously enumerated within each blob"),
-    ("TYPE", "None",'Morphological model: "PSF"=stellar, "REX"="round exponential galaxy" = round EXP galaxy with a variable radius, "EXP"=exponential, "DEV"=deVauc, "SER"=Sersic, "DUP"==Gaia source fit by different model. See also the larger description.'),
+    ("TYPE", "None", 'Morphological model: "PSF"=stellar, "REX"="round exponential galaxy" = round EXP galaxy with a variable radius, "EXP"=exponential, "DEV"=deVauc, "SER"=Sersic, "DUP"==Gaia source fit by different model. See also the larger description.'),
     ("RA", "deg", "Right ascension at equinox J2000"),
     ("DEC", "deg", "Declination at equinox J2000"),
     ("RA_IVAR", "1/deg**2", "Inverse variance of RA (no cosine term!), excluding astrometric calibration errors"),
@@ -119,8 +115,8 @@ columns = (
     ("FIBERTOTFLUX_R", "nanomaggy", "Predicted r-band flux within a fiber of diameter 1.5 arcsec from all sources at this location in 1 arcsec Gaussian seeing"),
     ("FIBERTOTFLUX_I", "nanomaggy", "Predicted i-band flux within a fiber of diameter 1.5 arcsec from all sources at this location in 1 arcsec Gaussian seeing"),
     ("FIBERTOTFLUX_Z", "nanomaggy", "Predicted z-band flux within a fiber of diameter 1.5 arcsec from all sources at this location in 1 arcsec Gaussian seeing"),
-    ("REF_CAT", "None",'Reference catalog source for this star: "T2" for Tycho-2, "GE" for Gaia EDR3, "L3" for the SGA, empty otherwise'),
-    ("REF_ID", "None",'Reference catalog identifier for this star; Tyc1*1,000,000+Tyc2*10+Tyc3 for Tycho-2; "sourceid" for Gaia EDR3 and SGA'),
+    ("REF_CAT", "None", 'Reference catalog source for this star: "T2" for Tycho-2, "GE" for Gaia EDR3, "L3" for the SGA, empty otherwise'),
+    ("REF_ID", "None", 'Reference catalog identifier for this star; Tyc1*1,000,000+Tyc2*10+Tyc3 for Tycho-2; "sourceid" for Gaia EDR3 and SGA'),
     ("REF_EPOCH", "yr", "Reference catalog reference epoch (eg, 2016.0 for Gaia EDR3)"),
     ("GAIA_PHOT_G_MEAN_MAG", "mag", "Gaia EDR3 G band magnitude"),
     ("GAIA_PHOT_G_MEAN_FLUX_OVER_ERROR", "", "Gaia EDR3 G band signal-to-noise"),

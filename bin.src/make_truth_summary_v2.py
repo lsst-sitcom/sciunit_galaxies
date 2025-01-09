@@ -8,10 +8,11 @@ import GCRCatalogs
 # from GCRCatalogs.helpers.tract_catalogs import tract_filter
 import numpy as np
 
-## conda-installed GCRCatalog v1.8 not compatible with astropy>=6.1
-## (fix currently exist in the main branch of GCRCatalogs but not conda-installable as of yet Aug 23, 2024)
-## To use the conda-installable version of GCRCatalogs, use astropy<6.1
-## import astropy
+# conda-installed GCRCatalog v1.8 not compatible with astropy>=6.1
+# (fix currently exist in the main branch of GCRCatalogs
+#  but is not conda-installable as of Aug 23, 2024)
+# To use the conda-installable version of GCRCatalogs, use astropy<6.1
+# import astropy
 # astropy.__version__
 
 do_mags = False
@@ -82,7 +83,8 @@ columns_dict["rv"] = "R_V"
 
 print(f"The following quantities will be added to the truth table: {columns_load}")
 
-# Updated descriptions from https://github.com/LSSTDESC/gcr-catalogs/blob/master/GCRCatalogs/SCHEMA.md
+# Updated descriptions from:
+# https://github.com/LSSTDESC/gcr-catalogs/blob/master/GCRCatalogs/SCHEMA.md
 for column, description in {
     "ra": "Right ascension, lensed (as observed)",
     "dec": "Declination, lensed (as observed)",

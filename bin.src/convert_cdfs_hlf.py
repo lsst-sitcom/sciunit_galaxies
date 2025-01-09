@@ -9,7 +9,7 @@ name_tab = "hlsp_hlf_hst_60mas_goodss_v2.1_catalog"
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
 
 columns = {
-	"id": ("Unique identifier", ""),
+    "id": ("Unique identifier", ""),
     "x": ("X centroid in image coordinates", "pix"),
     "y": ("Y centroid in image coordinates", "pix"),
     "ra": ("R.A. J2000", "deg"),
