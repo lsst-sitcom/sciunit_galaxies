@@ -11,6 +11,7 @@ import numpy as np
 get_hst = True
 plot_hst = True
 use_ppm = True
+use_nightly = False
 
 if get_hst:
     from astropy.coordinates import SkyCoord
@@ -42,9 +43,11 @@ def calibrate_exposure(exposure: lsst.afw.image.Exposure) -> lsst.afw.image.Mask
     return image
 
 
-ra_gal, dec_gal = 53.124654379926724, -27.740377354687737
+# ra_gal, dec_gal = 53.124654379926724, -27.740377354687737
+ra_gal, dec_gal = 53.124848804610785, -27.758377013546585
+# ra_gal, dec_gal = 52.9035204, -28.0243690  # nice galaxy but not fully covered
 bands = ("i", "r", "g")
-bands_hst = ("F814W", "F606W", "F435W")
+bands_hst = ("F775W", "F606W", "F435W")
 weight_mean = np.mean([bands_weights_lsst[band] for band in bands])
 for band in bands:
     bands_weights_lsst[band] /= weight_mean
@@ -63,6 +66,7 @@ if get_hst:
     abs_mag_hst = {
         "F435W": 5.35,
         "F606W": 4.72,
+        "F775W": 4.52,
         "F814W": 4.52,
     }
     weights_hst = 1/(u.ABmag.to(u.Jy, [abs_mag_hst[band] for band in bands_hst]))
@@ -115,10 +119,14 @@ if get_hst:
         (ax_hst[1] if use_ppm else ax_hst).imshow(img_lup_hst, extent=extent_hst)
 
 butler = dafButler.Butler("/repo/embargo")
-collections = butler.registry.queryCollections(
-    "LSSTComCam/runs/nightlyValidation/202411*",
-    collectionTypes=[dafButler.CollectionType.CHAINED],
-)
+collections = [
+    collection for collection in butler.registry.queryCollections(
+        "LSSTComCam/runs/nightlyValidation/202411*" if use_nightly else "LSSTComCam/runs/DRP/20241101*",
+        collectionTypes=[dafButler.CollectionType.CHAINED],
+    )
+    if not collection.endswith("/hips")
+]
+n_collections = len(collections)
 name_skymap = "lsst_cells_v1"
 skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
 tractInfo = skymap.findTract(coord)
@@ -192,14 +200,14 @@ for idx, (collection, cutouts_bands) in enumerate(cutouts.items()):
     extent = (0., cutout_size[0] * 0.2, 0., cutout_size[1] * 0.2)
 
     for fig, axes, img in fig_ax_imgs:
-        axis = axes[idx, 0] if get_hst else axes[idx]
+        axis = (axes[idx, 0] if get_hst else axes[idx]) if (n_collections > 1) else axes[0]
         axis.imshow(img, extent=extent)
         axis.set_title(title)
 
     if get_hst:
         for fig, axes, img in fig_ax_imgs:
-            band_diff_lsst, band_diff_hst = "i", "F814W"
-            axis = axes[idx, 1] if get_hst else axes[idx]
+            band_diff_lsst, band_diff_hst = "i", "F775W"
+            axis = (axes[idx, ] if get_hst else axes[idx]) if (n_collections > 1) else axes[1]
             coadd_lsst = coadds[collection][band_diff_lsst]
             cutout_lsst = cutouts[collection][band_diff_lsst]
             cutout_hst = cutouts_hst[band_diff_hst].data
