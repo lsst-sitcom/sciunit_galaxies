@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 get_hst = True
+# This will use a lot of memory
+keep_hst_full = True
 plot_hst = True
-use_ppm = True
-use_nightly = False
+use_ppm = False
 
 if get_hst:
     from astropy.coordinates import SkyCoord
@@ -43,8 +44,13 @@ def calibrate_exposure(exposure: lsst.afw.image.Exposure) -> lsst.afw.image.Mask
     return image
 
 
+# A nice group of galaxies
+ra_gal, dec_gal = 53.12277768, -27.73640709
 # ra_gal, dec_gal = 53.124654379926724, -27.740377354687737
-ra_gal, dec_gal = 53.124848804610785, -27.758377013546585
+# A region with some dubious detections
+# ra_gal, dec_gal = 53.11, -27.9
+# Another galaxy of some description
+# ra_gal, dec_gal = 53.124848804610785, -27.758377013546585
 # ra_gal, dec_gal = 52.9035204, -28.0243690  # nice galaxy but not fully covered
 bands = ("i", "r", "g")
 bands_hst = ("F775W", "F606W", "F435W")
@@ -55,12 +61,13 @@ for band in bands:
 scale_lsst = 0.2
 
 coord = SpherePoint(ra_gal, dec_gal, degrees)
-cutout_size = Extent2I(150, 150)
+cutout_size = Extent2I(200, 200)
 figsize_ax = 8
 kwargs_lup = dict(minimum=-1, Q=8, stretch=100)
 
 cutouts_hst = {}
 wcs_hst = {}
+full_hst = {}
 
 if get_hst:
     abs_mag_hst = {
@@ -76,19 +83,22 @@ if get_hst:
     }
 
     kwargs_lup_hst = deepcopy(kwargs_lup)
-    kwargs_lup_hst["stretch"] = 4
-    kwargs_lup_hst["minimum"] = -0.3
+    kwargs_lup_hst["stretch"] = 1.0
+    kwargs_lup_hst["minimum"] = -0.04
 
     if use_ppm:
         kwargs_ppm_hst = deepcopy(kwargs_ppm)
-        kwargs_ppm_hst["scaleLumKWargs"]["stretch"] = 16
+        kwargs_ppm_hst["scaleLumKWargs"]["stretch"] = 4
 
     path_cdfs_hst = "/sdf/data/rubin/user/dtaranu/tickets/cdfs/"
     scale_hst = 0.03
     for band in bands_hst:
-        img_cdfs = fits.open(
-            f"{path_cdfs_hst}hlsp_hlf_hst_acs-30mas_goodss_{band.lower()}_v2.0_sci.fits.gz"
-        )
+        if (img_cdfs := full_hst.get(band)) is None:
+            img_cdfs = fits.open(
+                f"{path_cdfs_hst}hlsp_hlf_hst_acs-30mas_goodss_{band.lower()}_v2.0_sci.fits.gz"
+            )
+            if keep_hst_full:
+                full_hst[band] = img_cdfs
         wcs_cdfs = WCS(img_cdfs[0])
         cutout = Cutout2D(
             img_cdfs[0].data,
@@ -101,12 +111,19 @@ if get_hst:
         cutout.data *= 10**(((u.nJy).to(u.ABmag) - img_cdfs[0].header["ZEROPNT"])/2.5)
         cutouts_hst[band] = cutout
 
+    radec_hst_begin = cutout.wcs.pixel_to_world(0, 0)
+    radec_hst_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
+    (ra_begin, dec_begin), (ra_end, dec_end) = (
+        (radec.ra.value, radec.dec.value) for radec in (radec_hst_begin, radec_hst_end)
+    )
+    extent_hst = (
+        radec_hst_begin.ra.value, radec_hst_end.ra.value, radec_hst_begin.dec.value, radec_hst_end.dec.value,
+    )
+
     img_lup_hst = make_lupton_rgb(
         *(cutout.data*bands_weights_hst[band] for band, cutout in cutouts_hst.items()),
         **kwargs_lup_hst,
     )
-
-    extent_hst = (0, img_lup_hst.shape[1]*scale_hst, 0, img_lup_hst.shape[0]*scale_hst)
 
     fig_hst, ax_hst = plt.subplots(figsize=(2*figsize_ax, 2*figsize_ax), nrows=1 + use_ppm)
     (ax_hst[0] if use_ppm else ax_hst).imshow(img_lup_hst, extent=extent_hst)
@@ -117,15 +134,13 @@ if get_hst:
             **kwargs_ppm_hst,
         )
         (ax_hst[1] if use_ppm else ax_hst).imshow(img_lup_hst, extent=extent_hst)
+    fig_hst.tight_layout()
 
-butler = dafButler.Butler("/repo/embargo")
+butler = dafButler.Butler("/repo/main")
 collections = [
-    collection for collection in butler.registry.queryCollections(
-        "LSSTComCam/runs/nightlyValidation/202411*" if use_nightly else "LSSTComCam/runs/DRP/20241101*",
-        collectionTypes=[dafButler.CollectionType.CHAINED],
-    )
-    if not collection.endswith("/hips")
+    "u/dtaranu/DM-48367/w_2025_09/match_three",
 ]
+
 n_collections = len(collections)
 name_skymap = "lsst_cells_v1"
 skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
@@ -133,6 +148,11 @@ tractInfo = skymap.findTract(coord)
 tract = tractInfo.tract_id
 patchInfo = tractInfo.findPatch(coord)
 patch = patchInfo.sequential_index
+
+matched = butler.get(
+    "matched_matched_cdfs_hlf_v2p1_des_y6gold_objectTable_tract",
+    skymap=name_skymap, tract=tract, storageClass="ArrowAstropy", collections=collections[0],
+)
 
 coadds = {}
 reference_coadds = {}
@@ -197,7 +217,14 @@ for idx, (collection, cutouts_bands) in enumerate(cutouts.items()):
     if use_ppm:
         fig_ax_imgs.append((fig_ppm, ax_ppm, img_ppm))
 
-    extent = (0., cutout_size[0] * 0.2, 0., cutout_size[1] * 0.2)
+    radec_begin = cutout.wcs.pixel_to_world(0, 0)
+    radec_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
+    (ra_begin, dec_begin), (ra_end, dec_end) = (
+        (radec.ra.value, radec.dec.value) for radec in (radec_begin, radec_end)
+    )
+    extent = (
+        radec_begin.ra.value, radec_end.ra.value, radec_begin.dec.value, radec_end.dec.value,
+    )
 
     for fig, axes, img in fig_ax_imgs:
         axis = (axes[idx, 0] if get_hst else axes[idx]) if (n_collections > 1) else axes[0]

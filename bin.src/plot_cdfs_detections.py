@@ -27,7 +27,7 @@ import numpy as np
 mpl.rcParams.update({"image.origin": "lower", "font.size": 13, "figure.figsize": (18, 18)})
 
 tract = 5063
-patch = 5
+patch = 34
 plot_streaks_1 = False
 if patch == 5:
     # A fairly dense region that ends up as one big blend at 100+ visits per band
@@ -152,10 +152,8 @@ butler = dafButler.Butler("/repo/embargo")
 skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
 tractInfo = skymap[tract]
 collections = (
-    "u/dtaranu/DM-47234/20241101_20241113/match",
-#    "LSSTComCam/runs/DRP/20241101_20241127/w_2024_48/DM-47841/match",
-#    "LSSTComCam/runs/DRP/20241101_20241204/w_2024_49/DM-47988/match",
-    "u/dtaranu/DM-47234/20241101_20241211/match",
+    "u/dtaranu/DM-47234/20241101_20241218/match",
+    "u/dtaranu/DM-47234/DP1-RC1/w_2025_02/match",
 )
 
 bands_hst_lsst = {
