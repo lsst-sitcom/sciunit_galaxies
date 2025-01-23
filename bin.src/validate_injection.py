@@ -1,93 +1,174 @@
-from lsst.daf.butler.formatters.parquet import arrow_to_astropy, pq
+import astropy.units as u
+from astropy.visualization import make_lupton_rgb
 import lsst.daf.butler as dafButler
-import lsst.geom
+from lsst.geom import Point2D, SpherePoint, degrees
+from lsst.sitcom.sciunit.galaxies.truth_summary import validate_injection_catalog
 import matplotlib as mpl
+from matplotlib import colormaps
 import matplotlib.pyplot as plt
 import numpy as np
 
-mpl.rcParams["image.origin"] = "lower"
+mpl.rcParams.update({"image.origin": "lower", 'font.size': 18, "figure.figsize": (15, 15)})
 
-tract = 9813
-patch = 40
-band = "i"
+is_rc2 = False
+plot_validation = False
 cutout_asec = 60
+tract_in = 3828
+repo_dc2 = "/repo/dc2"
+skymap_dc2 = "DC2_cells_v1"
 
-repo = "/repo/main"
-butler = dafButler.Butler(repo, skymap="hsc_rings_v1", collections=["u/dtaranu/DM-44943/injected"])
-injection = arrow_to_astropy(pq.read_table("injection_catalog_hsc_rings_v1_9813_from_DC2_cells_v1_r_3828.parq"))
+if is_rc2:
+    tract = 9813
+    patch = 40
+    band = "i"
+
+    repo = "/repo/main"
+    skymap = "hsc_rings_v1"
+    butler = dafButler.Butler(repo, skymap=skymap, collections=["u/dtaranu/DM-44943/injected"])
+else:
+    tract = 5063
+    patch = 33
+    band = "r"
+    repo = "/repo/main"
+    skymap = "lsst_cells_v1"
+    butler = dafButler.Butler(repo, skymap=skymap,
+                              collections=["u/dtaranu/DM-47185/injected_dp1_2025_06/plots"])
+
 butler_dc2 = dafButler.Butler(
-    "/repo/dc2", skymap="DC2_cells_v1", collections=["2.2i/runs/test-med-1/w_2024_40/DM-46604"],
-)
-calexp_hsc = butler.get("deepCoadd_calexp", patch=patch, tract=tract, band=band)
-calexp_inj = butler.get("injected_deepCoadd", patch=patch, tract=tract, band=band)
-truth_summary_v2 = arrow_to_astropy(pq.read_table(
-    "/sdf/data/rubin/user/dtaranu/dc2/truth_summary_cell/truth_summary_v2_3828_DC2_cells_v1_2_2i_truth_summary.parq"
-))
-
-objects = butler.get(
-    "objectTable_tract", tract=tract, storageClass="ArrowAstropy",
-    parameters={"columns": ("coord_ra", "coord_dec", "detect_isPrimary",)},
+    repo_dc2, skymap=skymap_dc2, collections=["2.2i/runs/test-med-1/w_2024_40/DM-46604"],
 )
 
-primary = objects[objects["detect_isPrimary"]]
-plt.scatter(objects["coord_ra"][::20], objects["coord_dec"][::20], s=0.8)
-plt.scatter(injection["ra"][::20], injection["dec"][::20], s=0.8)
-plt.tight_layout()
-plt.show()
+if plot_validation:
+    validate_injection_catalog(
+        butler_in=butler_dc2,
+        butler_out=butler,
+        tract_in=tract_in,
+        tract_out=tract,
+        skymap_name_in=skymap_dc2,
+        skymap_name_out=skymap,
+        patch=patch,
+        band=band,
+        cutout_asec=cutout_asec,
+        ids_ref=[],
+    )
 
-pa_offset = 90
+objects = butler.get("objectTable_tract", skymap=skymap, tract=tract, storageClass="ArrowAstropy")
+objects_patch = objects[objects["patch"] == patch]
 
-ids_ref = [
-    7813120317, 7812500182, 7812541653, 7812608827, 7812509574,
-    7812509636, 7812612080, 7812647026, 7812647658, 7813026314,
+objects_injected = butler.get("injected_objectTable_tract", skymap=skymap, tract=tract, storageClass="ArrowAstropy")
+objects_injected_patch = objects_injected[objects_injected["patch"] == patch]
+
+injected = butler.get("injected_deepCoadd_catalog_tract", skymap=skymap, tract=tract)
+injected_patch = injected[injected["patch"] == patch]
+
+matched = butler.get(
+    "matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract", skymap=skymap, tract=tract,
+    storageClass="ArrowAstropy"
+)
+
+coadd = butler.get("deepCoadd_calexp", skymap=skymap, tract=tract, patch=patch, band=band)
+coadd_injected = butler.get("injected_deepCoadd_calexp", skymap=skymap, tract=tract, patch=patch, band=band)
+
+print("MASK [original, injected] (pixels)")
+for mask in coadd.mask.getMaskPlaneDict():
+    print(mask, [np.sum((c.mask.array & c.mask.getPlaneBitMask(mask)) > 0) for c in (coadd, coadd_injected)])
+
+tractInfo = butler.get("skyMap", skymap=skymap)[tract]
+no_patch = matched["patch"].mask | ~(matched["patch"] >= 0).data
+matched["patch"].mask = False
+new_patches = np.full(np.sum(no_patch), -1, dtype=matched["patch"].dtype)
+for idx, row in enumerate(matched[no_patch]):
+    new_patches[idx] = tractInfo.findPatch(
+        SpherePoint(row["ref_ra"], row["ref_dec"], degrees)
+    ).sequential_index
+matched["patch"][no_patch] = new_patches
+matched_patch = matched[matched["patch"] == patch]
+
+# TODO: This should already be the case but isn't - fix it
+matched_patch[f"ref_{band}_flux"].unit = u.nJy
+
+ref_mag = matched_patch[f"ref_{band}_flux"].to(u.ABmag).value
+matched_bright = ref_mag < 24
+matched_good = np.array(matched_patch["detect_isPrimary"] == True)
+
+bright = injected_patch[f"{band}_mag"] < 24
+flags = injected_patch[f"{band}_comp1_injection_flag"]
+
+unique, counts = np.unique(flags, return_counts=True)
+n_flags = len(unique)
+
+colors = colormaps["plasma"].colors
+
+def get_xys_from_radec(ra, dec):
+    xys = np.array([
+        [y for y in x] for x in coadd_injected.wcs.skyToPixel([
+            SpherePoint(ra, dec, degrees)
+            for ra, dec in zip(ra, dec)
+        ])
+    ])
+    return xys
+
+corners_xy = np.array(coadd_injected.getBBox().getCorners())
+corners_radec = np.array([
+    [y.asDegrees() for y in coadd_injected.wcs.pixelToSky(Point2D(x))]
+    for x in coadd_injected.getBBox().getCorners()
+])
+extent = [
+    np.mean(corners_xy[0:3:4, 0]), np.mean(corners_xy[1:3, 0]),
+    np.mean(corners_xy[0:2, 1]), np.mean(corners_xy[2:4, 1]),
 ]
-for id_ref in ids_ref:
-    obj_ref = injection[injection["group_id"] == id_ref][0]
-    ra_hsc, dec_hsc = (obj_ref[c] for c in ("ra", "dec"))
 
-    obj_dc2 = truth_summary_v2[truth_summary_v2["id"] == id_ref][0]
-    calexp_dc2 = butler_dc2.get("deepCoadd_calexp", patch=obj_dc2["patch"], tract=obj_dc2["tract"], band=band)
+fig, ax = plt.subplots()
+img_inj = coadd_injected.image.array
+imgs_rgb = [
+    ((coadd.mask.array & coadd.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img_inj,
+    img_inj,
+    ((coadd_injected.mask.array & coadd_injected.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img_inj,
+]
+ax.imshow(make_lupton_rgb(*imgs_rgb, Q=8, stretch=0.2), extent=extent)
 
-    cutout_hsc, cutout_hsc_inj = (
-        calexp.getCutout(
-            center=lsst.geom.SpherePoint(ra_hsc, dec_hsc, lsst.geom.degrees),
-            size=lsst.geom.Extent2I(int(cutout_asec/0.168), int(cutout_asec/0.168)),
-        )
-        for calexp in (calexp_hsc, calexp_inj)
-    )
+xys = get_xys_from_radec(
+    objects_injected_patch["coord_ra"][objects_injected_patch["detect_isPrimary"]],
+    objects_injected_patch["coord_dec"][objects_injected_patch["detect_isPrimary"]],
+)
+ax.scatter(xys[:, 0], xys[:, 1], edgecolor='darkviolet', marker='o', label="detect_isPrimary", s=50, facecolor="None")
 
-    coord_dc2 = lsst.geom.SpherePoint(obj_dc2["ra"], obj_dc2["dec"], lsst.geom.degrees)
+for idx, flag in enumerate(unique):
+    color = colors[round((idx/(n_flags - 1 + (n_flags == 1)))*205 + 25)]
+    to_plot = bright & (flags == flag)
+    xys = get_xys_from_radec(injected_patch["ra"][to_plot], injected_patch["dec"][to_plot])
+    ax.scatter(xys[:, 0], xys[:, 1], color=color, label=f"{flag=}", s=50)
 
-    cutout_dc2 = calexp_dc2.getCutout(
-        center=coord_dc2,
-        size=lsst.geom.Extent2I(int(cutout_asec / 0.2), int(cutout_asec / 0.2)),
-    )
+xys = get_xys_from_radec(
+    matched_patch["ref_ra"][matched_bright & matched_good],
+    matched_patch["ref_dec"][matched_bright & matched_good],
+)
+ax.scatter(xys[:, 0], xys[:, 1], c='b', marker='+', label="good match", s=120)
+xys = get_xys_from_radec(
+    matched_patch["ref_ra"][matched_bright & ~matched_good],
+    matched_patch["ref_dec"][matched_bright & ~matched_good],
+)
+ax.scatter(xys[:, 0], xys[:, 1], c='r', marker='x', label="no match", s=120)
+ax.legend()
+ax.set_title("RGB Red=coadd*detected, Green=injected, Blue=injected*detected")
+fig.tight_layout()
 
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
+fig, ax = plt.subplots()
+img = coadd.image.array
+imgs_rgb = [
+    ((coadd.mask.array & coadd.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img,
+    img,
+    ((coadd_injected.mask.array & coadd_injected.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img,
+]
+ax.imshow(make_lupton_rgb(*imgs_rgb, Q=8, stretch=0.2), extent=extent)
 
-    min_in = np.nanmin(cutout_hsc.image.array)
-    max_in = np.nanmax(cutout_hsc.image.array)
-
-    pa = obj_dc2['positionAngle']
-
-    ax[0][0].imshow(np.arcsinh(cutout_hsc.image.array*10), cmap="gray")
-    ax[0][0].set_title(f"HSC {tract=} {patch=} {band=}")
-    ax[0][1].imshow(np.arcsinh(np.clip(cutout_hsc_inj.image.array, min_in, max_in)*10), cmap="gray")
-    ax[0][1].set_title(f"HSC injected {tract=} {patch=} {band=}")
-    ax[1][0].imshow(
-        np.arcsinh(10*np.clip(cutout_hsc_inj.image.array - cutout_hsc.image.array, min_in, max_in)),
-        cmap="gray",
-    )
-    ax[1][0].set_title(f"injected difference")
-    ax[1][1].imshow(np.arcsinh(np.clip(cutout_dc2.image.array, min_in, max_in)*10), cmap="gray")
-    ax[1][1].set_title(f"DC2 id={id_ref} tract={obj_dc2['tract']} patch={obj_dc2['patch']}"
-                       f" {pa_offset}-PA={pa_offset - pa:.1f}")
-    coord = [x/2 for x in cutout_dc2.image.array.shape[::-1]]
-    linelen = coord[0]/8
-    dx = np.cos((-pa + pa_offset)*np.pi/180)
-    dy = np.sin((-pa + pa_offset)*np.pi/180)
-    ax[1][1].plot([coord[0]-linelen*dx, coord[0]+linelen*dx], [coord[1]-linelen*dy, coord[1]+linelen*dy], 'r-')
-
-    plt.tight_layout()
+xys = get_xys_from_radec(
+    objects_patch["coord_ra"][objects_patch["detect_isPrimary"]],
+    objects_patch["coord_dec"][objects_patch["detect_isPrimary"]],
+)
+ax.scatter(xys[:, 0], xys[:, 1], edgecolor='darkviolet', marker='o', label="detect_isPrimary", s=50, facecolor="None")
+ax.legend()
+ax.set_title("RGB Red=coadd*detected, Green=coadd, Blue=injected*detected")
+fig.tight_layout()
 
 plt.show()

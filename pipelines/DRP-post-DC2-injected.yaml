@@ -1,0 +1,62 @@
+description: Match tract-level injected_deepCoadd_catalog datasets to injected_objectTable_tract datasets.
+imports:
+  - location: $SOURCE_INJECTION_DIR/pipelines/match_injected_tract_catalog.yaml
+  - location: $ANALYSIS_TOOLS_DIR/pipelines/coaddDiffMatchedInjectedCore.yaml
+tasks:
+  consolidate_injected_catalogs:
+    class: lsst.source.injection.utils.ConsolidateInjectedCatalogsTask
+    config:
+      columns_extra: ["n", "half_light_radius", "q", "beta"]
+      groupIdKey: group_id
+      pixel_match_radius: -1
+
+  compare_object_to_injected:
+    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
+    config:
+      connections.name_input_cat_ref: injected_deepCoadd_catalog_tract
+      connections.name_input_cat_target: injected_objectTable_tract
+
+      column_matched_prefix_ref: "ref_"
+      # TODO: Remove as part of DM-44139
+      columns_ref_mag_to_nJy: {
+        u_mag: "u_flux", g_mag: "g_flux", r_mag: "r_flux", i_mag: "i_flux", z_mag: "z_flux", y_mag: "y_flux",
+      }
+      columns_ref_copy: [
+        "injected_id", "r_comp1_source_type",
+        "u_injection_flag", "g_injection_flag", "r_injection_flag",
+        "i_injection_flag", "z_injection_flag", "y_injection_flag",
+        "u_mag", "g_mag", "r_mag", "i_mag", "z_mag", "y_mag",
+        "injection_flag", "injected_isPatchInner", "injected_isTractInner", "injected_isPrimary",
+      ]
+      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      columns_target_copy: [
+        "u_cModelFlux", "g_cModelFlux", "r_cModelFlux",
+        "i_cModelFlux", "z_cModelFlux", "y_cModelFlux",
+        "u_cModelFluxErr", "g_cModelFluxErr", "r_cModelFluxErr",
+        "i_cModelFluxErr", "z_cModelFluxErr", "y_cModelFluxErr",
+        "u_free_cModelFlux_flag", "g_free_cModelFlux_flag", "r_free_cModelFlux_flag",
+        "i_free_cModelFlux_flag", "z_free_cModelFlux_flag", "y_free_cModelFlux_flag",
+        "patch", "detect_isDeblendedSource", "detect_isPatchInner", "detect_isPrimary", "merge_peak_sky",
+        "refExtendedness", "refSizeExtendedness",
+      ]
+  diff_matched_analysis:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.inputName: matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract
+      connections.outputName: matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract
+
+      python: |
+        from lsst.analysis.tools.atools.diffMatched import reconfigure_diff_matched_defaults
+        from lsst.analysis.tools.actions.vector.selectors import InjectedGalaxySelector, InjectedStarSelector
+        
+        InjectedGalaxySelector.key_class.default = "ref_r_comp1_source_type"
+        InjectedStarSelector.key_class.default = "ref_r_comp1_source_type"
+
+        reconfigure_diff_matched_defaults(
+          config=config,
+          context="injection",
+          key_flux_meas="cmodel_err",
+          use_any=True,
+          use_galaxies=True,
+          use_stars=True,
+        )
