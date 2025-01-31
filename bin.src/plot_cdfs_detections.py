@@ -9,7 +9,7 @@ import math
 
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.nddata import Cutout2D
+from astropy.nddata import Cutout2D, NoOverlapError
 from astropy.visualization import make_lupton_rgb
 from astropy.wcs import WCS
 import astropy.units as u
@@ -17,7 +17,7 @@ import lsst.afw.image
 from lsst.afw.table import SourceCatalog
 import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import arrow_to_astropy, pq
-from lsst.geom import SpherePoint, degrees, Point2D, Extent2I
+from lsst.geom import SpherePoint, degrees, Extent2I
 from lsst.multiprofit.plotting.reference_data import bands_weights_lsst
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -27,13 +27,17 @@ import numpy as np
 mpl.rcParams.update({"image.origin": "lower", "font.size": 13, "figure.figsize": (18, 18)})
 
 tract = 5063
-patch = 34
+patch = 24
 plot_streaks_1 = False
 if patch == 5:
     # A fairly dense region that ends up as one big blend at 100+ visits per band
     radec = 53.06700454971479, -28.221957930172174
+    plot_streaks_1 = True
+elif patch == 24:
+    # Another region to investigate detection/blending issues
+    radec = 53.18934642786272, -27.918339584161377
 elif patch == 34:
-    plot_streaks_1 = False
+    # A region with some galaxies and maybe deblending issues?
     radec = 53.12277768, -27.73640709
 
 weird_lines = []
@@ -217,16 +221,20 @@ for band_hst, bands_lsst in bands_hst_lsst.items():
         )
         wcs_cdfs = WCS(img_cdfs[0])
 
-        coadd_hst = Cutout2D(
-            img_cdfs[0].data,
-            position=SkyCoord(radec[0]*u.degree, radec[1]*u.degree),
-            size=(
-                int(math.ceil(cutout_asec[0]/scale_hst)),
-                int(math.ceil(cutout_asec[1]/scale_hst)),
-            ),
-            wcs=wcs_cdfs,
-            copy=True,
-        )
+        try:
+            coadd_hst = Cutout2D(
+                img_cdfs[0].data,
+                position=SkyCoord(radec[0]*u.degree, radec[1]*u.degree),
+                size=(
+                    int(math.ceil(cutout_asec[0]/scale_hst)),
+                    int(math.ceil(cutout_asec[1]/scale_hst)),
+                ),
+                wcs=wcs_cdfs,
+                copy=True,
+            )
+        except NoOverlapError as err:
+            continue
+
         for collection, matched in matches.items():
             if "x_hst" not in matched.colnames:
                 n_matched = len(matched)
