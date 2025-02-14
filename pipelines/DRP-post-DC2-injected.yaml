@@ -1,7 +1,6 @@
 description: Match tract-level injected_deepCoadd_catalog datasets to injected_objectTable_tract datasets.
 imports:
   - location: $SOURCE_INJECTION_DIR/pipelines/match_injected_tract_catalog.yaml
-  - location: $ANALYSIS_TOOLS_DIR/pipelines/coaddDiffMatchedInjectedCore.yaml
 tasks:
   consolidate_injected_catalogs:
     class: lsst.source.injection.utils.ConsolidateInjectedCatalogsTask
@@ -30,12 +29,29 @@ tasks:
       ]
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       columns_target_copy: [
+        "objectId",
         "u_cModelFlux", "g_cModelFlux", "r_cModelFlux",
         "i_cModelFlux", "z_cModelFlux", "y_cModelFlux",
+        "u_kronFlux", "g_kronFlux", "r_kronFlux",
+        "i_kronFlux", "z_kronFlux", "y_kronFlux",
+        "u_gaap1p0Flux", "g_gaap1p0Flux", "r_gaap1p0Flux",
+        "i_gaap1p0Flux", "z_gaap1p0Flux", "y_gaap1p0Flux",
+        "u_gaap3p0Flux", "g_gaap3p0Flux", "r_gaap3p0Flux",
+        "i_gaap3p0Flux", "z_gaap3p0Flux", "y_gaap3p0Flux",
         "u_cModelFluxErr", "g_cModelFluxErr", "r_cModelFluxErr",
         "i_cModelFluxErr", "z_cModelFluxErr", "y_cModelFluxErr",
+        "u_kronFluxErr", "g_kronFluxErr", "r_kronFluxErr",
+        "i_kronFluxErr", "z_kronFluxErr", "y_kronFluxErr",
+        "u_gaap1p0FluxErr", "g_gaap1p0FluxErr", "r_gaap1p0FluxErr",
+        "i_gaap1p0FluxErr", "z_gaap1p0FluxErr", "y_gaap1p0FluxErr",
+        "u_gaap3p0FluxErr", "g_gaap3p0FluxErr", "r_gaap3p0FluxErr",
+        "i_gaap3p0FluxErr", "z_gaap3p0FluxErr", "y_gaap3p0FluxErr",
         "u_free_cModelFlux_flag", "g_free_cModelFlux_flag", "r_free_cModelFlux_flag",
         "i_free_cModelFlux_flag", "z_free_cModelFlux_flag", "y_free_cModelFlux_flag",
+        "u_kronFlux_flag", "g_kronFlux_flag", "r_kronFlux_flag",
+        "i_kronFlux_flag", "z_kronFlux_flag", "y_kronFlux_flag",
+        "u_gaapFlux_flag", "g_gaapFlux_flag", "r_gaapFlux_flag",
+        "i_gaapFlux_flag", "z_gaapFlux_flag", "y_gaapFlux_flag",
         "patch", "detect_isDeblendedSource", "detect_isPatchInner", "detect_isPrimary", "merge_peak_sky",
         "refExtendedness", "refSizeExtendedness",
       ]
@@ -45,8 +61,70 @@ tasks:
       connections.inputName: matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract
       connections.outputName: matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract
 
+      atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
+      atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
+      atools.matchedRefAngularSeparationDiffZoom: MatchedRefCoaddDiffDistanceZoomTool
+      atools.matchedRefAngularSeparationChi: MatchedRefCoaddChiDistanceTool
+      atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefCModelColorDiffZoom: MatchedRefCoaddDiffColorZoomTool
+      atools.matchedRefCModelColorChi: MatchedRefCoaddChiColorTool
+      atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagDiffZoom: MatchedRefCoaddDiffMagZoomTool
+      atools.matchedRefCModelMagChi: MatchedRefCoaddChiMagTool
+      atools.matchedRefKronColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefKronColorDiff.mag_y1: kron_err
+      atools.matchedRefKronColorDiff.mag_y2: kron_err
+      atools.matchedRefKronColorDiffZoom: MatchedRefCoaddDiffColorZoomTool
+      atools.matchedRefKronColorDiffZoom.mag_y1: kron_err
+      atools.matchedRefKronColorDiffZoom.mag_y2: kron_err
+      atools.matchedRefKronColorChi: MatchedRefCoaddChiColorTool
+      atools.matchedRefKronColorChi.mag_y1: kron_err
+      atools.matchedRefKronColorChi.mag_y2: kron_err
+      atools.matchedRefKronMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefKronMagDiff.mag_y: kron_err
+      atools.matchedRefKronMagDiffZoom: MatchedRefCoaddDiffMagZoomTool
+      atools.matchedRefKronMagDiffZoom.mag_y: kron_err
+      atools.matchedRefKronMagChi: MatchedRefCoaddChiMagTool
+      atools.matchedRefKronMagChi.mag_y: kron_err
+      atools.matchedRefGaap1p0ColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefGaap1p0ColorDiff.mag_y1: gaap1p0_err
+      atools.matchedRefGaap1p0ColorDiff.mag_y2: gaap1p0_err
+      atools.matchedRefGaap1p0ColorDiffZoom: MatchedRefCoaddDiffColorZoomTool
+      atools.matchedRefGaap1p0ColorDiffZoom.mag_y1: gaap1p0_err
+      atools.matchedRefGaap1p0ColorDiffZoom.mag_y2: gaap1p0_err
+      atools.matchedRefGaap1p0ColorChi: MatchedRefCoaddChiColorTool
+      atools.matchedRefGaap1p0ColorChi.mag_y1: gaap1p0_err
+      atools.matchedRefGaap1p0ColorChi.mag_y2: gaap1p0_err
+      atools.matchedRefGaap1p0MagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefGaap1p0MagDiff.mag_y: gaap1p0_err
+      atools.matchedRefGaap1p0MagDiffZoom: MatchedRefCoaddDiffMagZoomTool
+      atools.matchedRefGaap1p0MagDiffZoom.mag_y: gaap1p0_err
+      atools.matchedRefGaap1p0MagChi: MatchedRefCoaddChiMagTool
+      atools.matchedRefGaap1p0MagChi.mag_y: gaap1p0_err
+      atools.matchedRefGaap3p0ColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefGaap3p0ColorDiff.mag_y1: gaap3p0_err
+      atools.matchedRefGaap3p0ColorDiff.mag_y2: gaap3p0_err
+      atools.matchedRefGaap3p0ColorDiffZoom: MatchedRefCoaddDiffColorZoomTool
+      atools.matchedRefGaap3p0ColorDiffZoom.mag_y1: gaap3p0_err
+      atools.matchedRefGaap3p0ColorDiffZoom.mag_y2: gaap3p0_err
+      atools.matchedRefGaap3p0ColorChi: MatchedRefCoaddChiColorTool
+      atools.matchedRefGaap3p0ColorChi.mag_y1: gaap3p0_err
+      atools.matchedRefGaap3p0ColorChi.mag_y2: gaap3p0_err
+      atools.matchedRefGaap3p0MagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefGaap3p0MagDiff.mag_y: gaap3p0_err
+      atools.matchedRefGaap3p0MagDiffZoom: MatchedRefCoaddDiffMagZoomTool
+      atools.matchedRefGaap3p0MagDiffZoom.mag_y: gaap3p0_err
+      atools.matchedRefGaap3p0MagChi: MatchedRefCoaddChiMagTool
+      atools.matchedRefGaap3p0MagChi.mag_y: gaap3p0_err
+      atools.matchedRefPositionRaDiff: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaDiffZoom: MatchedRefCoaddDiffCoordRaZoomTool
+      atools.matchedRefPositionRaChi: MatchedRefCoaddChiCoordRaTool
+      atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecDiffZoom: MatchedRefCoaddDiffCoordDecZoomTool
+      atools.matchedRefPositionDecChi: MatchedRefCoaddChiCoordDecTool
+
       python: |
-        from lsst.analysis.tools.atools.diffMatched import reconfigure_diff_matched_defaults
+        from lsst.analysis.tools.atools.diffMatched import *
         from lsst.analysis.tools.actions.vector.selectors import InjectedGalaxySelector, InjectedStarSelector
         
         InjectedGalaxySelector.key_class.default = "ref_r_comp1_source_type"
