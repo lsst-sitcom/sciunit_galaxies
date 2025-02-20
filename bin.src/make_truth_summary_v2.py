@@ -5,6 +5,7 @@ import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import arrow_to_astropy, astropy_to_arrow, pa, pq
 from lsst.geom import SpherePoint, degrees
 import GCRCatalogs
+# This should be used but doesn't seem to work
 # from GCRCatalogs.helpers.tract_catalogs import tract_filter
 import numpy as np
 
@@ -21,7 +22,7 @@ butler = dafButler.Butler("/repo/dc2")
 name_skymap = "DC2_cells_v1"
 skymap = butler.get("skyMap", skymap=name_skymap, collections="skymaps")
 
-GCRCatalogs.set_root_dir('/sdf/data/rubin/user/combet')
+GCRCatalogs.set_root_dir('/sdf/data/rubin/shared')
 print(f"root dir={GCRCatalogs.get_root_dir()}")
 
 truth = GCRCatalogs.load_catalog('desc_dc2_run2.2i_dr6_truth')
@@ -62,8 +63,10 @@ other_keys = {
     'dec_true': 'dec_unlensed',
     'redshiftHubble': 'redshift_Hubble',
 }
+# Although there is a morphology/positionAngle column, it was not used in DC2
+# Instead, randomly-generated angles were used
 key_list = (
-    {"morphology/positionAngle": "positionAngle"},
+    {"position_angle_true_dc2": "positionAngle"},
     diskmorph_keys, spheroidmorph_keys,
     disklum_keys, spheroidlum_keys,
     mag_keys, other_keys
@@ -100,7 +103,7 @@ for band in bands:
     }
 truth_columninfo["id_string"] = {"description": "Original string id", "unit": None}
 cosmodc2_columninfo = {
-    "morphology/positionAngle": {
+    "position_angle_true_dc2": {
         "description": "Position angle relative to north (+Dec) towards east (+RA)",
         "unit": "deg",
     },
@@ -140,7 +143,7 @@ for tract in tracts:
     print(f"==== Reading default truth catalog for tract={tract} ====")
     # These already have new integer ID columns
     truth = arrow_to_astropy(pq.read_table(
-        f"/sdf/group/rubin/ncsa-project/project/shared/DC2/truth_summary_v2/truth_tract{tract}.parquet")
+        f"/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_integer_ids/truth_tract{tract}.parquet")
     )
     filt = truth["is_unique_truth_entry"]
     truth = truth[filt]
@@ -176,9 +179,9 @@ for tract in tracts:
     # Re-order columns
     cosmodc2 = cosmodc2[columns_load]
     for column in columns_load:
-        units = cosmodc2_cat.get_quantity_info(column)['units']
-        if units:
-            cosmodc2[column].units = units
+        if (quantinfo := cosmodc2_cat.get_quantity_info(column)) is not None:
+            if units := quantinfo.get('units'):
+                cosmodc2[column].units = units
     # Apply column info overrides
     for column_name, info in cosmodc2_columninfo.items():
         if (column := cosmodc2.columns.get(column_name)) is not None:
@@ -215,7 +218,7 @@ for tract in tracts:
 
     print("==== Populating patch column ====")
     tractinfo = skymap[tract]
-    radecs = [SpherePoint(ra, dec, degrees) for ra, dec in zip(truth["ra"], truth["dec"])]
+    radecs = [SpherePoint(ra, dec, degrees) for ra, dec in zip(merged_table["ra"], merged_table["dec"])]
     patches = [tractinfo.findPatch(radec).sequential_index for radec in radecs]
     merged_table["patch"] = patches
     merged_table["patch"].description = f"The patch number in {skymap=}"
@@ -223,9 +226,9 @@ for tract in tracts:
     filename_out = f"truth_summary_v2_{tract}_{name_skymap}_2_2i_truth_summary.parq"
     pq.write_table(astropy_to_arrow(merged_table), filename_out)
 
-    print("==== Done ====")
+    print(f"==== Wrote {filename_out} ====")
 
-    print("==== Read in new merged table file and check for units and descriptions ====")
+    print("==== Reading in new merged table file and check for units and descriptions ====")
 
     pa_table = pa.parquet.read_table(filename_out)
     ap_table = arrow_to_astropy(pa_table)
