@@ -1,3 +1,6 @@
+# Validate a DC2-based injection run
+# Should be in ComCam; HSC may not work as well
+
 import astropy.units as u
 from astropy.visualization import make_lupton_rgb
 import lsst.daf.butler as dafButler
@@ -16,6 +19,7 @@ cutout_asec = 60
 tract_in = 3828
 repo_dc2 = "/repo/dc2"
 skymap_dc2 = "DC2_cells_v1"
+bands = ("i", "r", "g")
 
 if is_rc2:
     tract = 9813
@@ -52,26 +56,59 @@ if plot_validation:
         ids_ref=[],
     )
 
-objects = butler.get("objectTable_tract", skymap=skymap, tract=tract, storageClass="ArrowAstropy")
-objects_patch = objects[objects["patch"] == patch]
-
-objects_injected = butler.get("injected_objectTable_tract", skymap=skymap, tract=tract, storageClass="ArrowAstropy")
-objects_injected_patch = objects_injected[objects_injected["patch"] == patch]
-
-injected = butler.get("injected_deepCoadd_catalog_tract", skymap=skymap, tract=tract)
-injected_patch = injected[injected["patch"] == patch]
-
-matched = butler.get(
-    "matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract", skymap=skymap, tract=tract,
-    storageClass="ArrowAstropy"
+coadd_data = butler.get("deepCoadd_calexp", skymap=skymap, tract=tract, patch=patch, band=band)
+# HSC skymaps aren't compatible with cells (and probably won't be made so)
+coadd_dc2 = None if is_rc2 else butler_dc2.get(
+    "deepCoadd_calexp", skymap=skymap_dc2, tract=tract_in, patch=patch, band=band,
 )
-
-coadd = butler.get("deepCoadd_calexp", skymap=skymap, tract=tract, patch=patch, band=band)
 coadd_injected = butler.get("injected_deepCoadd_calexp", skymap=skymap, tract=tract, patch=patch, band=band)
 
-print("MASK [original, injected] (pixels)")
-for mask in coadd.mask.getMaskPlaneDict():
-    print(mask, [np.sum((c.mask.array & c.mask.getPlaneBitMask(mask)) > 0) for c in (coadd, coadd_injected)])
+columns = ("coord_ra", "coord_dec", "detect_isPrimary", "patch")
+
+coadds = {}
+objects = {}
+for subtype, butler_sub, skymap_sub, tract_sub, patch_sub, prefix in (
+    ("Injected", butler, skymap, tract, patch, "injected_"),
+    ("DC2", butler_dc2, skymap_dc2, tract_in, patch, ""),
+    ("Data", butler, skymap, tract, None if is_rc2 else patch, ""),
+):
+    objects_sub = butler_sub.get(
+        f"{prefix}objectTable_tract",
+        skymap=skymap_sub, tract=tract_sub, storageClass="ArrowAstropy",
+        parameters={"columns": columns},
+    )
+    objects[subtype] = objects_sub[objects_sub["patch"] == patch]
+    coadds[subtype] = butler.get(
+        f"{prefix}deepCoadd_calexp",
+        skymap=skymap, tract=tract, patch=patch, band=band,
+    )
+
+columns_injected = tuple(
+    name.format(band=band) for name in ("{band}_mag", "{band}_comp1_injection_flag") for band in bands
+) + ("patch", "ra", "dec")
+
+injected = butler.get(
+    "injected_deepCoadd_catalog_tract",
+    skymap=skymap, tract=tract, storageClass="ArrowAstropy",
+    parameters={"columns": columns_injected},
+)
+injected = injected[injected["patch"] == patch]
+injected.rename_columns(("ra", "dec"), ("coord_ra", "coord_dec"))
+
+columns_matched = tuple(
+    name.format(band=band)
+    for name in (
+        "ref_{band}_flux", "{band}_cModelFlux", "{band}_kronFlux", "{band}_gaap1p0Flux", "{band}_gaap3p0Flux",
+    )
+    for band in bands
+) + (
+    "coord_ra", "coord_dec", "detect_isPrimary", "objectId", "patch", "ref_injected_id", "ref_ra", "ref_dec"
+)
+
+matched = butler.get(
+    "matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract",
+    skymap=skymap, tract=tract, storageClass="ArrowAstropy", parameters={"columns": columns_matched},
+)
 
 tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 no_patch = matched["patch"].mask | ~(matched["patch"] >= 0).data
@@ -84,91 +121,97 @@ for idx, row in enumerate(matched[no_patch]):
 matched["patch"][no_patch] = new_patches
 matched_patch = matched[matched["patch"] == patch]
 
-# TODO: This should already be the case but isn't - fix it
-matched_patch[f"ref_{band}_flux"].unit = u.nJy
+flux_matched = []
+flux_injected = []
 
-ref_mag = matched_patch[f"ref_{band}_flux"].to(u.ABmag).value
-matched_bright = ref_mag < 24
+for band in bands:
+    # TODO: This should already be the case but isn't - fix it
+    matched_patch[f"ref_{band}_flux"].unit = u.nJy
+    flux_matched.append(matched_patch[f"ref_{band}_flux"])
+    flux_injected.append(injected["r_mag"].to(u.nJy).value)
+
+mag_matched = np.nansum(flux_matched, axis=0)
+mag_ref = np.nansum(flux_injected, axis=0)
+
+matched_bright = mag_ref < 23
 matched_good = np.array(matched_patch["detect_isPrimary"] == True)
 
-bright = injected_patch[f"{band}_mag"] < 24
-flags = injected_patch[f"{band}_comp1_injection_flag"]
+bright = injected[f"{band}_mag"] < 24
+flags = injected[f"{band}_comp1_injection_flag"]
 
 unique, counts = np.unique(flags, return_counts=True)
 n_flags = len(unique)
 
 colors = colormaps["plasma"].colors
 
-def get_xys_from_radec(ra, dec):
+def get_xys_from_radec(ra, dec, coadd):
     xys = np.array([
-        [y for y in x] for x in coadd_injected.wcs.skyToPixel([
+        [y for y in x] for x in coadd.wcs.skyToPixel([
             SpherePoint(ra, dec, degrees)
             for ra, dec in zip(ra, dec)
         ])
     ])
     return xys
 
-corners_xy = np.array(coadd_injected.getBBox().getCorners())
-corners_radec = np.array([
-    [y.asDegrees() for y in coadd_injected.wcs.pixelToSky(Point2D(x))]
-    for x in coadd_injected.getBBox().getCorners()
-])
-extent = [
-    np.mean(corners_xy[0:3:4, 0]), np.mean(corners_xy[1:3, 0]),
-    np.mean(corners_xy[0:2, 1]), np.mean(corners_xy[2:4, 1]),
-]
 
-fig, ax = plt.subplots()
-img_inj = coadd_injected.image.array
-imgs_rgb = [
-    ((coadd.mask.array & coadd.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img_inj,
-    img_inj,
-    ((coadd_injected.mask.array & coadd_injected.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img_inj,
-]
-ax.imshow(make_lupton_rgb(*imgs_rgb, Q=8, stretch=0.2), extent=extent)
+kwargs_primary = dict(edgecolor='cornflowerblue', marker='o', s=50, facecolor="None")
+kwargs_primary_injected = dict(facecolor='orange', marker='+', s=50)
+kwargs_primary_data = dict(edgecolor='limegreen', marker='o', s=50, facecolor="None")
 
-xys = get_xys_from_radec(
-    objects_injected_patch["coord_ra"][objects_injected_patch["detect_isPrimary"]],
-    objects_injected_patch["coord_dec"][objects_injected_patch["detect_isPrimary"]],
-)
-ax.scatter(xys[:, 0], xys[:, 1], edgecolor='darkviolet', marker='o', label="detect_isPrimary", s=50, facecolor="None")
+xlim = (9000, 9500)
+ylim = (9000, 9500)
 
-for idx, flag in enumerate(unique):
-    color = colors[round((idx/(n_flags - 1 + (n_flags == 1)))*205 + 25)]
-    to_plot = bright & (flags == flag)
-    xys = get_xys_from_radec(injected_patch["ra"][to_plot], injected_patch["dec"][to_plot])
-    ax.scatter(xys[:, 0], xys[:, 1], color=color, label=f"{flag=}", s=50)
+detected_injected = coadd_injected.mask.getPlaneBitMask("DETECTED")
+is_detected_injected = ((coadd_injected.mask.array & detected_injected) > 0).astype(int)
 
-xys = get_xys_from_radec(
-    matched_patch["ref_ra"][matched_bright & matched_good],
-    matched_patch["ref_dec"][matched_bright & matched_good],
-)
-ax.scatter(xys[:, 0], xys[:, 1], c='b', marker='+', label="good match", s=120)
-xys = get_xys_from_radec(
-    matched_patch["ref_ra"][matched_bright & ~matched_good],
-    matched_patch["ref_dec"][matched_bright & ~matched_good],
-)
-ax.scatter(xys[:, 0], xys[:, 1], c='r', marker='x', label="no match", s=120)
-ax.legend()
-ax.set_title("RGB Red=coadd*detected, Green=injected, Blue=injected*detected")
-fig.tight_layout()
+for subtype, coadd in (("Injected", coadd_injected), ("DC2", coadd_dc2), ("Data", coadd_data)):
+    if coadd is not None:
+        is_injected = subtype == "Injected"
+        objects_sub = objects[subtype]
+        print(f"{subtype} mask statistics:")
+        for mask in coadd.mask.getMaskPlaneDict():
+            print(mask, [np.sum((c.mask.array & c.mask.getPlaneBitMask(mask)) > 0) for c in
+                         (coadd_dc2, coadd_injected)])
 
-fig, ax = plt.subplots()
-img = coadd.image.array
-imgs_rgb = [
-    ((coadd.mask.array & coadd.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img,
-    img,
-    ((coadd_injected.mask.array & coadd_injected.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img,
-]
-ax.imshow(make_lupton_rgb(*imgs_rgb, Q=8, stretch=0.2), extent=extent)
+        fig, ax = plt.subplots()
 
-xys = get_xys_from_radec(
-    objects_patch["coord_ra"][objects_patch["detect_isPrimary"]],
-    objects_patch["coord_dec"][objects_patch["detect_isPrimary"]],
-)
-ax.scatter(xys[:, 0], xys[:, 1], edgecolor='darkviolet', marker='o', label="detect_isPrimary", s=50, facecolor="None")
-ax.legend()
-ax.set_title("RGB Red=coadd*detected, Green=coadd, Blue=injected*detected")
-fig.tight_layout()
+        corners_xy = np.array(coadd.getBBox().getCorners())
+        corners_radec = np.array([
+            [y.asDegrees() for y in coadd.wcs.pixelToSky(Point2D(x))]
+            for x in coadd.getBBox().getCorners()
+        ])
+        extent = [
+            np.mean(corners_xy[0:3:4, 0]), np.mean(corners_xy[1:3, 0]),
+            np.mean(corners_xy[0:2, 1]), np.mean(corners_xy[2:4, 1]),
+        ]
+
+        img = coadd.image.array
+        imgs_rgb = [
+            ((coadd.mask.array & coadd.mask.getPlaneBitMask("DETECTED")) > 0).astype(int)*img,
+            img,
+            is_detected_injected*img,
+        ]
+        ax.imshow(make_lupton_rgb(*imgs_rgb, Q=8, stretch=0.2), extent=extent)
+
+        to_plot = {
+            "detect_isPrimary": (objects_sub, kwargs_primary),
+        }
+        if is_injected:
+            to_plot["injected"] = (injected, kwargs_primary_injected)
+            to_plot["data"] = (objects["Data"], kwargs_primary_data)
+
+        for label, (objects_plot, kwargs_plot) in to_plot.items():
+            xys = get_xys_from_radec(
+                objects_plot["coord_ra"][objects_plot["detect_isPrimary"]],
+                objects_plot["coord_dec"][objects_plot["detect_isPrimary"]],
+
+            )
+            ax.scatter(xys[:, 0], xys[:, 1], label=label, **kwargs_plot)
+
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
+        ax.legend()
+        ax.set_title(f"{subtype} RGB Red=coadd*detected, Green=coadd, Blue=injected*detected")
+        fig.tight_layout()
 
 plt.show()
