@@ -125,17 +125,6 @@ if get_hst:
         **kwargs_lup_hst,
     )
 
-    fig_hst, ax_hst = plt.subplots(figsize=(2*figsize_ax, 2*figsize_ax), nrows=1 + use_ppm)
-    (ax_hst[0] if use_ppm else ax_hst).imshow(img_lup_hst, extent=extent_hst)
-
-    if use_ppm:
-        img_ppm = lsstRGB(
-            *(cutout.data for band, cutout in cutouts_hst.items()),
-            **kwargs_ppm_hst,
-        )
-        (ax_hst[1] if use_ppm else ax_hst).imshow(img_lup_hst, extent=extent_hst)
-    fig_hst.tight_layout()
-
 butler = dafButler.Butler("/repo/main")
 collections = [
     "u/dtaranu/DM-48367/w_2025_09/match_three",
@@ -153,6 +142,32 @@ matched = butler.get(
     "matched_matched_cdfs_hlf_v2p1_des_y6gold_objectTable_tract",
     skymap=name_skymap, tract=tract, storageClass="ArrowAstropy", collections=collections[0],
 )
+
+if get_hst:
+    extent = extent_hst
+    matched_in = matched[
+        (matched["coord_best_ra"] > extent[1]) & (matched["coord_best_ra"] < extent[0])
+        & (matched["coord_best_dec"] > extent[2]) & (matched["coord_best_dec"] < extent[3])
+    ]
+
+    fig_hst, ax_hst = plt.subplots(figsize=(2*figsize_ax, 2*figsize_ax), nrows=1 + use_ppm)
+    ax_plot = (ax_hst[0] if use_ppm else ax_hst)
+    ax_plot.imshow(img_lup_hst, extent=extent_hst)
+
+    good_hst = matched_in["matched_refcat_id"] >= 0
+    ax_plot.scatter(matched_in["matched_refcat_ra_gaia"][good_hst],
+                    matched_in["matched_refcat_dec_gaia"][good_hst],
+                    s=30, edgecolor="cornflowerblue", marker="o", facecolor="none")
+    ax_plot.scatter(matched_in["matched_refcat_ra_gaia"][good_hst],
+                    matched_in["matched_refcat_dec_gaia"][good_hst],
+                    s=60, edgecolor="orange", marker="o", facecolor="none")
+    if use_ppm:
+        img_ppm = lsstRGB(
+            *(cutout.data for band, cutout in cutouts_hst.items()),
+            **kwargs_ppm_hst,
+        )
+        (ax_hst[1] if use_ppm else ax_hst).imshow(img_lup_hst, extent=extent_hst)
+    fig_hst.tight_layout()
 
 coadds = {}
 reference_coadds = {}
@@ -230,6 +245,22 @@ for idx, (collection, cutouts_bands) in enumerate(cutouts.items()):
         axis = (axes[idx, 0] if get_hst else axes[idx]) if (n_collections > 1) else axes[0]
         axis.imshow(img, extent=extent)
         axis.set_title(title)
+
+        matched_in = matched[
+            (matched["coord_best_ra"] > extent[1]) & (matched["coord_best_ra"] < extent[0])
+            & (matched["coord_best_dec"] > extent[2]) & (matched["coord_best_dec"] < extent[3])
+        ]
+        good_comcam = matched_in["objectId"] >= 0
+        axis.scatter(matched_in["matched_refcat_ra_gaia"][good_comcam],
+                     matched_in["matched_refcat_dec_gaia"][good_comcam],
+                     s=60, edgecolor="green", marker="s", facecolor="none")
+        if get_hst:
+            axis.scatter(matched_in["matched_refcat_ra_gaia"][good_hst],
+                         matched_in["matched_refcat_dec_gaia"][good_hst],
+                         s=30, edgecolor="cornflowerblue", marker="o", facecolor="none")
+            axis.scatter(matched_in["matched_refcat_ra_gaia"][good_hst],
+                         matched_in["matched_refcat_dec_gaia"][good_hst],
+                         s=60, edgecolor="orange", marker="o", facecolor="none")
 
     if get_hst:
         for fig, axes, img in fig_ax_imgs:
