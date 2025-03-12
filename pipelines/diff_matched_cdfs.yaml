@@ -38,6 +38,7 @@ tasks:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: decals_dr10
+      connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_decals_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_decals_coord_dec
 
@@ -64,6 +65,7 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: decals_dr10
+      connections.name_input_cat_target: object
       coord_format.column_ref_coord1: parameters.cdfs_decals_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_decals_coord_dec
       include_unmatched: true
@@ -82,13 +84,14 @@ tasks:
               fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_ref_copy = ["objid", "maskbits", "type"]
-        config.columns_target_copy = columns_obj_copy + fluxes_meas_other + [
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else []):
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
   matchObjectToCdfsDesY3Gold:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: des_y3gold
+      connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_des_y3gold_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_des_y3gold_coord_dec
 
@@ -115,6 +118,7 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: des_y3gold
+      connections.name_input_cat_target: object
       coord_format.column_ref_coord1: parameters.cdfs_des_y3gold_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_des_y3gold_coord_dec
       include_unmatched: true
@@ -134,13 +138,14 @@ tasks:
               fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_ref_copy = ["coadd_object_id", "extended_class_mash_sof"]
-        config.columns_target_copy = columns_obj_copy + fluxes_meas_other + [
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else []):
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
   matchObjectToCdfsDesY6Gold:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: des_y6gold
+      connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_des_y6gold_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_des_y6gold_coord_dec
 
@@ -167,6 +172,7 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: des_y6gold
+      connections.name_input_cat_target: object
       coord_format.column_ref_coord1: parameters.cdfs_des_y6gold_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_des_y6gold_coord_dec
       include_unmatched: true
@@ -185,13 +191,14 @@ tasks:
               fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_ref_copy = parameters.columns_des_y6gold_copy
-        config.columns_target_copy = columns_obj_copy + fluxes_meas_other + [
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else []):
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
   matchObjectToCdfsAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_hlf_v2p1
+      connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
       refcat_sharding_type: "none"
@@ -219,9 +226,11 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: cdfs_hlf_v2p1
+      connections.name_input_cat_target: object
       coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
       refcat_sharding_type: "none"
+      include_unmatched: true
 
       python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
@@ -236,9 +245,9 @@ tasks:
             for model in parameters.models_other:
               fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
-        config.columns_target_copy = columns_obj_copy + fluxes_meas_other + [
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else []):
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         config.columns_ref_copy = parameters.columns_hlf_copy
   matchCdfsDesY6GoldToCdfsAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
@@ -306,6 +315,7 @@ tasks:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_des_y6gold
+      connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: coord_best_ra
       match_tract_catalog.coord_format.column_ref_coord2: coord_best_dec
 
@@ -334,6 +344,7 @@ tasks:
     config:
       columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
       connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_des_y6gold
+      connections.name_input_cat_target: object
       coord_format.column_ref_coord1: coord_best_ra
       coord_format.column_ref_coord2: coord_best_dec
       include_unmatched: true
