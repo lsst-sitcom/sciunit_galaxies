@@ -21,8 +21,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z"]
-      connections.inputName: matched_decals_dr10_objectTable_tract
-      connections.outputName: diff_matched_decals_dr10_objectTable_tract
+      connections.inputName: matched_decals_dr10_object
+      connections.outputName: diff_matched_decals_dr10_object
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
@@ -153,8 +153,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z"]
-      connections.inputName: matched_des_y3gold_objectTable_tract
-      connections.outputName: diff_matched_des_y3gold_objectTable_tract
+      connections.inputName: matched_des_y3gold_object
+      connections.outputName: diff_matched_des_y3gold_object
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
@@ -269,7 +269,7 @@ tasks:
           selector_obj = RangeSelector(vectorKey="refcat_extended_class_mash_sof", minimum=0)
           selector_star = RangeSelector(
             plotLabelKey="Stars: SOF extendedness_class < 1.5", vectorKey="refcat_extended_class_mash_sof",
-            minimum=0, maximum=1.5,
+            minimum=0, maximum=1.5, 
           )
 
         ref_matched = FluxConfig(
@@ -288,8 +288,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z", "y"]
-      connections.inputName: matched_des_y6gold_objectTable_tract
-      connections.outputName: diff_matched_des_y6gold_objectTable_tract
+      connections.inputName: matched_des_y6gold_object
+      connections.outputName: diff_matched_des_y6gold_object
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
@@ -423,8 +423,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["i"]
-      connections.inputName: matched_cdfs_hlf_v2p1_objectTable_tract
-      connections.outputName: diff_matched_cdfs_hlf_v2p1_objectTable_tract
+      connections.inputName: matched_cdfs_hlf_v2p1_object
+      connections.outputName: diff_matched_cdfs_hlf_v2p1_object
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy

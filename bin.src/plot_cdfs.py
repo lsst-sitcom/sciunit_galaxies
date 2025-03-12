@@ -1,3 +1,5 @@
+import os.path
+
 from astropy.visualization import make_lupton_rgb
 from copy import deepcopy
 import lsst.afw.image
@@ -18,7 +20,7 @@ use_ppm = True
 if get_hst:
     from astropy.coordinates import SkyCoord
     from astropy.io import fits
-    from astropy.nddata import Cutout2D
+    from astropy.nddata import Cutout2D, NoOverlapError
     from astropy.wcs import WCS
     import astropy.units as u
     import galsim as gs
@@ -167,42 +169,51 @@ if get_hst:
     if use_ppm:
         kwargs_ppm_hst = deepcopy(kwargs_ppm)
         kwargs_ppm_hst["scaleLumKWargs"]["stretch"] = 80
-
+        kwargs_ppm_hst["cieWhitePoint"] = (0.31, 0.31)
 
     path_cdfs_hst = f"/sdf/data/rubin/shared/hst/ecdfs/{name_skymap}"
     scale_hst = 0.03
     for band in bands_hst:
         if (fits_cdfs := full_hst.get(band)) is None:
-            fits_cdfs = fits.open(
-                f"{path_cdfs_hst}/{tract}/{patch}/hlf_hst_coadd_{tract}_{patch}_{band}_{name_skymap}.fits.gz"
-            )
-            if keep_hst_full:
-                full_hst[band] = fits_cdfs
-        hdu_cdfs = fits_cdfs[1]
-        wcs_cdfs = WCS(hdu_cdfs)
-        cutout = Cutout2D(
-            hdu_cdfs.data,
-            position=SkyCoord(ra_gal, dec_gal, unit=u.degree),
-            # Should read pixel scale from CD1_1, etc. oh well
-            size=(cutout_size[0]*scale_lsst/scale_hst, cutout_size[1]*scale_lsst/scale_hst),
-            wcs=wcs_cdfs,
-            copy=True,
+            filename = (f"{path_cdfs_hst}/{tract}/{patch}/"
+                        f"hlf_hst_coadd_{tract}_{patch}_{band}_{name_skymap}.fits.gz")
+            if os.path.isfile(filename):
+                fits_cdfs = fits.open(filename)
+                if keep_hst_full:
+                    full_hst[band] = fits_cdfs
+                hdu_cdfs = fits_cdfs[1]
+                wcs_cdfs = WCS(hdu_cdfs)
+                try:
+                    cutout = Cutout2D(
+                        hdu_cdfs.data,
+                        position=SkyCoord(ra_gal, dec_gal, unit=u.degree),
+                        # Should read pixel scale from CD1_1, etc. oh well
+                        size=(cutout_size[0]*scale_lsst/scale_hst, cutout_size[1]*scale_lsst/scale_hst),
+                        wcs=wcs_cdfs,
+                        copy=True,
+                    )
+                    cutouts_hst[band] = cutout
+                except NoOverlapError as err:
+                    continue
+
+    if len(cutouts_hst) < 3:
+        # We could try a little harder here, but never mind
+        get_hst = False
+        plot_hst = False
+    else:
+        cutout = next(iter(cutouts_hst.values()))
+        radec_hst_begin = cutout.wcs.pixel_to_world(0, 0)
+        radec_hst_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
+        (ra_begin, dec_begin), (ra_end, dec_end) = (
+            (radec.ra.value, radec.dec.value) for radec in (radec_hst_begin, radec_hst_end)
         )
-        cutouts_hst[band] = cutout
-
-    radec_hst_begin = cutout.wcs.pixel_to_world(0, 0)
-    radec_hst_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
-    (ra_begin, dec_begin), (ra_end, dec_end) = (
-        (radec.ra.value, radec.dec.value) for radec in (radec_hst_begin, radec_hst_end)
-    )
-    extent_hst = (
-        radec_hst_begin.ra.value, radec_hst_end.ra.value, radec_hst_begin.dec.value, radec_hst_end.dec.value,
-    )
-
-    img_lup_hst = make_lupton_rgb(
-        *(cutout.data*bands_weights_hst[band] for band, cutout in cutouts_hst.items()),
-        **kwargs_lup_hst,
-    )
+        extent_hst = (
+            radec_hst_begin.ra.value, radec_hst_end.ra.value, radec_hst_begin.dec.value, radec_hst_end.dec.value,
+        )
+        img_lup_hst = make_lupton_rgb(
+            *(cutout.data*bands_weights_hst[band] for band, cutout in cutouts_hst.items()),
+            **kwargs_lup_hst,
+        )
 
 # Splitting off the plotting part for easy copypasting
 if get_hst:
