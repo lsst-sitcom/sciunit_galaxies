@@ -2,16 +2,16 @@ description: Import external catalogs
 version: 1.0.0
 data:
 - type: dataset_type
-  name: decals_dr10
+  name: des_y6gold
   dimensions: [skymap, tract]
   storage_class: ArrowAstropy
   is_calibration: false
 - type: dataset
-  dataset_type: decals_dr10
-  run: u/dtaranu/DM-48367/cdfs_decals
+  dataset_type: des_y6gold
+  run: u/dtaranu/DM-48367/cdfs_des_y6gold
   records:
   - dataset_id:
-    - !uuid 'fe90bb3c-3a78-425f-9975-68d190f75475'
+    - !uuid '6feb1f24-781e-4f6b-8983-59c66cbd77a6'
     data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
-    path: decals_dr10_lsst_cells_v1_5063.parq
+    path: des_y6gold_lsst_cells_v1_5063.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
