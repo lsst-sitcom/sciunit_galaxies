@@ -8,10 +8,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-get_hst = True
+get_hst = False
 # This will use a lot of memory
-keep_hst_full = True
-plot_hst = True
+keep_hst_full = False
+plot_hst = False
 use_ppm = False
 
 if get_hst:
