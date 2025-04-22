@@ -8,7 +8,7 @@ data:
   is_calibration: false
 - type: dataset
   dataset_type: des_y3gold
-  run: u/dtaranu/DM-47234/cdfs_decals
+  run: u/dtaranu/DM-48367/cdfs_des_y3gold
   records:
   - dataset_id:
     - !uuid '95c96e57-0d58-49c5-9865-bb830b9dde57'
