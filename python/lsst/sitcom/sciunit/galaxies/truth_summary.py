@@ -22,6 +22,7 @@ def convert_truth_summary_v2_to_injection(
     mag_total_max_component: float = 29.,
     truth_summary_path: str = "/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_cell",
     plot: bool = False,
+    n_skip: float = 0.,
 ) -> dict[str, astropy.table.Table]:
     """ Convert a truth_summary_v2 to an injection catalog.
 
@@ -53,6 +54,9 @@ def convert_truth_summary_v2_to_injection(
         The path to parquet summary files (if not butler ingested).
     plot
         Whether to make a plot of the object overlap in the tract.
+    n_skip
+        The number of objects to skip per object output, i.e. if n_skip
+        is 1, only every 2nd object will be kept.
 
     Returns
     -------
@@ -68,6 +72,8 @@ def convert_truth_summary_v2_to_injection(
         butler_in = dafButler.Butler("/repo/dc2")
     if butler_out is None:
         butler_out = dafButler.Butler("/repo/main", collections=["HSC/runs/RC2/w_2024_38/DM-46429"])
+    if (not n_skip >= 0) and (np.isfinite(n_skip)):
+        raise ValueError(f"{n_skip=} must be >=0 and finite")
 
     skymap_in, skymap_out = (
         butler.get("skyMap", skymap=skymap_name, collections="skymaps")
@@ -109,6 +115,10 @@ def convert_truth_summary_v2_to_injection(
                       mag_total_min_galaxy*truth_galaxy[truth_good]))
         & (mag_total < mag_total_max)
     ]
+
+    if n_skip > 0:
+        selection = np.round(np.arange(0, len(truth_out), 1.0 + n_skip)).astype(int)
+        truth_out = truth_out[selection]
 
     ra_in, dec_in = (truth_out[col] for col in ("ra", "dec"))
     dec_out = dec_in + cen_dec_out - cen_dec_in
@@ -224,7 +234,7 @@ def convert_truth_summary_v2_to_injection(
         filename = f"{prefix}{skymap_name_out}_{tract_out}_from_{skymap_name_in}_{band}_{tract_in}.parq"
         tables_out[filename] = table_out
 
-    if mag_total_max_component < np.Inf:
+    if mag_total_max_component < np.inf:
         mag_total = u.nJy.to(
             u.ABmag,
             np.sum([mags_band.unit.to(u.nJy, mags_band.value) for mags_band in mags.values()], axis=0)
