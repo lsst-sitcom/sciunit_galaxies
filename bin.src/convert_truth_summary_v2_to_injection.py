@@ -11,6 +11,7 @@ plot = False
 mag_total_min_star = 17.5
 mag_total_min_galaxy = 15
 mag_total_max = 26.5
+n_skip = 1
 
 tract_in = 3828
 
@@ -22,8 +23,8 @@ if is_hsc:
 else:
     bands = ("u", "g", "r", "i", "z", "y")
     butler_out = dafButler.Butler(
-        "/repo/embargo",
-        collections=["LSSTComCam/runs/DRP/20241101_20241127/w_2024_48/DM-47841"],
+        "/repo/main",
+        collections=["LSSTComCam/runs/DRP/DP1/v29_0_0_rc6/DM-50098"],
     )
     skymap_name_out = "lsst_cells_v1"
     tract_out = 5063
@@ -43,6 +44,7 @@ catalogs, mags = convert_truth_summary_v2_to_injection(
     mag_total_min_star=mag_total_min_star,
     mag_total_min_galaxy=mag_total_min_galaxy,
     mag_total_max=mag_total_max,
+    n_skip=n_skip,
 )
 
 for (filename, catalog), (band, mags_band) in zip(catalogs.items(), mags.items()):
