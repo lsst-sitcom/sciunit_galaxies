@@ -3,6 +3,7 @@
 
 import astropy.units as u
 from astropy.visualization import make_lupton_rgb
+import lsst.afw.image
 import lsst.daf.butler as dafButler
 from lsst.geom import Point2D, SpherePoint, degrees
 from lsst.sitcom.sciunit.galaxies.truth_summary import validate_injection_catalog
@@ -36,7 +37,18 @@ else:
     repo = "/repo/main"
     skymap = "lsst_cells_v1"
     butler = dafButler.Butler(repo, skymap=skymap,
-                              collections=["u/dtaranu/DM-47185/injected_dp1_2025_06/plots"])
+                              collections=["u/dtaranu/DM-50425/injected_dp1_v29_0_0_rc6/plots"])
+
+
+def calibrate_exposure(exposure: lsst.afw.image.Exposure) -> lsst.afw.image.Exposure:
+    calib = exposure.getPhotoCalib()
+    image = calib.calibrateImage(
+        lsst.afw.image.MaskedImageF(exposure.image, mask=exposure.mask, variance=exposure.variance)
+    )
+    exposure.image.array[:] = image.image.array[:]
+    exposure.mask.array[:] = image.mask.array[:]
+    exposure.variance.array[:] = image.variance.array[:]
+    return exposure
 
 butler_dc2 = dafButler.Butler(
     repo_dc2, skymap=skymap_dc2, collections=["2.2i/runs/test-med-1/w_2024_40/DM-46604"],
@@ -56,31 +68,38 @@ if plot_validation:
         ids_ref=[],
     )
 
-coadd_data = butler.get("deepCoadd_calexp", skymap=skymap, tract=tract, patch=patch, band=band)
-# HSC skymaps aren't compatible with cells (and probably won't be made so)
-coadd_dc2 = None if is_rc2 else butler_dc2.get(
-    "deepCoadd_calexp", skymap=skymap_dc2, tract=tract_in, patch=patch, band=band,
+coadd_data = calibrate_exposure(
+    butler.get("deep_coadd", skymap=skymap, tract=tract, patch=patch, band=band)
 )
-coadd_injected = butler.get("injected_deepCoadd_calexp", skymap=skymap, tract=tract, patch=patch, band=band)
+# HSC skymaps aren't compatible with cells (and probably won't be made so)
+coadd_dc2 = None if is_rc2 else calibrate_exposure(
+    butler_dc2.get("deepCoadd_calexp", skymap=skymap_dc2, tract=tract_in, patch=patch, band=band)
+)
+coadd_injected = calibrate_exposure(
+    butler.get("injected_deep_coadd", skymap=skymap, tract=tract, patch=patch, band=band)
+)
 
-columns = ("coord_ra", "coord_dec", "detect_isPrimary", "patch")
+columns = ("coord_ra", "coord_dec", "patch",)
+columns_old = ("detect_isPrimary",)
 
 coadds = {}
 objects = {}
-for subtype, butler_sub, skymap_sub, tract_sub, patch_sub, prefix in (
-    ("Injected", butler, skymap, tract, patch, "injected_"),
-    ("DC2", butler_dc2, skymap_dc2, tract_in, patch, ""),
-    ("Data", butler, skymap, tract, None if is_rc2 else patch, ""),
+for subtype, butler_sub, skymap_sub, tract_sub, patch_sub, prefix, old in (
+    ("Injected", butler, skymap, tract, patch, "injected_", False),
+    ("DC2", butler_dc2, skymap_dc2, tract_in, patch, "", True),
+    ("Data", butler, skymap, tract, None if is_rc2 else patch, "", False),
 ):
     objects_sub = butler_sub.get(
-        f"{prefix}objectTable_tract",
+        f"{prefix}{'objectTable_tract' if old else 'object'}",
         skymap=skymap_sub, tract=tract_sub, storageClass="ArrowAstropy",
-        parameters={"columns": columns},
+        parameters={"columns": columns + (columns_old if old else tuple())},
     )
+    if not old:
+        objects_sub["detect_isPrimary"] = True
     objects[subtype] = objects_sub[objects_sub["patch"] == patch]
-    coadds[subtype] = butler.get(
-        f"{prefix}deepCoadd_calexp",
-        skymap=skymap, tract=tract, patch=patch, band=band,
+    coadds[subtype] = butler_sub.get(
+        f"{prefix}{'deepCoadd_calexp' if old else 'deep_coadd'}",
+        skymap=skymap_sub, tract=tract_sub, patch=patch_sub, band=band,
     )
 
 columns_injected = tuple(
@@ -88,7 +107,7 @@ columns_injected = tuple(
 ) + ("patch", "ra", "dec")
 
 injected = butler.get(
-    "injected_deepCoadd_catalog_tract",
+    "injected_deepCoadd_catalog_tract" if is_rc2 else "injected_deep_coadd_predetection_catalog_tract",
     skymap=skymap, tract=tract, storageClass="ArrowAstropy",
     parameters={"columns": columns_injected},
 )
@@ -106,7 +125,8 @@ columns_matched = tuple(
 )
 
 matched = butler.get(
-    "matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract",
+    ("matched_injected_deepCoadd_catalog_tract_injected_objectTable_tract" if is_rc2 else
+     "matched_injected_deep_coadd_predetection_catalog_tract_injected_object_all"),
     skymap=skymap, tract=tract, storageClass="ArrowAstropy", parameters={"columns": columns_matched},
 )
 
@@ -191,20 +211,21 @@ for subtype, coadd in (("Injected", coadd_injected), ("DC2", coadd_dc2), ("Data"
             img,
             is_detected_injected*img,
         ]
-        ax.imshow(make_lupton_rgb(*imgs_rgb, Q=8, stretch=0.2), extent=extent)
+        ax.imshow(make_lupton_rgb(*imgs_rgb, Q=8, stretch=10), extent=extent)
 
         to_plot = {
-            "detect_isPrimary": (objects_sub, kwargs_primary),
+            "primary": (objects_sub, kwargs_primary),
         }
         if is_injected:
             to_plot["injected"] = (injected, kwargs_primary_injected)
             to_plot["data"] = (objects["Data"], kwargs_primary_data)
 
         for label, (objects_plot, kwargs_plot) in to_plot.items():
+            ra, dec = (objects_plot[f"coord_{c}"] for c in ("ra", "dec"))
             xys = get_xys_from_radec(
-                objects_plot["coord_ra"][objects_plot["detect_isPrimary"]],
-                objects_plot["coord_dec"][objects_plot["detect_isPrimary"]],
-
+                ra[objects_plot["detect_isPrimary"]] if is_rc2 else ra,
+                dec[objects_plot["detect_isPrimary"]] if is_rc2 else dec,
+                coadd
             )
             ax.scatter(xys[:, 0], xys[:, 1], label=label, **kwargs_plot)
 
