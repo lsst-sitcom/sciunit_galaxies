@@ -38,7 +38,7 @@ tasks:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: decals_dr10
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_decals_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_decals_coord_dec
 
@@ -65,7 +65,7 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: decals_dr10
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       coord_format.column_ref_coord1: parameters.cdfs_decals_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_decals_coord_dec
       include_unmatched: true
@@ -91,7 +91,7 @@ tasks:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: des_y3gold
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_des_y3gold_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_des_y3gold_coord_dec
 
@@ -118,7 +118,7 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: des_y3gold
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       coord_format.column_ref_coord1: parameters.cdfs_des_y3gold_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_des_y3gold_coord_dec
       include_unmatched: true
@@ -145,7 +145,7 @@ tasks:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: des_y6gold
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_des_y6gold_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_des_y6gold_coord_dec
 
@@ -172,7 +172,7 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: des_y6gold
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       coord_format.column_ref_coord1: parameters.cdfs_des_y6gold_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_des_y6gold_coord_dec
       include_unmatched: true
@@ -198,7 +198,7 @@ tasks:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_hlf_v2p1
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
       refcat_sharding_type: "none"
@@ -226,7 +226,7 @@ tasks:
     config:
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: cdfs_hlf_v2p1
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
       coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
       refcat_sharding_type: "none"
@@ -315,7 +315,7 @@ tasks:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_des_y6gold
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       match_tract_catalog.coord_format.column_ref_coord1: coord_best_ra
       match_tract_catalog.coord_format.column_ref_coord2: coord_best_dec
 
@@ -344,7 +344,7 @@ tasks:
     config:
       columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
       connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_des_y6gold
-      connections.name_input_cat_target: object
+      connections.name_input_cat_target: object_all
       coord_format.column_ref_coord1: coord_best_ra
       coord_format.column_ref_coord2: coord_best_dec
       include_unmatched: true
