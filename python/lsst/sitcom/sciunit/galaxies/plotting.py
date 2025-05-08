@@ -3,6 +3,9 @@ from typing import Any
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
+import lsst.gauss2d as g2d
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 import lsst.gauss2d as g2d
 
