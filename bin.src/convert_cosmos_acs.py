@@ -16,7 +16,7 @@ tab_ap["flux_auto"].unit = u.nJy
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
 
-pq.write_table(tab_arrow, "cosmos_acs_iphot_200709.parq")
+pq.write_table(tab_arrow, "cosmos_acs_iphot_200709.parq", row_group_size=row_group_size)
 
 
 def register():
