@@ -2,7 +2,6 @@ import os.path
 
 from astropy.visualization import make_lupton_rgb
 from copy import deepcopy
-import lsst.afw.image
 import lsst.daf.butler as dafButler
 import lsst.gauss2d as g2d
 from lsst.geom import SpherePoint, degrees, Extent2I
@@ -42,15 +41,6 @@ mpl.rcParams.update({"image.origin": "lower", 'font.size': 13})
 kwargs_lup = dict(minimum=-2, Q=10, stretch=60)
 kwargs_lup_hst = dict(minimum=0, Q=8, stretch=1.3)
 
-
-def calibrate_exposure(exposure: lsst.afw.image.Exposure) -> lsst.afw.image.MaskedImageF:
-    calib = exposure.getPhotoCalib()
-    image = calib.calibrateImage(
-        lsst.afw.image.MaskedImageF(exposure.image, mask=exposure.mask, variance=exposure.variance)
-    )
-    return image
-
-
 # A nice group of galaxies
 ra_gal, dec_gal = 53.12277768, -27.73640709
 # ra_gal, dec_gal = 53.124654379926724, -27.740377354687737
@@ -59,10 +49,11 @@ ra_gal, dec_gal = 53.12277768, -27.73640709
 # Another galaxy of some description
 # ra_gal, dec_gal = 53.124848804610785, -27.758377013546585
 # ra_gal, dec_gal = 52.9035204, -28.0243690  # nice galaxy but not fully covered
-bands = ("i", "r", "g")
+bands_lsst_rgb = (("y", "z"), ("i", "r"), ("g", "u"))
+bands_lsst = tuple(band for bands in bands_lsst_rgb for band in bands)
 bands_hst = ("F775W", "F606W", "F435W")
-weight_mean = np.mean([bands_weights_lsst[band] for band in bands])
-for band in bands:
+weight_mean = np.mean([bands_weights_lsst[band] for band in bands_lsst])
+for band in bands_lsst:
     bands_weights_lsst[band] /= weight_mean
 
 scale_lsst = 0.2
@@ -78,7 +69,7 @@ full_hst = {}
 
 butler = dafButler.Butler("/repo/main")
 collections = [
-    "u/dtaranu/DM-48367/v29_0_0_rc2/match",
+    "u/dtaranu/DM-50091/v29_0_0_rc6/match",
 ]
 
 n_collections = len(collections)
@@ -94,7 +85,7 @@ patch = patchInfo.sequential_index
 # "best" available astrometry from a hierarchy of reference catalogs
 # HST, DES, then ComCam
 matched = butler.get(
-    "matched_matched_cdfs_hlf_v2p1_des_y6gold_object",
+    "matched_matched_cdfs_hlf_v2p1_euclid_q1_object",
     skymap=name_skymap, tract=tract, storageClass="ArrowAstropy", collections=collections[0],
 )
 
@@ -108,6 +99,10 @@ kwargs_scatter_hst = (
     dict(s=60, edgecolor="orange", marker="D", facecolor="none", label="HST",),
 )
 
+kwargs_scatter_euclid = (
+    dict(s=40, edgecolor="magenta", marker="o", facecolor="none", label="HST",),
+    dict(s=60, edgecolor="green", marker="o", facecolor="none", label="HST",),
+)
 
 def scatter_multi(axis, x, y, kwargs_scatter_list):
     for kwargs_scatter in kwargs_scatter_list:
@@ -138,14 +133,12 @@ for collection in collections:
 
     coadds_collection = {}
     # Reorder the coadds and fill in missing bands
-    for band in bands:
+    for band in bands_lsst:
         coadds_collection[band] = coadds_iter.get(band, reference_coadds[band])
     coadds[collection] = coadds_collection
 
 cutouts = {
-    collection: {
-        band: calibrate_exposure(calexps.get(band).getCutout(coord, cutout_size)) for band in bands
-    }
+    collection: {band: calexps.get(band).getCutout(coord, cutout_size) for band in bands_lsst}
     for collection, calexps in coadds.items()
 }
 
@@ -181,27 +174,24 @@ if get_hst:
                 fits_cdfs = fits.open(filename)
                 if keep_hst_full:
                     full_hst[band] = fits_cdfs
-                hdu_cdfs = fits_cdfs[1]
-                wcs_cdfs = WCS(hdu_cdfs)
-                try:
-                    cutout = Cutout2D(
-                        hdu_cdfs.data,
-                        position=SkyCoord(ra_gal, dec_gal, unit=u.degree),
-                        # Should read pixel scale from CD1_1, etc. oh well
-                        size=(cutout_size[0]*scale_lsst/scale_hst, cutout_size[1]*scale_lsst/scale_hst),
-                        wcs=wcs_cdfs,
-                        copy=True,
-                    )
-                    cutouts_hst[band] = cutout
-                except NoOverlapError as err:
-                    continue
+        if fits_cdfs is not None:
+            hdu_cdfs = fits_cdfs[1]
+            wcs_cdfs = WCS(hdu_cdfs)
+            cutout = Cutout2D(
+                hdu_cdfs.data,
+                position=SkyCoord(ra_gal, dec_gal, unit=u.degree),
+                # Should read pixel scale from CD1_1, etc. oh well
+                size=(cutout_size[0]*scale_lsst/scale_hst, cutout_size[1]*scale_lsst/scale_hst),
+                wcs=wcs_cdfs,
+                copy=True,
+            )
+            cutouts_hst[band] = cutout
 
     if len(cutouts_hst) < 3:
         # We could try a little harder here, but never mind
         get_hst = False
         plot_hst = False
     else:
-        cutout = next(iter(cutouts_hst.values()))
         radec_hst_begin = cutout.wcs.pixel_to_world(0, 0)
         radec_hst_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
         (ra_begin, dec_begin), (ra_end, dec_end) = (
@@ -210,6 +200,7 @@ if get_hst:
         extent_hst = (
             radec_hst_begin.ra.value, radec_hst_end.ra.value, radec_hst_begin.dec.value, radec_hst_end.dec.value,
         )
+
         img_lup_hst = make_lupton_rgb(
             *(cutout.data*bands_weights_hst[band] for band, cutout in cutouts_hst.items()),
             **kwargs_lup_hst,
@@ -227,11 +218,11 @@ if get_hst:
     ax_plot = (ax_hst[0] if use_ppm else ax_hst)
     ax_plot.imshow(img_lup_hst, extent=extent_hst)
 
-    good_hst = matched_in["matched_refcat_id"] >= 0
+    good_hst = matched_in["hst_id"] >= 0
     scatter_multi(
         ax_plot,
-        matched_in["matched_refcat_ra_gaia"][good_hst],
-        matched_in["matched_refcat_dec_gaia"][good_hst],
+        matched_in["hst_ra_gaia"][good_hst],
+        matched_in["hst_dec_gaia"][good_hst],
         kwargs_scatter_list=kwargs_scatter_hst,
     )
     good_comcam = matched_in["objectId"] >= 0
@@ -261,16 +252,14 @@ if use_ppm:
     fig_ppm, ax_ppm = plt.subplots(figsize=figsize, ncols=n_cols, nrows=n_rows)
 
 for idx, (collection, cutouts_bands) in enumerate(cutouts.items()):
-    img_lup = make_lupton_rgb(
-        *(cutout.image.array*bands_weights_lsst[band] for band, cutout in cutouts_bands.items()),
-        **kwargs_lup,
+    cutouts_lsst_rgb = tuple(
+        np.sum([cutouts_bands[band].image.array*bands_weights_lsst[band] for band in bands], axis=0)
+        for bands in bands_lsst_rgb
     )
+    img_lup = make_lupton_rgb(*cutouts_lsst_rgb, **kwargs_lup)
     if use_ppm:
-        img_ppm = lsstRGB(
-            *(cutout.image.array for band, cutout in cutouts_bands.items()),
-            **kwargs_ppm,
-        )
-    title = f"{collection} LSST {','.join(cutouts_bands)}"
+        img_ppm = lsstRGB(*cutouts_lsst_rgb, **kwargs_ppm)
+    title = f"{collection} LSST {';'.join(','.join(bands) for bands in bands_lsst_rgb)}"
     if idx == 0:
         title = f"{title} {tract},{patch}"
 
@@ -319,8 +308,8 @@ for idx, (collection, cutouts_bands) in enumerate(cutouts.items()):
         if get_hst:
             scatter_multi(
                 axis,
-                matched_in["matched_refcat_ra_gaia"][good_hst],
-                matched_in["matched_refcat_dec_gaia"][good_hst],
+                matched_in["hst_ra_gaia"][good_hst],
+                matched_in["hst_dec_gaia"][good_hst],
                 kwargs_scatter_list=kwargs_scatter_hst,
             )
 
