@@ -20,7 +20,7 @@ parameters:
     "f_f160w", "e_f160w",
     "z_spec", "star_flag", "flags", "detection_flag",
   ]
-  columns_des_y6gold_copy: ["coadd_object_id", "ext_mash"]
+  columns_des_y6gold_copy: ["coadd_object_id", "ext_mash", "patch"]
   columns_euclid_copy: [
     "object_id", "right_ascension", "declination", "vis_det",
     "flux_vis_psf", "flux_y_templfit", "flux_j_templfit", "flux_h_templfit",
@@ -204,7 +204,7 @@ tasks:
             for model in parameters.models_other:
               fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
-        config.columns_ref_copy = ["coadd_object_id", "extended_class_mash_sof"]
+        config.columns_ref_copy = parameters.columns_euclid_copy
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
@@ -432,6 +432,7 @@ tasks:
   compareObjectToCdfsAcsEuclid:
     class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
     config:
+      column_match_candidate_ref: None
       columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
       connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_euclid_q1
       connections.name_input_cat_target: object_all
@@ -458,6 +459,11 @@ tasks:
             )
             for model in parameters.models_other:
               fluxes_meas_other.append(f"{band}_{model}Flux")
+        for band in ("u", "g", "r", "i", "z", "y"):
+          if band not in parameters.bands_match_acs:
+            fluxes_meas_other.append(f"{band}_cModelFlux")
+            for model in parameters.models_other:
+              fluxes_meas_other.append(f"{band}_{model}Flux")          
         config.columns_flux = columns_flux
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
