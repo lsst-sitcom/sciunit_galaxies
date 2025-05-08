@@ -1,0 +1,17 @@
+description: Import external catalogs
+version: 1.0.0
+data:
+- type: dataset_type
+  name: euclid_q1
+  dimensions: [skymap, tract]
+  storage_class: ArrowAstropy
+  is_calibration: false
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50091/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '4d725468-a5b2-48c9-ac77-5358c39c4d89'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5063/euclid_q1_5063_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
