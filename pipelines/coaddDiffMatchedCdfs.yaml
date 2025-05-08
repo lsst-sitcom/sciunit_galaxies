@@ -298,8 +298,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z", "y"]
-      connections.inputName: matched_euclid_q1_object_all
-      connections.outputName: diff_matched_euclid_q1_object_all
+      connections.inputName: matched_euclid_q1_object
+      connections.outputName: diff_matched_euclid_q1_object
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.prep.selectors.patch: selector_patch

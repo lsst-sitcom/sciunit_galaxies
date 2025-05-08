@@ -349,7 +349,7 @@ tasks:
         config.columns_ref_copy = [
           f"{parameters.prefix_acs}{col_ref}" for col_ref in parameters.columns_hlf_copy
         ] + [
-          f"{parameters.prefix_des_y6g}{col_ref}" for col_ref in [
+          f"{parameters.prefix_des_y6gold}{col_ref}" for col_ref in [
             parameters.des_y6gold_coord_ra, parameters.des_y6gold_coord_dec,
           ] + parameters.columns_des_y6gold_copy + [
             f"bdf_flux_err_{band}_corrected" for band in parameters.bands_match_des_y6gold
