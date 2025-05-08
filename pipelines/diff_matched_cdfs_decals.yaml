@@ -1,0 +1,67 @@
+description: Catalog matching and analysis for HSC with COSMOS
+parameters:
+  bands_match_decals: ["g", "r", "i", "z"]
+  cdfs_decals_coord_ra: "ra"
+  cdfs_decals_coord_dec: "dec"
+  columns_obj_copy: ["objectId", "patch", "refExtendedness"]
+  columns_sersic_copy: [
+    "sersic_x", "sersic_y", "sersic_xErr", "sersic_yErr",
+    "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
+    "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
+    "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
+  ]
+  models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic"]
+tasks:
+  matchObjectToCdfsDecals:
+    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
+    config:
+      connections.name_input_cat_ref: decals_dr10
+      connections.name_input_cat_target: object
+      match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_decals_coord_ra
+      match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_decals_coord_dec
+
+      python: |
+        # Target settings are likely common to all object tables
+        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        
+        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        fluxes_ref = [f"flux_{band}" for band in parameters.bands_match_decals]
+        config.match_tract_catalog.columns_ref_flux = fluxes_ref
+        config.match_tract_catalog.columns_ref_meas = [
+          parameters.cdfs_decals_coord_ra, parameters.cdfs_decals_coord_dec,
+        ] + fluxes_ref
+        fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match_decals]
+        columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
+        config.match_tract_catalog.columns_target_meas = columns_meas
+        config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
+        # Might need adjusting for different survey depths
+        config.match_tract_catalog.mag_faintest_ref = 27.0
+        config.match_tract_catalog.columns_ref_copy = ["objid"]
+        config.match_tract_catalog.columns_target_copy = ["objectId"]
+  compareObjectToCdfsDecals:
+    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
+    config:
+      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      connections.name_input_cat_ref: decals_dr10
+      connections.name_input_cat_target: object
+      coord_format.column_ref_coord1: parameters.cdfs_decals_coord_ra
+      coord_format.column_ref_coord2: parameters.cdfs_decals_coord_dec
+      include_unmatched: true
+
+      python: |
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        columns_flux = {}
+        fluxes_meas_other = []
+        for band in parameters.bands_match_decals:
+            columns_flux[band] = MatchedCatalogFluxesConfig(
+                column_ref_flux=f"flux_{band}",
+                columns_target_flux=[f"{band}_cModelFlux",],
+                columns_target_flux_err=[f"{band}_cModelFluxErr",],
+            )
+            for model in parameters.models_other:
+              fluxes_meas_other.append(f"{band}_{model}Flux")
+        config.columns_flux = columns_flux
+        config.columns_ref_copy = ["objid", "maskbits", "type"]
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+          f"{col}Err" for col in fluxes_meas_other
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
