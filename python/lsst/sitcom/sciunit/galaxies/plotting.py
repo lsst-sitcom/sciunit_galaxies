@@ -1,11 +1,17 @@
+<<<<<<< HEAD
 from typing import Any
 
+=======
+>>>>>>> af25226 (Add Euclid scripts)
 import astropy.units as u
 import lsst.gauss2d as g2d
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+<<<<<<< HEAD
 from numpy.typing import NDArray
+=======
+>>>>>>> af25226 (Add Euclid scripts)
 
 from .lsst import scale_lsst_deg
 
