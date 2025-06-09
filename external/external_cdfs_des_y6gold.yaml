@@ -8,10 +8,10 @@ data:
   is_calibration: false
 - type: dataset
   dataset_type: des_y6gold
-  run: u/dtaranu/DM-48367/cdfs_des_y6gold
+  run: u/dtaranu/DM-50091/cdfs_des_y6gold
   records:
   - dataset_id:
-    - !uuid '6feb1f24-781e-4f6b-8983-59c66cbd77a6'
+    - !uuid 'f6e1136c-e63a-48d7-b104-8f85f1e55915'
     data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
     path: des_y6gold_lsst_cells_v1_5063.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
