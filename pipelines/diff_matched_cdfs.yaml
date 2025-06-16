@@ -119,6 +119,7 @@ tasks:
         config.match_tract_catalog.columns_ref_meas = [
           parameters.cdfs_acs_coord_ra, parameters.cdfs_acs_coord_dec,
         ] + fluxes_ref
+        config.match_tract_catalog.match_dist_max = 1.0
         fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match_acs]
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
@@ -361,6 +362,7 @@ tasks:
         config.match_tract_catalog.columns_ref_meas = [
           parameters.cdfs_acs_coord_ra, parameters.cdfs_acs_coord_dec,
         ] + fluxes_ref
+        config.match_tract_catalog.match_dist_max = 1.0
 
         fluxes_meas = ["flux_vis_sersic"]
         config.match_tract_catalog.columns_target_meas = [
