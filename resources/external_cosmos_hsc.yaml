@@ -1,0 +1,18 @@
+description: Import external catalogs
+version: 1.0.0
+data:
+- type: dataset_type
+  name: rc2_object_hsc
+  dimensions: [skymap, tract]
+  storage_class: ArrowAstropy
+  is_calibration: false
+- type: dataset
+  dataset_type: rc2_object_hsc
+  run: u/dtaranu/DM-50135/cosmos_hsc/w_2025_18
+  records:
+  - dataset_id:
+    - !uuid '1bcfc8dd-fd17-4011-b9ab-2d6c7b3275a1'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 9813}
+    path: rc2_object_hsc_lsst_cells_v1_9813.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+

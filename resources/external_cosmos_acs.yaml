@@ -8,7 +8,7 @@ data:
   is_calibration: false
 - type: dataset
   dataset_type: cosmos_acs_iphot_200709
-  run: u/dtaranu/DM-44000/cosmos_acs
+  run: u/dtaranu/DM-50135/cosmos_acs
   records:
   - dataset_id:
     - !uuid 'da135476-6089-4e90-883f-1d9429574bcf'
