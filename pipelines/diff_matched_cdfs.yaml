@@ -18,7 +18,7 @@ parameters:
     "f_f160w", "e_f160w",
     "z_spec", "star_flag", "flags", "detection_flag",
   ]
-  columns_des_y6gold_copy: ["coadd_object_id", "ext_mash"]
+  columns_des_y6gold_copy: ["coadd_object_id", "ext_mash", "patch"]
   columns_euclid_copy: [
     "object_id", "right_ascension", "declination", "vis_det",
     "flux_vis_psf", "flux_y_templfit", "flux_j_templfit", "flux_h_templfit",

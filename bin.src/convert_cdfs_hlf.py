@@ -1,10 +1,16 @@
 import astropy.table as apTab
 import astropy.units as u
+import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import astropy_to_arrow, compute_row_group_size
+from lsst.geom import degrees, SpherePoint
 import numpy as np
 import pyarrow.parquet as pq
 
+skymap = "lsst_cells_v1"
+tract = 5063
 name_tab = "hlsp_hlf_hst_60mas_goodss_v2.1_catalog"
+butler = dafButler.Butler("/repo/main", collections="skymaps")
+tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
 
@@ -67,7 +73,20 @@ for name_column in ("detection_flag", "use_f160w", "use_f850lp"):
     tab_ap[name_column].unit = column.unit
     tab_ap[name_column].description = column.description
 
+coords = [
+    SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["ra_gaia"], tab_ap["dec_gaia"])
+]
+within = np.array([tractInfo.contains(coord) for coord in coords])
+if np.sum(within) != len(within):
+    tab_ap = tab_ap[within]
+    coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
+patches = np.array(
+    [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
+    dtype=np.int16,
+)
+tab_ap["patch"] = patches
+
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
 
-pq.write_table(tab_arrow, f"{name_tab}.parq")
+pq.write_table(tab_arrow, f"{name_tab}.parq", row_group_size=row_group_size)

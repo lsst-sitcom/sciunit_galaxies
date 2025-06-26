@@ -448,4 +448,4 @@ tab_ap["patch"] = patches
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
 
-pq.write_table(tab_arrow, f"{name_tab}.parq")
+pq.write_table(tab_arrow, f"{name_tab}.parq", row_group_size=row_group_size)
