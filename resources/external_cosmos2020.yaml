@@ -8,7 +8,7 @@ data:
   is_calibration: false
 - type: dataset
   dataset_type: cosmos2020_classic_v2p2
-  run: u/dtaranu/DM-44000/cosmos2020
+  run: u/dtaranu/DM-50135/cosmos2020
   records:
   - dataset_id:
     - !uuid '96929b09-11af-43d9-89b1-ef9662e416cf'
