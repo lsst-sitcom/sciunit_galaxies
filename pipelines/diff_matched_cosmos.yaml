@@ -2,15 +2,36 @@ description: Catalog matching and analysis for HSC with COSMOS
 parameters:
   bands_match: ["g", "r", "i", "z", "y"]
   bands_match_acs: ["i"]
+  columns_cosmos_acs_copy: [
+    "class_star", "flux_auto", "fluxerr_auto", "kron_radius", "mu_class", "number", "ra", "dec", "patch",
+  ]
+  columns_cosmos2020_copy: [
+    "ALPHA_J2000", "DELTA_J2000", "FLAG_HSC", "FLAG_COMBINED", "lp_type", "patch",
+    "HSC_g_FLUX_AUTO", "HSC_r_FLUX_AUTO", "HSC_i_FLUX_AUTO", "HSC_z_FLUX_AUTO", "HSC_y_FLUX_AUTO",
+  ]
+  columns_rc2_object_hsc_copy: [
+    "objectId", "patch", "refExtendedness", "refSizeExtendedness",
+    "coord_ra", "coord_dec",
+    "g_psfFlux_flag", "r_psfFlux_flag", "i_psfFlux_flag", "z_psfFlux_flag", "y_psfFlux_flag",
+  ]
+  columns_obj_copy: ["objectId", "patch", "refExtendedness", "refSizeExtendedness"]
+  columns_sersic_copy: [
+    "sersic_x", "sersic_y", "sersic_xErr", "sersic_yErr",
+    "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
+    "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
+    "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
+  ]
   cosmos2020_coord_ra: "ALPHA_J2000"
   cosmos2020_coord_dec: "DELTA_J2000"
   cosmos_acs_coord_ra: "ra"
   cosmos_acs_coord_dec: "dec"
+  models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic"]
 tasks:
   matchObjectToCosmos2020:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cosmos2020_classic_v2p2
+      connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cosmos2020_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cosmos2020_coord_dec
       refcat_sharding_type: "none"
@@ -29,15 +50,15 @@ tasks:
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
         # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 27.0
+        config.match_tract_catalog.mag_faintest_ref = 29.0
         config.match_tract_catalog.columns_ref_copy = ["ID"]
         config.match_tract_catalog.columns_target_copy = ["objectId"]
   compareObjectToCosmos2020:
     class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
     config:
-      column_ref_extended: "FLAG_HSC"
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: cosmos2020_classic_v2p2
+      connections.name_input_cat_target: object
       coord_format.column_ref_coord1: parameters.cosmos2020_coord_ra
       coord_format.column_ref_coord2: parameters.cosmos2020_coord_dec
       include_unmatched: true
@@ -46,23 +67,25 @@ tasks:
       python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
-        fluxes_meas_psf = []
+        fluxes_meas_other = []
         for band in parameters.bands_match:
             columns_flux[band] = MatchedCatalogFluxesConfig(
                 column_ref_flux=f"HSC_{band}_FLUX_AUTO",
                 columns_target_flux=[f"{band}_cModelFlux",],
                 columns_target_flux_err=[f"{band}_cModelFluxErr",],
             )
-            fluxes_meas_psf.append(f"{band}_psfFlux")
+            for model in parameters.models_other:
+              fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
-        config.columns_ref_copy = ["FLAG_HSC", "FLAG_COMBINED", "lp_type"]
-        config.columns_target_copy = ["patch"] + fluxes_meas_psf + [
-          f"{col}Err" for col in fluxes_meas_psf
-        ]
+        config.columns_ref_copy = parameters.columns_cosmos2020_copy
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+          f"{col}Err" for col in fluxes_meas_other
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
   matchObjectToCosmosAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cosmos_acs_iphot_200709
+      connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cosmos_acs_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cosmos_acs_coord_dec
       refcat_sharding_type: "none"
@@ -77,20 +100,19 @@ tasks:
         config.match_tract_catalog.columns_ref_meas = [
           parameters.cosmos_acs_coord_ra, parameters.cosmos_acs_coord_dec,
         ] + fluxes_ref
+        config.match_tract_catalog.match_dist_max = 1.0
         fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match_acs]
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
         # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 27.0
-        config.match_tract_catalog.columns_ref_copy = ["mu_class", "number"]
-        config.match_tract_catalog.columns_target_copy = ["objectId"]
+        config.match_tract_catalog.mag_faintest_ref = 29.0
   compareObjectToCosmosAcs:
     class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
     config:
-      column_ref_extended: "mu_class"
       columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: cosmos_acs_iphot_200709
+      connections.name_input_cat_target: object
       coord_format.column_ref_coord1: parameters.cosmos_acs_coord_ra
       coord_format.column_ref_coord2: parameters.cosmos_acs_coord_dec
       include_unmatched: true
@@ -99,15 +121,67 @@ tasks:
       python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
-        fluxes_meas_psf = []
+        fluxes_meas_other = []
         for band in parameters.bands_match_acs:
             columns_flux[band] = MatchedCatalogFluxesConfig(
                 column_ref_flux=f"flux_auto",
                 columns_target_flux=[f"{band}_cModelFlux",],
                 columns_target_flux_err=[f"{band}_cModelFluxErr",],
             )
-            fluxes_meas_psf.append(f"{band}_psfFlux")
+            for model in parameters.models_other:
+              fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
-        config.columns_target_copy = ["patch"] + fluxes_meas_psf + [
-          f"{col}Err" for col in fluxes_meas_psf
-        ]
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+          f"{col}Err" for col in fluxes_meas_other
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        config.columns_ref_copy = parameters.columns_cosmos_acs_copy
+  matchObjectToHsc:
+    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
+    config:
+      connections.name_input_cat_ref: rc2_object_hsc
+      connections.name_input_cat_target: object
+      match_tract_catalog.coord_format.column_ref_coord1: "coord_ra"
+      match_tract_catalog.coord_format.column_ref_coord2: "coord_dec"
+      python: |
+        # Target settings are likely common to all object tables
+        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        
+        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        fluxes_ref = [f"{band}_cModelFlux" for band in parameters.bands_match]
+        config.match_tract_catalog.columns_ref_flux = fluxes_ref
+        config.match_tract_catalog.columns_ref_meas = ["coord_ra", "coord_dec"] + fluxes_ref
+        fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match]
+        columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
+        config.match_tract_catalog.columns_target_meas = columns_meas
+        config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
+        # Might need adjusting for different survey depths
+        config.match_tract_catalog.mag_faintest_ref = 29.0
+        config.match_tract_catalog.columns_ref_copy = ["objectId"]
+        config.match_tract_catalog.columns_target_copy = ["objectId"]
+  compareObjectToHsc:
+    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
+    config:
+      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      connections.name_input_cat_ref: rc2_object_hsc
+      connections.name_input_cat_target: object
+      coord_format.column_ref_coord1: "coord_ra"
+      coord_format.column_ref_coord2: "coord_dec"
+      include_unmatched: true
+
+      python: |
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        columns_flux = {}
+        fluxes_meas_other = []
+        for band in parameters.bands_match:
+            columns_flux[band] = MatchedCatalogFluxesConfig(
+                column_ref_flux=f"{band}_cModelFlux",
+                columns_target_flux=[f"{band}_cModelFlux",],
+                columns_target_flux_err=[f"{band}_cModelFluxErr",],
+            )
+            for model in parameters.models_other:
+              fluxes_meas_other.append(f"{band}_{model}Flux")
+        config.columns_flux = columns_flux 
+        columns_other = fluxes_meas_other + [f"{col}Err" for col in fluxes_meas_other] + (
+          parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        config.columns_target_copy = parameters.columns_obj_copy + columns_other
+        config.columns_ref_copy = parameters.columns_rc2_object_hsc_copy + columns_other

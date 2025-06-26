@@ -187,21 +187,6 @@ tasks:
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
       atools.matchedRefAngularSeparationDiff.produce.plot.xLims: lims_mag_x
 
-      #atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
-      #atools.matchedRefCModelColorChi.produce.buildActions.galaxySelector: selector_galaxy
-      #atools.matchedRefCModelColorChi.produce.buildActions.allSelector: selector_obj
-      #atools.matchedRefCModelColorChi.produce.buildActions.starSelector: selector_star
-      #atools.matchedRefCModelColorDiff.produce.plot.xLims: lims_mag_x
-      #atools.matchedRefCModelColorDiff.produce.plot.yLims: lims_color_diff
-      #
-      #atools.matchedRefCModelColorChi: MatchedRefCoaddDiffColorTool
-      #atools.matchedRefCModelColorChi.compute_chi: true
-      #atools.matchedRefCModelColorChi.selector_ref_galaxy: selector_galaxy
-      #atools.matchedRefCModelColorChi.selector_ref_all: selector_obj
-      #atools.matchedRefCModelColorChi.selector_ref_star: selector_star
-      #atools.matchedRefCModelColorChi.produce.plot.xLims: lims_mag_x
-      #atools.matchedRefCModelColorChi.produce.plot.yLims: lims_mag_chi
-
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
