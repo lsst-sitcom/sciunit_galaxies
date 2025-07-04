@@ -21,8 +21,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z"]
-      connections.inputName: matched_decals_dr10_object
-      connections.outputName: diff_matched_decals_dr10_object
+      connections.inputName: matched_decals_dr10_object_all
+      connections.outputName: diff_matched_decals_dr10_object_all
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
@@ -153,8 +153,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z"]
-      connections.inputName: matched_des_y3gold_object
-      connections.outputName: diff_matched_des_y3gold_object
+      connections.inputName: matched_des_y3gold_object_all
+      connections.outputName: diff_matched_des_y3gold_object_all
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
@@ -288,8 +288,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z", "y"]
-      connections.inputName: matched_des_y6gold_object
-      connections.outputName: diff_matched_des_y6gold_object
+      connections.inputName: matched_des_y6gold_object_all
+      connections.outputName: diff_matched_des_y6gold_object_all
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
@@ -423,8 +423,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["i"]
-      connections.inputName: matched_cdfs_hlf_v2p1_object
-      connections.outputName: diff_matched_cdfs_hlf_v2p1_object
+      connections.inputName: matched_cdfs_hlf_v2p1_object_all
+      connections.outputName: diff_matched_cdfs_hlf_v2p1_object_all
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
