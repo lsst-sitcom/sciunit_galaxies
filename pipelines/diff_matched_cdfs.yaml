@@ -1,9 +1,9 @@
 description: Catalog matching and analysis for HSC with COSMOS
 parameters:
-  bands_euclid: ["vis", "y", "j", "h"]
+  bands_lsst: ["u", "g", "r", "i", "z", "y"]
   bands_match_des_y6gold: ["g", "r", "i", "z", "y"]
   bands_match_acs: ["i"]
-  bands_match_euclid: ["g", "r", "i", "z", "y"]
+  bands_match_euclid: ["i"]
   des_y6gold_coord_ra: "alphawin_j2000"
   des_y6gold_coord_dec: "deltawin_j2000"
   cdfs_acs_coord_ra: "ra_gaia"
@@ -18,7 +18,7 @@ parameters:
     "f_f098m", "e_f098m", "f_f105w", "e_f105w",
     "f_f125w", "e_f125w", "f_f140w", "e_f140w",
     "f_f160w", "e_f160w",
-    "z_spec", "star_flag", "flags", "detection_flag",
+    "z_spec", "star_flag", "flags", "detection_flag", "patch",
   ]
   columns_des_y6gold_copy: ["coadd_object_id", "ext_mash", "patch"]
   columns_euclid_copy: [
@@ -95,14 +95,17 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
-        for band in parameters.bands_match_des_y6gold:
-            columns_flux[band] = MatchedCatalogFluxesConfig(
-                column_ref_flux=f"bdf_flux_{band}_corrected",
-                columns_target_flux=[f"{band}_cModelFlux",],
-                columns_target_flux_err=[f"{band}_cModelFluxErr",],
-            )
+        for band in parameters.bands_lsst:
+            if band in parameters.bands_match_des_y6gold:
+                columns_flux[band] = MatchedCatalogFluxesConfig(
+                    column_ref_flux=f"bdf_flux_{band}_corrected",
+                    columns_target_flux=[f"{band}_cModelFlux",],
+                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                )
+            else:
+                fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")
+                fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_ref_copy = parameters.columns_des_y6gold_copy
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
@@ -152,15 +155,20 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
-        for band in parameters.bands_match_acs:
-            columns_flux[band] = MatchedCatalogFluxesConfig(
-                column_ref_flux=f"f_f775w",
-                columns_target_flux=[f"{band}_cModelFlux",],
-                columns_target_flux_err=[f"{band}_cModelFluxErr",],
-            )
+        for band in parameters.bands_lsst:
+            if band in parameters.bands_match_acs:
+                columns_flux[band] = MatchedCatalogFluxesConfig(
+                    column_ref_flux=f"f_f775w",
+                    columns_target_flux=[f"{band}_cModelFlux",],
+                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                )
+            else:
+                fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")
+                fluxes_meas_other.append(f"{band}_{model}Flux")
+
         config.columns_flux = columns_flux
+        config.columns_ref_copy = parameters.columns_hlf_copy
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
@@ -206,14 +214,17 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
-        for band in parameters.bands_match_euclid:
-            columns_flux[band] = MatchedCatalogFluxesConfig(
-                column_ref_flux=f"flux_vis_sersic",
-                columns_target_flux=[f"{band}_cModelFlux",],
-                columns_target_flux_err=[f"{band}_cModelFluxErr",],
-            )
+        for band in parameters.bands_lsst:
+            if band in parameters.bands_match_euclid:
+                columns_flux[band] = MatchedCatalogFluxesConfig(
+                    column_ref_flux=f"flux_vis_sersic",
+                    columns_target_flux=[f"{band}_cModelFlux",],
+                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                )
+            else:
+                fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")
+                fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_ref_copy = parameters.columns_euclid_copy
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
@@ -331,14 +342,17 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
-        for band in parameters.bands_match_acs:
-            columns_flux[band] = MatchedCatalogFluxesConfig(
-                column_ref_flux=f"{parameters.prefix_acs}f_f775w",
-                columns_target_flux=[f"{band}_cModelFlux",],
-                columns_target_flux_err=[f"{band}_cModelFluxErr",],
-            )
+        for band in parameters.bands_lsst:
+            if band in parameters.bands_match_acs:
+                columns_flux[band] = MatchedCatalogFluxesConfig(
+                    column_ref_flux=f"{parameters.prefix_acs}f_f775w",
+                    columns_target_flux=[f"{band}_cModelFlux",],
+                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                )
+            else:
+                fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")
+                fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
@@ -473,21 +487,19 @@ tasks:
         prefix_euclid = parameters.prefix_euclid
 
         columns_flux = {}
-        fluxes_meas_other = []
+        fluxes_meas_other = []      
+        for band in parameters.bands_lsst:
+            if band in parameters.bands_match_acs:
+                columns_flux[band] = MatchedCatalogFluxesConfig(
+                    column_ref_flux=f"{parameters.prefix_acs}f_f775w",
+                    columns_target_flux=[f"{band}_cModelFlux",],
+                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                )
+            else:
+                fluxes_meas_other.append(f"{band}_cModelFlux")
+            for model in parameters.models_other:
+                fluxes_meas_other.append(f"{band}_{model}Flux")
 
-        for band in parameters.bands_match_acs:
-            columns_flux[band] = MatchedCatalogFluxesConfig(
-                column_ref_flux=f"{prefix_hst}f_f775w",
-                columns_target_flux=[f"{band}_cModelFlux",],
-                columns_target_flux_err=[f"{band}_cModelFluxErr",],
-            )
-            for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")
-        for band in ("u", "g", "r", "i", "z", "y"):
-          if band not in parameters.bands_match_acs:
-            fluxes_meas_other.append(f"{band}_cModelFlux")
-            for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other

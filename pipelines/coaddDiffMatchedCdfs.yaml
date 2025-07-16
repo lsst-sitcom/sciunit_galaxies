@@ -146,7 +146,7 @@ tasks:
             GalaxySelector,
             StarSelector,
           )
-          selector_galaxy = GalaxySelector(vectorKey="refExtendedness")
+          selector_galaxy =it s GalaxySelector(vectorKey="refExtendedness")
           selector_obj = StarSelector(vectorKey="refExtendedness", extendedness_maximum=1.0)
           selector_star = StarSelector(vectorKey="refExtendedness", plotLabelKey="Stars: LSST refExtendedness < 0.5")
         else:
@@ -278,6 +278,7 @@ tasks:
         )
         from lsst.analysis.tools.actions.vector import SetSelector
         from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        from lsst.analysis.tools.actions.vector import RangeSelector, SetSelector
 
         selector_all = SetSelector(vectorKeys=["match_candidate", "refcat_match_candidate"], values=[1])
         selector_galaxy = ReferenceGalaxySelector(
@@ -288,6 +289,14 @@ tasks:
           plotLabelKey="Star: HST class_star >= 0.5", vectorKey="refcat_class_star",
           threshold=0.5, op="ge",
         )
+        if parameters.patches:
+          selector_patch = SetSelector(
+            vectorKeys=["patch", "refcat_patch"],
+            values=parameters.patches,
+          )
+        else:
+          selector_patch = RangeSelector(vectorKey="patch", op="ge", threshold=0)
+        
         ref_matched = FluxConfig(
             key_flux="refcat_f_f775w",
             name_flux="Reference",
@@ -323,14 +332,20 @@ tasks:
       atools.matchedRefAngularSeparationDiff.produce.plot.xLims: lims_mag_x
 
       #atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
-      #atools.matchedRefCModelColorChi.produce.buildActions.galaxySelector: selector_galaxy
-      #atools.matchedRefCModelColorChi.produce.buildActions.allSelector: selector_obj
-      #atools.matchedRefCModelColorChi.produce.buildActions.starSelector: selector_star
+      #atools.matchedRefCModelColorDiff.prep.selectors.patch: selector_patch
+      #atools.matchedRefCModelColorDiff.bands: bands_color
+      #atools.matchedRefCModelColorDiff.selector_all: selector_all
+      #atools.matchedRefCModelColorDiff.selector_ref_galaxy: selector_galaxy
+      #atools.matchedRefCModelColorDiff.selector_ref_all: selector_obj
+      #atools.matchedRefCModelColorDiff.selector_ref_star: selector_star
       #atools.matchedRefCModelColorDiff.produce.plot.xLims: lims_mag_x
       #atools.matchedRefCModelColorDiff.produce.plot.yLims: lims_color_diff
-      #
+
       #atools.matchedRefCModelColorChi: MatchedRefCoaddDiffColorTool
+      #atools.matchedRefCModelColorChi.prep.selectors.patch: selector_patch
+      #atools.matchedRefCModelColorChi.bands: bands_color
       #atools.matchedRefCModelColorChi.compute_chi: true
+      #atools.matchedRefCModelColorChi.selector_all: selector_all
       #atools.matchedRefCModelColorChi.selector_ref_galaxy: selector_galaxy
       #atools.matchedRefCModelColorChi.selector_ref_all: selector_obj
       #atools.matchedRefCModelColorChi.selector_ref_star: selector_star
