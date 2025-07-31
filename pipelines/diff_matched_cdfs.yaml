@@ -286,11 +286,11 @@ tasks:
         
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         
-        fluxes_ref = ["hst_f_f775w", "bdf_flux_i_corrected"]
+        fluxes_ref = ["hst_f_f775w", "des_bdf_flux_i_corrected"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
           f"hst_{parameters.cdfs_acs_coord_ra}", f"hst_{parameters.cdfs_acs_coord_dec}",
-          parameters.des_y6gold_coord_ra, parameters.des_y6gold_coord_dec,
+          f"des_{parameters.des_y6gold_coord_ra}", f"des_{parameters.des_y6gold_coord_dec}",
         ] + fluxes_ref
         fluxes_meas = ["i_sersicFlux", "i_sersicFlux"]
         columns_meas = ["sersic_ra", "sersic_dec", "sersic_ra", "sersic_dec"] + fluxes_meas
@@ -298,7 +298,7 @@ tasks:
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
         # Might need adjusting for different survey depths
         config.match_tract_catalog.mag_faintest_ref = 29.0
-        config.match_tract_catalog.columns_ref_copy = ["hst_id", "coadd_object_id"]
+        config.match_tract_catalog.columns_ref_copy = ["hst_id", "des_coadd_object_id"]
         config.match_tract_catalog.columns_target_copy = ["objectId"]
   compareObjectToCdfsAcsDes:
     class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask

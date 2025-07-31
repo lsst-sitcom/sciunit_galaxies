@@ -20,17 +20,19 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z", "y"]
-      connections.inputName: matched_des_y6gold_object_all
-      connections.outputName: diff_matched_des_y6gold_object_all
+      connections.inputName: matched_des_y6gold_object
+      connections.outputName: diff_matched_des_y6gold_object
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.prep.selectors.patch: selector_patch
+      atools.matchedRefCompleteness.selector_all: selector_all
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCompleteness.selector_ref_all: selector_obj
       atools.matchedRefCompleteness.selector_ref_star: selector_star
 
       atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
       atools.matchedRefAngularSeparationDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
       atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
@@ -38,6 +40,7 @@ tasks:
       atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
       atools.matchedRefCModelColorDiff.prep.selectors.patch: selector_patch
       atools.matchedRefCModelColorDiff.bands: bands_color
+      atools.matchedRefCModelColorDiff.selector_all: selector_all
       atools.matchedRefCModelColorDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelColorDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelColorDiff.selector_ref_star: selector_star
@@ -48,6 +51,7 @@ tasks:
       atools.matchedRefCModelColorChi.prep.selectors.patch: selector_patch
       atools.matchedRefCModelColorChi.bands: bands_color
       atools.matchedRefCModelColorChi.compute_chi: true
+      atools.matchedRefCModelColorChi.selector_all: selector_all
       atools.matchedRefCModelColorChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelColorChi.selector_ref_all: selector_obj
       atools.matchedRefCModelColorChi.selector_ref_star: selector_star
@@ -56,6 +60,7 @@ tasks:
 
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
       atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
@@ -66,6 +71,7 @@ tasks:
       atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagChi.prep.selectors.patch: selector_patch
       atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_all: selector_all
       atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
       atools.matchedRefCModelMagChi.selector_ref_star: selector_star
@@ -76,6 +82,7 @@ tasks:
       atools.matchedRefPositionRaDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaDiff.coord_ref: refcat_alphawin_j2000
       atools.matchedRefPositionRaDiff.coord_ref_cos: refcat_alphawin_j2000
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
       atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
@@ -87,6 +94,7 @@ tasks:
       atools.matchedRefPositionRaChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaChi.coord_ref: refcat_alphawin_j2000
       atools.matchedRefPositionRaChi.coord_ref_cos: refcat_alphawin_j2000
+      atools.matchedRefPositionRaChi.selector_all: selector_all
       atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
       atools.matchedRefPositionRaChi.selector_ref_star: selector_star
@@ -98,6 +106,7 @@ tasks:
       atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecDiff.coord_ref: refcat_deltawin_j2000
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
       atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
@@ -108,6 +117,7 @@ tasks:
       atools.matchedRefPositionDecChi: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecChi.coord_ref: refcat_deltawin_j2000
+      atools.matchedRefPositionDecChi.selector_all: selector_all
       atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
       atools.matchedRefPositionDecChi.selector_ref_star: selector_star
@@ -126,10 +136,11 @@ tasks:
           MatchedRefCoaddDiffCoordDecTool,
         )
         from lsst.analysis.tools.atools.genericBuild import FluxConfig
-        from lsst.analysis.tools.actions.vector import RangeSelector, SetSelector
+        from lsst.analysis.tools.actions.vector import AllSelector, RangeSelector, SetSelector
         
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
         
+        selector_all = AllSelector(vectorKey="objectId")
         if parameters.use_extendedness_for_des_y6gold:
           from lsst.analysis.tools.actions.vector.selectors import (
             GalaxySelector,
@@ -173,15 +184,17 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["i"]
-      connections.inputName: matched_cdfs_hlf_v2p1_object_all
-      connections.outputName: diff_matched_cdfs_hlf_v2p1_object_all
+      connections.inputName: matched_cdfs_hlf_v2p1_object
+      connections.outputName: diff_matched_cdfs_hlf_v2p1_object
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompleteness.selector_all: selector_all
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCompleteness.selector_ref_all: selector_obj
       atools.matchedRefCompleteness.selector_ref_star: selector_star
 
       atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
       atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
@@ -203,6 +216,7 @@ tasks:
       #atools.matchedRefCModelColorChi.produce.plot.yLims: lims_mag_chi
 
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
       atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
@@ -212,6 +226,7 @@ tasks:
 
       atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_all: selector_all
       atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
       atools.matchedRefCModelMagChi.selector_ref_star: selector_star
@@ -221,6 +236,7 @@ tasks:
       atools.matchedRefPositionRaDiff: MatchedRefCoaddDiffPositionTool
       atools.matchedRefPositionRaDiff.coord_meas: coord_ra
       atools.matchedRefPositionRaDiff.coord_ref: refcat_ra_gaia
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
       atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
@@ -231,6 +247,7 @@ tasks:
       atools.matchedRefPositionRaChi: MatchedRefCoaddDiffPositionTool
       atools.matchedRefPositionRaChi.coord_meas: coord_ra
       atools.matchedRefPositionRaChi.coord_ref: refcat_ra_gaia
+      atools.matchedRefPositionRaChi.selector_all: selector_all
       atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
       atools.matchedRefPositionRaChi.selector_ref_star: selector_star
@@ -242,6 +259,7 @@ tasks:
       atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffPositionTool
       atools.matchedRefPositionDecDiff.coord_meas: coord_dec
       atools.matchedRefPositionDecDiff.coord_ref: refcat_dec_gaia
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
       atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
@@ -252,6 +270,7 @@ tasks:
       atools.matchedRefPositionDecChi: MatchedRefCoaddDiffPositionTool
       atools.matchedRefPositionDecChi.coord_meas: coord_dec
       atools.matchedRefPositionDecChi.coord_ref: refcat_dec_gaia
+      atools.matchedRefPositionDecChi.selector_all: selector_all
       atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
       atools.matchedRefPositionDecChi.selector_ref_star: selector_star
@@ -271,8 +290,10 @@ tasks:
           ReferenceObjectSelector,
           ReferenceStarSelector,
         )
+        from lsst.analysis.tools.actions.vector import AllSelector
         from lsst.analysis.tools.atools.genericBuild import FluxConfig
 
+        selector_all = AllSelector(vectorKey="objectId")
         selector_galaxy = ReferenceGalaxySelector(
           vectorKey="refcat_class_star", threshold=0.5, op="lt",
         )
@@ -302,12 +323,14 @@ tasks:
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.prep.selectors.patch: selector_patch
+      atools.matchedRefCompleteness.selector_all: selector_all
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCompleteness.selector_ref_all: selector_obj
       atools.matchedRefCompleteness.selector_ref_star: selector_star
 
       atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
       atools.matchedRefAngularSeparationDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
       atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
@@ -329,6 +352,7 @@ tasks:
 
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
       atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
@@ -339,6 +363,7 @@ tasks:
       atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagChi.prep.selectors.patch: selector_patch
       atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_all: selector_all
       atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
       atools.matchedRefCModelMagChi.selector_ref_star: selector_star
@@ -349,6 +374,7 @@ tasks:
       atools.matchedRefPositionRaDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaDiff.coord_ref: refcat_right_ascension
       atools.matchedRefPositionRaDiff.coord_ref_cos: refcat_right_ascension
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
       atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
@@ -360,6 +386,7 @@ tasks:
       atools.matchedRefPositionRaChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaChi.coord_ref: refcat_right_ascension
       atools.matchedRefPositionRaChi.coord_ref_cos: refcat_right_ascension
+      atools.matchedRefPositionRaChi.selector_all: selector_all
       atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
       atools.matchedRefPositionRaChi.selector_ref_star: selector_star
@@ -371,6 +398,7 @@ tasks:
       atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecDiff.coord_ref: refcat_declination
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
       atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
@@ -381,6 +409,7 @@ tasks:
       atools.matchedRefPositionDecChi: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecChi.coord_ref: refcat_declination
+      atools.matchedRefPositionDecChi.selector_all: selector_all
       atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
       atools.matchedRefPositionDecChi.selector_ref_star: selector_star
@@ -391,6 +420,7 @@ tasks:
 
       python: |        
         from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddTool,
           MatchedRefCoaddDiffColorTool,
           MatchedRefCoaddDiffMagTool,
           MatchedRefCoaddDiffCoordRaTool,
@@ -400,10 +430,16 @@ tasks:
           ReferenceGalaxySelector,
           ReferenceObjectSelector,
           ReferenceStarSelector,
+          reconfigure_diff_matched_defaults,
         )
-        from lsst.analysis.tools.atools.genericBuild import FluxConfig
-        from lsst.analysis.tools.actions.vector import RangeSelector, SetSelector
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig, ObjectClassTool
+        from lsst.analysis.tools.actions.plot import CompletenessHist
+        from lsst.analysis.tools.actions.vector import AllSelector, RangeSelector, SetSelector
         
+        CompletenessHist.mag_ref_label.default = "Sersic VIS (mag)"
+        CompletenessHist.mag_target_label.default = "{name_flux} {band} (mag)"
+        
+        selector_all = AllSelector(vectorKey="objectId")
         selector_galaxy = ReferenceGalaxySelector(
           vectorKey="refcat_mumax_minus_mag", threshold=-2.6, op="ge",
         )
