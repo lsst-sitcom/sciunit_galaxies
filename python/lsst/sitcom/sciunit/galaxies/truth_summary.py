@@ -22,7 +22,8 @@ def convert_truth_summary_v2_to_injection(
     mag_total_max_component: float = 29.,
     truth_summary_path: str = "/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_cell",
     plot: bool = False,
-    n_skip: float = 0.,
+    n_skip_psf: float = 0.,
+    n_skip_extended: float = 0.,
 ) -> dict[str, astropy.table.Table]:
     """ Convert a truth_summary_v2 to an injection catalog.
 
@@ -54,9 +55,11 @@ def convert_truth_summary_v2_to_injection(
         The path to parquet summary files (if not butler ingested).
     plot
         Whether to make a plot of the object overlap in the tract.
-    n_skip
-        The number of objects to skip per object output, i.e. if n_skip
+    n_skip_psf:
+        The number of unresolved objects to skip per object output, i.e. if n_skip
         is 1, only every 2nd object will be kept.
+    n_skip_extended:
+        As n_skip_psf, but for resolved objects.
 
     Returns
     -------
@@ -72,8 +75,11 @@ def convert_truth_summary_v2_to_injection(
         butler_in = dafButler.Butler("/repo/dc2")
     if butler_out is None:
         butler_out = dafButler.Butler("/repo/main", collections=["HSC/runs/RC2/w_2024_38/DM-46429"])
-    if (not n_skip >= 0) and (np.isfinite(n_skip)):
-        raise ValueError(f"{n_skip=} must be >=0 and finite")
+    if not (
+        (n_skip_psf >= 0) and np.isfinite(n_skip_psf)
+        and (n_skip_extended >= 0) and np.isfinite(n_skip_extended)
+    ):
+        raise ValueError(f"{n_skip_psf=} and {n_skip_extended=} must be >=0 and finite")
 
     skymap_in, skymap_out = (
         butler.get("skyMap", skymap=skymap_name, collections="skymaps")
@@ -116,9 +122,21 @@ def convert_truth_summary_v2_to_injection(
         & (mag_total < mag_total_max)
     ]
 
-    if n_skip > 0:
-        selection = np.round(np.arange(0, len(truth_out), 1.0 + n_skip)).astype(int)
-        truth_out = truth_out[selection]
+    if (n_skip_psf > 0) or (n_skip_extended > 0):
+        is_star = truth_out["truth_type"] == 2
+        for n_skip, select in ((n_skip_psf, is_star), (n_skip_extended, ~is_star)):
+            if n_skip > 0:
+                # Objects not being skipped will be selected
+                select_new = select == False
+                n_select = np.sum(select)
+                # Create a new sub-selection mask for this type only
+                select_skip_new = np.zeros(n_select, dtype=bool)
+                # Select indices for a subset of the objects of this type
+                select_switch = np.round(np.arange(0, n_select, 1.0 + n_skip)).astype(int)
+                select_skip_new[select_switch] = True
+                # Modify the full mask with objects of all types
+                select_new[select] = select_skip_new
+                truth_out = truth_out[select_new]
 
     ra_in, dec_in = (truth_out[col] for col in ("ra", "dec"))
     dec_out = dec_in + cen_dec_out - cen_dec_in
