@@ -9,7 +9,7 @@ parameters:
   mag_diff_max: 1000
   mag_chi_min: -5
   mag_chi_max: 5
-  patches: [2,3,4,5,6,12,13,14,15,16,22,23,24,25,26,33,34,35]
+  patches: ""
   pos_diff_min: -200
   pos_diff_max: 200
   pos_chi_min: -5
@@ -150,12 +150,13 @@ tasks:
           )
 
         if parameters.patches:
+          values = [int(x) for x in parameters.patches.split(",")]
           selector_patch = SetSelector(
             vectorKeys=["patch", "refcat_patch"],
-            values=parameters.patches,
+            values=values,
           )
         else:
-          selector_patch = RangeSelector(vectorKey="patch", op="ge", threshold=0)
+          selector_patch = RangeSelector(vectorKey="patch", minimum=0)
 
         ref_matched = FluxConfig(
             key_flux="refcat_bdf_flux_{band}_corrected",
@@ -297,8 +298,8 @@ tasks:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z", "y"]
-      connections.inputName: matched_euclid_q1_object
-      connections.outputName: diff_matched_euclid_q1_object
+      connections.inputName: matched_euclid_q1_object_all
+      connections.outputName: diff_matched_euclid_q1_object_all
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.prep.selectors.patch: selector_patch
@@ -334,7 +335,6 @@ tasks:
       atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
       atools.matchedRefCModelMagDiff.produce.plot.xLims: lims_mag_x
       atools.matchedRefCModelMagDiff.produce.plot.yLims: lims_mag_diff
-      atools.matchedRefCModelMagDiff.fluxes_default.ref_matched: ref_matched
 
       atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagChi.prep.selectors.patch: selector_patch
@@ -418,13 +418,15 @@ tasks:
             name_flux_short="Sersic_vis",
             key_flux_error=None,
         )
+        MatchedRefCoaddDiffMagTool.fluxes_default.ref_matched = ref_matched
         if parameters.patches:
+          values = [int(x) for x in parameters.patches.split(",")]
           selector_patch = SetSelector(
             vectorKeys=["patch", "refcat_patch"],
-            values=parameters.patches,
+            values=values,
           )
         else:
-          selector_patch = RangeSelector(vectorKey="patch", op="ge", threshold=0)
+          selector_patch = RangeSelector(vectorKey="patch", minimum=0)
 
         lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
         lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)

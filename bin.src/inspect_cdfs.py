@@ -29,7 +29,10 @@ kwargs_ppm = {
 
 mpl.rcParams.update({"image.origin": "lower", 'font.size': 13})
 
+# My favourite SN host
 ra_gal, dec_gal = 53.12277768, -27.73640709
+# A galaxy at the edge of a tract that has trouble being detected
+# ra_gal, dec_gal = 52.895, -28.38175
 
 # gri are the easiest bands to make aesthetically pleasing images from
 # Using all 6 bands may be better for understanding detection issues since
@@ -101,15 +104,6 @@ center_subpatch_ap = SkyCoord(
 )
 zooms_subpatch = zooms_patch.get(subpatch_rc, tuple())
 
-# This table has DESY6G quantities if needed too
-# One can use the coord_best_[ra/dec] columns to plot all objects with the
-# "best" available astrometry from a hierarchy of reference catalogs
-# HST, DES, then ComCam
-matched = butler.get(
-    "matched_matched_cdfs_hlf_v2p1_euclid_q1_object",
-    skymap=skymap, tract=tract, storageClass="ArrowAstropy", collections=collection,
-)
-
 kwargs_scatter_euclid = (
     dict(s=40, edgecolor="cornflowerblue", marker="D", facecolor="none", label="Euclid",),
     dict(s=60, edgecolor="orange", marker="D", facecolor="none", label="Euclid",),
@@ -129,79 +123,135 @@ cutouts_lsst_rgb = tuple(
 )
 img_rgb_lsst = lsstRGB(*cutouts_lsst_rgb, **kwargs_ppm)
 
-weights_hst = 1/(u.ABmag.to(u.Jy, [abs_mag_sol_hst[band] for band in bands_hst]))
-weights_hst_mean = np.mean(weights_hst)
-# like with bands_weight_lsst, this re-weights per-band images so that
-# solar colors appear white
-bands_weights_hst = {
-    band: weight_hst/weights_hst_mean for band, weight_hst in zip(bands_hst, weights_hst)
-}
-
-kwargs_ppm_hst = deepcopy(kwargs_ppm)
-kwargs_ppm_hst["scaleLumKWargs"]["stretch"] = 80
-
-cutouts_hst, extent = get_cutouts_cdfs_hst(
-    tract, patch, bands_hst, skymap, center_subpatch_ap,
-    cutout_size=tuple(int(math.ceil(s*scale_ratio_hst)) for s in cutout_size),
-)
-
-bands_euclid = ("vis",)
+bands_euclid = ("VIS",)
 
 cutouts_euclid, extent_euclid = get_cutouts_euclid(
     skymap=skymap, tract=tract, patch=patch, bands=bands_euclid, position=center_subpatch_ap,
     cutout_size=tuple(2*s for s in cutout_size),
 )
-img_euclid = np.arcsinh(2e4*np.clip(cutouts_euclid["vis"].data, -1e-4, 0.01))
+img_euclid = np.arcsinh(2e4*np.clip(cutouts_euclid["VIS"].data, -1e-4, 0.01))
 
-# Splitting off the plotting part for easy copypasting
-matched_in = matched[
-    (matched["coord_best_ra"] > extent[1]) & (matched["coord_best_ra"] < extent[0])
-    & (matched["coord_best_dec"] > extent[2]) & (matched["coord_best_dec"] < extent[3])
-]
+try:
+    cutouts_hst, extent = get_cutouts_cdfs_hst(
+        tract, patch, bands_hst, skymap, center_subpatch_ap,
+        cutout_size=tuple(int(math.ceil(s*scale_ratio_hst)) for s in cutout_size),
+    )
+    weights_hst = 1 / (u.ABmag.to(u.Jy, [abs_mag_sol_hst[band] for band in bands_hst]))
+    weights_hst_mean = np.mean(weights_hst)
+    # like with bands_weight_lsst, this re-weights per-band images so that
+    # solar colors appear white
+    bands_weights_hst = {
+        band: weight_hst / weights_hst_mean for band, weight_hst in zip(bands_hst, weights_hst)
+    }
+
+    kwargs_ppm_hst = deepcopy(kwargs_ppm)
+    kwargs_ppm_hst["scaleLumKWargs"]["stretch"] = 80
+
+    img_rgb_hst = lsstRGB(
+        *(cutout.data * bands_weights_hst[band] for band, cutout in cutouts_hst.items()),
+        **kwargs_ppm_hst,
+    )
+    # TODO compare extents?
+    fluxes_hst = {band: f"hst_f_{band.lower()}" for band in cutouts_hst.keys()}
+
+    matched_datatype = "matched_matched_euclid_q1_cdfs_hlf_v2p1_object_all"
+    col_ra, col_dec, euclid_pre = "coord_best_ra", "coord_best_dec", "euclid_"
+    has_hst = True
+except FileNotFoundError:
+    extent = extent_euclid
+    matched_datatype = "matched_euclid_q1_object_all"
+    col_ra, col_dec, euclid_pre = "refcat_right_ascension", "refcat_declination", "refcat_"
+    has_hst = False
+
+# One can use the coord_best_[ra/dec] columns to plot all objects with the
+# "best" available astrometry from a hierarchy of reference catalogs
+matched = butler.get(
+    matched_datatype, skymap=skymap, tract=tract, storageClass="ArrowAstropy", collections=collection,
+)
+
+flux_lsst = np.sum([matched[f"{band}_sersicFlux"] for band in "griz"], axis=0)
+mag_lsst = (u.nJy * flux_lsst).to(u.ABmag).value
+
+flux_euclid = np.nansum([matched[f"{euclid_pre}flux_{band.lower()}_sersic"] for band in bands_euclid], axis=0)
+mag_euclid = (u.nJy * flux_euclid).to(u.ABmag).value
+
+mag_offset_euclid = np.nanmedian((mag_euclid - mag_lsst)[mag_lsst < 21])
+
+mag_cutoff_lsst_euclid = 23.5
+mag_cutoff_lsst_hst = 24
+
+select_in = (
+    (matched[col_ra] > extent[1]) & (matched[col_ra] < extent[0])
+    & (matched[col_dec] > extent[2]) & (matched[col_dec] < extent[3])
+)
+matched_in = matched[select_in]
 
 # Make the finite (valid) euclid object ids positive
 # This is critical to deal with the annoyance of masked id columns converting
 # mask values to a negative (usually -1) fill value
-matched_in["euclid_object_id"][matched_in["euclid_object_id"] < 0] *= -1
+matched_in[f"{euclid_pre}object_id"][matched_in[f"{euclid_pre}object_id"] < 0] *= -1
+good_euclid = np.array(matched_in[f"{euclid_pre}object_id"]) >= 0
+good_lsst = np.array(matched_in["objectId"]) >= 0
+detectable_lsst_euclid = mag_lsst[select_in] < mag_cutoff_lsst_euclid
+detectable_euclid = mag_euclid[select_in] < (mag_cutoff_lsst_euclid + mag_offset_euclid)
+if has_hst:
+    good_hst = np.array(matched_in["hst_id"]) >= 0
+    flux_hst = np.nansum([matched[f"hst_f_{band.lower()}"] for band in cutouts_hst.keys()], axis=0)
+    mag_hst = -2.5*np.log10(flux_hst) + 31.4
+    mag_offset_hst = np.nanmedian((mag_hst - mag_lsst)[(mag_lsst < 21) & (mag_hst < 27)])
+    detectable_lsst_hst = mag_lsst[select_in] < mag_cutoff_lsst_hst
+    detectable_hst = mag_hst[select_in] < (mag_cutoff_lsst_hst + mag_offset_hst)
 
-img_rgb_hst = lsstRGB(
-    *(cutout.data * bands_weights_hst[band] for band, cutout in cutouts_hst.items()),
-    **kwargs_ppm_hst,
-)
-
-# TODO compare extents?
-fluxes_hst = {band: f"hst_f_{band.lower()}" for band in cutouts_hst.keys()}
+# Splitting off the plotting part for easy copypasting
+kwargs_subplots = {"figsize": (8, 16),}
 
 zooms = (None,) + zooms_subpatch
 
 for zoom in zooms:
-    fig_hst, ax_hst = plot_external_matches(
-        img_rgb_lsst, img_rgb_hst, extent, matched_in,
-        id_ext="hst_id",
-        bands_fluxes_ext=fluxes_hst,
-    )
-
-    ax_hst[0].set_title(f"HST {','.join(cutouts_hst.keys())}")
     title_lsst = f"{collection} LSST {';'.join(','.join(bands) for bands in bands_lsst_rgb)}"
-    ax_hst[1].set_title(title_lsst)
-    fig_hst.tight_layout()
+    if has_hst:
+        fig_hst, ax_hst = plot_external_matches(
+            img_rgb_lsst, img_rgb_hst, matched_in,
+            good_ext=good_hst,
+            good_lsst=good_lsst,
+            detectable_ext=detectable_hst,
+            detectable_lsst=detectable_lsst_hst,
+            kwargs_imshow_ext={"cmap": "gray", "extent": extent},
+            kwargs_imshow_lsst={"extent": extent},
+            kwargs_subplots=kwargs_subplots,
+        )
+
+        ax_hst[0].set_title(f"HST {','.join(cutouts_hst.keys())}")
+        ax_hst[1].set_title(title_lsst)
+        fig_hst.tight_layout()
 
     fig_euclid, ax_euclid = plot_external_matches(
-        img_rgb_lsst, img_euclid, extent, matched_in,
-        id_ext="euclid_object_id",
-        bands_fluxes_ext={"vis": "euclid_flux_vis_sersic"},
-        kwargs_imshow_ext={"cmap": "gray"},
+        img_rgb_lsst,
+        img_euclid,
+        matched_in,
+        good_ext=good_euclid,
+        good_lsst=good_lsst,
+        detectable_ext=detectable_euclid,
+        detectable_lsst=detectable_lsst_euclid,
+        key_ra_ref=col_ra,
+        key_dec_ref=col_dec,
+        label_ext_default="Euclid",
+        kwargs_imshow_ext={"cmap": "gray", "extent": extent},
+        kwargs_imshow_lsst={"extent": extent},
+        kwargs_subplots=kwargs_subplots,
     )
 
-    ax_euclid[0].set_title(f"Euclid {','.join(bands_euclid)}")
+    ax_euclid[0].set_title(f"Euclid Q1 {','.join(bands_euclid)}")
     ax_euclid[1].set_title(title_lsst)
     fig_euclid.tight_layout()
     if zoom:
-        for axes in (ax_euclid, ax_hst):
+        axes_list = [ax_euclid] + ([ax_hst] if has_hst else [])
+        for axes in axes_list:
             for axis in axes:
                 axis.set_xlim(*zoom[0])
                 axis.set_ylim(*zoom[1])
                 if zoom[0][0] > zoom[0][1]:
                     # I don't know why the y-axis needs inverting?
                     axis.invert_yaxis()
+    plt.legend()
     plt.show()
