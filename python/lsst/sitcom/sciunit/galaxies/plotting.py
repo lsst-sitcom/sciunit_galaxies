@@ -1,8 +1,11 @@
+from typing import Any
+
 import astropy.units as u
 import lsst.gauss2d as g2d
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 
 from .lsst import scale_lsst_deg
 
@@ -13,75 +16,121 @@ def _scatter_multi(axis, x, y, kwargs_scatter_list):
 
 
 def plot_external_matches(
-    img_rgb_lsst, img_rgb_ext, extent, matched_in,
-    id_ext: str,
-    bands_fluxes_ext: dict[str, str],
-    figsize_ax: float = 8,
-    kwargs_imshow_ext=None,
-    kwargs_scatter_matched=None,
-    kwargs_scatter_lsst=None,
-    kwargs_scatter_ext=None,
+    img_rgb_lsst,
+    img_rgb_ext,
+    matched_in,
+    good_ext: NDArray[bool],
+    good_lsst: NDArray[bool],
+    detectable_ext: NDArray[bool],
+    detectable_lsst: NDArray[bool],
+    key_ra_ref="coord_best_ra",
+    key_dec_ref="coord_best_dec",
+    label_ext_default="HST",
+    kwargs_imshow_ext: dict[str, Any] = None,
+    kwargs_imshow_lsst: dict[str, Any] = None,
+    kwargs_scatter_matched: dict[str, Any] = None,
+    kwargs_scatter_lsst: dict[str, Any] = None,
+    kwargs_scatter_ext: dict[str, Any] = None,
+    kwargs_subplots: dict[str, Any] = None,
 ):
+    """
+
+    Parameters
+    ----------
+    img_rgb_lsst
+        The LSST RGB image.
+    img_rgb_ext
+        An external RGB image covering the same area.
+    matched_in
+        The matched catalog subset within the image extent.
+    good_ext
+        A boolean array selecting matched_in rows with good external measurements.
+    good_lsst
+        A boolean array selecting matched_in rows with good LSST measurements.
+    detectable_ext
+        A boolean array selecting matched_in rows with external fluxes bright
+        enough to be detectable in LSST. Missing
+    detectable_lsst
+        A boolean array selecting matched_in rows with LSST fluxes bright
+        enough to be detectable in the external dataset.
+    key_ra_ref
+        The external right ascension column name.
+    key_dec_ref
+        The external declination column name.
+    label_ext_default
+        The label or name of the external dataset/telescope.
+    kwargs_imshow_ext
+        Keyword arguments to pass to plt.imshow for the external image.
+    kwargs_imshow_lsst
+        Keyword arguments to pass to plt.imshow for the LSST image.
+    kwargs_scatter_matched
+        Keyword arguments to pass to plt.scatter for the matched objects.
+    kwargs_scatter_lsst
+        Keyword arguments to pass to plt.scatter for the unmatched LSST objects.
+    kwargs_scatter_ext
+        Keyword arguments to pass to plt.scatter for the unmatched external objects.
+    kwargs_subplots
+        Keyword arguments to pass to plt.subplots
+
+    Returns
+    -------
+    fig_ext, ax_ext
+        The matplotlib Figure and Axes.
+    """
     if kwargs_imshow_ext is None:
         kwargs_imshow_ext = {}
+    if kwargs_imshow_lsst is None:
+        kwargs_imshow_lsst = {}
     if kwargs_scatter_matched is None:
         kwargs_scatter_matched = (
             dict(s=100, edgecolor="darkred", marker="o", facecolor="none", label="Matched", ),
         )
     if kwargs_scatter_lsst is None:
         kwargs_scatter_lsst = (
-            dict(s=40, edgecolor="lavender", marker="s", facecolor="none", label="LSST", ),
-            dict(s=60, edgecolor="aquamarine", marker="s", facecolor="none", label="LSST", ),
+            dict(s=40, edgecolor="lavender", marker="s", facecolor="none", label="LSST only"),
+            dict(s=60, edgecolor="aquamarine", marker="s", facecolor="none"),
         )
-
     if kwargs_scatter_ext is None:
         kwargs_scatter_ext = (
-            dict(s=40, edgecolor="cornflowerblue", marker="D", facecolor="none", label="HST", ),
-            dict(s=60, edgecolor="orange", marker="D", facecolor="none", label="HST", ),
+            dict(s=40, edgecolor="cornflowerblue", marker="D", facecolor="none"),
+            dict(s=60, edgecolor="orange", marker="D", facecolor="none", label=f"{label_ext_default} only"),
         )
+    if kwargs_subplots is None:
+        kwargs_subplots = {}
 
-    good_ext = np.array(matched_in[id_ext]) >= 0
-    good_comcam = np.array(matched_in["objectId"]) >= 0
-    good_match = good_ext & good_comcam
+    good_match = good_ext & good_lsst
 
-    ra_lsst = matched_in["coord_ra"][good_comcam]
-    dec_lsst = matched_in["coord_dec"][good_comcam]
+    ra_lsst = matched_in["coord_ra"][good_lsst]
+    dec_lsst = matched_in["coord_dec"][good_lsst]
 
-    # TODO: Get more than i-band fluxes in the matched catalog
-    flux_lsst = np.sum([matched_in[f"{band}_sersicFlux"] for band in ("i",)], axis=0)
-    mag_lsst = (u.nJy * flux_lsst).to(u.ABmag).value
+    unmatched_bright_ext = (good_ext & ~good_lsst) & detectable_ext
+    unmatched_bright_lsst = (~good_ext & good_lsst) & detectable_lsst
 
-    flux_ext = np.sum([matched_in[flux] for flux in bands_fluxes_ext.values()], axis=0)
-    mag_ext = (u.nJy * flux_ext).to(u.ABmag).value
+    fig_ext, ax_ext = plt.subplots(nrows=2, ncols=1, **kwargs_subplots)
 
-    missing_bright_ext = (good_ext & ~good_comcam) & (mag_ext < 25)
-    missing_bright_lsst = (~good_ext & good_comcam) & (mag_lsst < 25)
-
-    fig_ext, ax_ext = plt.subplots(figsize=(2 * figsize_ax, 2 * figsize_ax), nrows=2)
-
-    ax_ext[0].imshow(img_rgb_ext, extent=extent, **kwargs_imshow_ext)
-    ax_ext[1].imshow(img_rgb_lsst, extent=extent)
+    ax_ext[0].imshow(img_rgb_ext, **kwargs_imshow_ext)
+    ax_ext[1].imshow(img_rgb_lsst, **kwargs_imshow_lsst)
 
     for axis in ax_ext:
         _scatter_multi(
             axis,
-            matched_in["coord_best_ra"][good_match],
-            matched_in["coord_best_dec"][good_match],
+            matched_in[key_ra_ref][good_match],
+            matched_in[key_dec_ref][good_match],
             kwargs_scatter_list=kwargs_scatter_matched,
         )
-        for missing_bright, kwargs_bright in (
-            (missing_bright_lsst, kwargs_scatter_lsst),
-            (missing_bright_ext, kwargs_scatter_ext),
+        for unmatched_bright, kwargs_bright in (
+            (unmatched_bright_lsst, kwargs_scatter_lsst),
+            (unmatched_bright_ext, kwargs_scatter_ext),
         ):
             _scatter_multi(
                 axis,
-                matched_in["coord_best_ra"][missing_bright],
-                matched_in["coord_best_dec"][missing_bright],
+                matched_in[key_ra_ref][unmatched_bright],
+                matched_in[key_dec_ref][unmatched_bright],
                 kwargs_scatter_list=kwargs_bright,
             )
 
     for idx_ell, (r_x, r_y, rho) in enumerate(zip(
-        *(matched_in[f"sersic_{col}"][good_comcam] for col in ("reff_x", "reff_y", "rho"))
+        *(matched_in[f"sersic_{col}"][good_lsst] for col in ("reff_x", "reff_y", "rho"))
     )):
         ell_maj = g2d.EllipseMajor(g2d.Ellipse(r_x, r_y, rho), degrees=True)
         if ell_maj.r_major > 5:
