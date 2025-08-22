@@ -9,6 +9,25 @@ parameters:
     "ALPHA_J2000", "DELTA_J2000", "FLAG_HSC", "FLAG_COMBINED", "lp_type", "patch",
     "HSC_g_FLUX_AUTO", "HSC_r_FLUX_AUTO", "HSC_i_FLUX_AUTO", "HSC_z_FLUX_AUTO", "HSC_y_FLUX_AUTO",
   ]
+  columns_cosmos2025_copy: [
+    "id", "ra", "dec", "ra_model", "dec_model", "patch",
+    "flux_auto_hst-f814w", "flux_err_auto_hst-f814w",
+    "flux_auto_f115w", "flux_err_auto_f115w", "flux_auto_f150w", "flux_err_auto_f150w",
+    "mu_max_hst-f814w", "mu_max_f115w",  "mu_max_f150w",
+    "flag_star", "flag_blend",
+    "radius_sersic", "radius_sersic_err", "axratio_sersic", "axratio_sersic_err",
+    "sersic", "sersic_err", "angle_sersic", "angle_sersic_err", "e1", "e1_err", "e2", "e2_err",
+    "flux_model_hst-f814w", "flux_model_f115w", "flux_model_f150w",
+    "flux_model_cfht-u", "flux_model_hsc-g", "flux_model_hsc-r",
+    "flux_model_hsc-i", "flux_model_hsc-z", "flux_model_hsc-y",
+    "flux_err-cal_model_hst-f814w", "flux_err-cal_model_f115w", "flux_err-cal_model_f150w",
+    "flux_err-cal_model_cfht-u", "flux_err-cal_model_hsc-g", "flux_err-cal_model_hsc-r",
+    "flux_err-cal_model_hsc-i", "flux_err-cal_model_hsc-z", "flux_err-cal_model_hsc-y",
+    "flux_err-uncal_model_hst-f814w", "flux_err-uncal_model_f115w", "flux_err-uncal_model_f150w",
+    "flux_err-uncal_model_cfht-u", "flux_err-uncal_model_hsc-g", "flux_err-uncal_model_hsc-r",
+    "flux_err-uncal_model_hsc-i", "flux_err-uncal_model_hsc-z", "flux_err-uncal_model_hsc-y",
+    "warn_flag", "zfinal", "type",
+  ]
   columns_rc2_object_hsc_copy: [
     "objectId", "patch", "refExtendedness", "refSizeExtendedness",
     "coord_ra", "coord_dec",
@@ -23,6 +42,8 @@ parameters:
   ]
   cosmos2020_coord_ra: "ALPHA_J2000"
   cosmos2020_coord_dec: "DELTA_J2000"
+  cosmos2025_coord_ra: "ra"
+  cosmos2025_coord_dec: "dec"
   cosmos_acs_coord_ra: "ra"
   cosmos_acs_coord_dec: "dec"
   models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic"]
@@ -35,6 +56,10 @@ tasks:
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cosmos2020_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cosmos2020_coord_dec
       refcat_sharding_type: "none"
+
+      match_tract_catalog.columns_target_select_true: []
+      match_tract_catalog.columns_target_select_false: []
+
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
@@ -56,13 +81,17 @@ tasks:
   compareObjectToCosmos2020:
     class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
     config:
-      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       connections.name_input_cat_ref: cosmos2020_classic_v2p2
       connections.name_input_cat_target: object
+
+      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       coord_format.column_ref_coord1: parameters.cosmos2020_coord_ra
       coord_format.column_ref_coord2: parameters.cosmos2020_coord_dec
       include_unmatched: true
       refcat_sharding_type: "none"
+
+      columns_target_select_true: []
+      columns_target_select_false: []
 
       python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
@@ -81,6 +110,69 @@ tasks:
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+  matchObjectToCosmos2025:
+    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
+    config:
+      connections.name_input_cat_ref: cosmos2025_v1
+      connections.name_input_cat_target: object
+
+      match_tract_catalog.coord_format.column_ref_coord1: parameters.cosmos2025_coord_ra
+      match_tract_catalog.coord_format.column_ref_coord2: parameters.cosmos2025_coord_dec
+      refcat_sharding_type: "none"
+
+      match_tract_catalog.columns_target_select_true: []
+      match_tract_catalog.columns_target_select_false: []
+
+      python: |
+        # Target settings are likely common to all object tables
+        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        
+        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        fluxes_ref = [f"flux_model_hsc-{band}" for band in parameters.bands_match]
+        config.match_tract_catalog.columns_ref_flux = fluxes_ref
+        config.match_tract_catalog.columns_ref_meas = [
+          parameters.cosmos2025_coord_ra, parameters.cosmos2025_coord_dec,
+        ] + fluxes_ref
+        fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match]
+        columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
+        config.match_tract_catalog.columns_target_meas = columns_meas
+        config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
+        # Might need adjusting for different survey depths
+        config.match_tract_catalog.mag_faintest_ref = 29.0
+        config.match_tract_catalog.columns_ref_copy = ["id"]
+        config.match_tract_catalog.columns_target_copy = ["objectId"]
+  compareObjectToCosmos2025:
+    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
+    config:
+      connections.name_input_cat_ref: cosmos2025_v1
+      connections.name_input_cat_target: object
+
+      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      coord_format.column_ref_coord1: parameters.cosmos2025_coord_ra
+      coord_format.column_ref_coord2: parameters.cosmos2025_coord_dec
+      include_unmatched: true
+      refcat_sharding_type: "none"
+
+      columns_target_select_true: []
+      columns_target_select_false: []
+
+      python: |
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        columns_flux = {}
+        fluxes_meas_other = []
+        for band in parameters.bands_match:
+            columns_flux[band] = MatchedCatalogFluxesConfig(
+                column_ref_flux=f"flux_model_hsc-{band}",
+                columns_target_flux=[f"{band}_cModelFlux",],
+                columns_target_flux_err=[f"{band}_cModelFluxErr",],
+            )
+            for model in parameters.models_other:
+              fluxes_meas_other.append(f"{band}_{model}Flux")
+        config.columns_flux = columns_flux
+        config.columns_ref_copy = parameters.columns_cosmos2025_copy
+        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+          f"{col}Err" for col in fluxes_meas_other
+        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
   matchObjectToCosmosAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
@@ -89,6 +181,10 @@ tasks:
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cosmos_acs_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cosmos_acs_coord_dec
       refcat_sharding_type: "none"
+
+      match_tract_catalog.columns_target_select_true: []
+      match_tract_catalog.columns_target_select_false: []
+
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
@@ -118,6 +214,9 @@ tasks:
       include_unmatched: true
       refcat_sharding_type: "none"
 
+      columns_target_select_true: []
+      columns_target_select_false: []
+
       python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
@@ -142,6 +241,10 @@ tasks:
       connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: "coord_ra"
       match_tract_catalog.coord_format.column_ref_coord2: "coord_dec"
+
+      match_tract_catalog.columns_target_select_true: []
+      match_tract_catalog.columns_target_select_false: []
+
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
@@ -167,6 +270,9 @@ tasks:
       coord_format.column_ref_coord1: "coord_ra"
       coord_format.column_ref_coord2: "coord_dec"
       include_unmatched: true
+
+      columns_target_select_true: []
+      columns_target_select_false: []
 
       python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig

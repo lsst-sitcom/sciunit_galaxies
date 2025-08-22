@@ -38,6 +38,8 @@ parameters:
   pos_chi_max: 5
   cosmos2020_coord_ra: "refcat_ALPHA_J2000"
   cosmos2020_coord_dec: "refcat_DELTA_J2000"
+  cosmos2025_coord_ra: "refcat_ra"
+  cosmos2025_coord_dec: "refcat_dec"
   cosmos_acs_coord_ra: "refcat_ra"
   cosmos_acs_coord_dec: "refcat_dec"
   rc2_hsc_coord_ra: "refcat_coord_ra"
@@ -52,12 +54,14 @@ tasks:
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.prep.selectors.patch: selector_patch
+      atools.matchedRefCompleteness.selector_all: selector_all
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCompleteness.selector_ref_all: selector_obj
       atools.matchedRefCompleteness.selector_ref_star: selector_star
 
       atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
       atools.matchedRefAngularSeparationDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
       atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
@@ -65,6 +69,7 @@ tasks:
       atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
       atools.matchedRefCModelColorDiff.prep.selectors.patch: selector_patch
       atools.matchedRefCModelColorDiff.bands: bands_color
+      atools.matchedRefCModelColorDiff.selector_all: selector_all
       atools.matchedRefCModelColorDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelColorDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelColorDiff.selector_ref_star: selector_star
@@ -75,6 +80,7 @@ tasks:
       atools.matchedRefCModelColorChi.prep.selectors.patch: selector_patch
       atools.matchedRefCModelColorChi.bands: bands_color
       atools.matchedRefCModelColorChi.compute_chi: true
+      atools.matchedRefCModelColorChi.selector_all: selector_all
       atools.matchedRefCModelColorChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelColorChi.selector_ref_all: selector_obj
       atools.matchedRefCModelColorChi.selector_ref_star: selector_star
@@ -83,6 +89,7 @@ tasks:
 
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
       atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
@@ -92,6 +99,7 @@ tasks:
 
       atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagChi.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagChi.selector_all: selector_all
       atools.matchedRefCModelMagChi.compute_chi: true
       atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
@@ -103,6 +111,7 @@ tasks:
       atools.matchedRefPositionRaDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaDiff.coord_ref: parameters.cosmos2020_coord_ra
       atools.matchedRefPositionRaDiff.coord_ref_cos: parameters.cosmos2020_coord_dec
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
       atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
@@ -114,6 +123,7 @@ tasks:
       atools.matchedRefPositionRaChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaChi.coord_ref: parameters.cosmos2020_coord_ra
       atools.matchedRefPositionRaChi.coord_ref_cos: parameters.cosmos2020_coord_dec
+      atools.matchedRefPositionRaChi.selector_all: selector_all
       atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
       atools.matchedRefPositionRaChi.selector_ref_star: selector_star
@@ -125,6 +135,7 @@ tasks:
       atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecDiff.coord_ref: parameters.cosmos2020_coord_dec
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
       atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
@@ -135,6 +146,7 @@ tasks:
       atools.matchedRefPositionDecChi: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecChi.coord_ref: parameters.cosmos2020_coord_dec
+      atools.matchedRefPositionDecChi.selector_all: selector_all
       atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
       atools.matchedRefPositionDecChi.selector_ref_star: selector_star
@@ -160,6 +172,7 @@ tasks:
         
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
         
+        selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = ReferenceGalaxySelector(
           plotLabelKey="Selection: unflagged", vectorKey="refcat_FLAG_HSC",
         )
@@ -189,6 +202,163 @@ tasks:
         lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
         lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
 
+  diff_matched_cosmos2025:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      bands: ["g", "r", "i", "z", "y"]
+      connections.inputName: matched_cosmos2025_v1_object
+      connections.outputName: diff_matched_cosmos2025_v1_object
+
+      atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompleteness.prep.selectors.patch: selector_patch
+      atools.matchedRefCompleteness.selector_all: selector_all
+      atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompleteness.selector_ref_all: selector_obj
+      atools.matchedRefCompleteness.selector_ref_star: selector_star
+
+      atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
+      atools.matchedRefAngularSeparationDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
+      atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
+      atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
+
+      atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefCModelColorDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelColorDiff.bands: bands_color
+      atools.matchedRefCModelColorDiff.selector_all: selector_all
+      atools.matchedRefCModelColorDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelColorDiff.selector_ref_all: selector_obj
+      atools.matchedRefCModelColorDiff.selector_ref_star: selector_star
+      atools.matchedRefCModelColorDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelColorDiff.produce.plot.yLims: lims_color_diff
+
+      atools.matchedRefCModelColorChi: MatchedRefCoaddDiffColorTool
+      atools.matchedRefCModelColorChi.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelColorChi.bands: bands_color
+      atools.matchedRefCModelColorChi.compute_chi: true
+      atools.matchedRefCModelColorChi.selector_all: selector_all
+      atools.matchedRefCModelColorChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelColorChi.selector_ref_all: selector_obj
+      atools.matchedRefCModelColorChi.selector_ref_star: selector_star
+      atools.matchedRefCModelColorChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelColorChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
+      atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
+      atools.matchedRefCModelMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefCModelMagDiff.fluxes_default.ref_matched: ref_matched
+
+      atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagChi.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagChi.selector_all: selector_all
+      atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
+      atools.matchedRefCModelMagChi.selector_ref_star: selector_star
+      atools.matchedRefCModelMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefPositionRaDiff: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefPositionRaDiff.coord_ref: parameters.cosmos2025_coord_ra
+      atools.matchedRefPositionRaDiff.coord_ref_cos: parameters.cosmos2025_coord_dec
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
+      atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionRaChi: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaChi.prep.selectors.patch: selector_patch
+      atools.matchedRefPositionRaChi.coord_ref: parameters.cosmos2025_coord_ra
+      atools.matchedRefPositionRaChi.coord_ref_cos: parameters.cosmos2025_coord_dec
+      atools.matchedRefPositionRaChi.selector_all: selector_all
+      atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaChi.selector_ref_star: selector_star
+      atools.matchedRefPositionRaChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionRaChi.scale_factor: 3600000
+      atools.matchedRefPositionRaChi.compute_chi: true
+
+      atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefPositionDecDiff.coord_ref: parameters.cosmos2025_coord_dec
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
+      atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionDecDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionDecChi: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecChi.prep.selectors.patch: selector_patch
+      atools.matchedRefPositionDecChi.coord_ref: parameters.cosmos2025_coord_dec
+      atools.matchedRefPositionDecChi.selector_all: selector_all
+      atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecChi.selector_ref_star: selector_star
+      atools.matchedRefPositionDecChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionDecChi.scale_factor: 3600000
+      atools.matchedRefPositionDecChi.compute_chi: true
+
+      python: |        
+        from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddCompurityTool,
+          MatchedRefCoaddDiffColorTool,
+          MatchedRefCoaddDiffDistanceTool,
+          MatchedRefCoaddDiffMagTool,
+          MatchedRefCoaddDiffCoordRaTool,
+          MatchedRefCoaddDiffCoordDecTool,
+          ReferenceGalaxySelector,
+          ReferenceObjectSelector,
+          ReferenceStarSelector,
+        )
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        from lsst.analysis.tools.actions.vector import RangeSelector, SetSelector
+        
+        bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
+        
+        selector_all = RangeSelector(vectorKey="objectId")
+        selector_galaxy = ReferenceGalaxySelector(
+          plotLabelKey="Selection: LePhare galaxies", vectorKey="refcat_type",
+        )
+        selector_obj = ReferenceObjectSelector(vectorKey="refcat_type", maximum=1)
+        selector_star = ReferenceStarSelector(
+          plotLabelKey="Selection: LePhare stars", vectorKey="refcat_type",
+        )
+
+        if parameters.patches_hst:
+          selector_patch = SetSelector(
+            vectorKeys=["patch", "refcat_patch"],
+            values=parameters.patches_hsc,
+          )
+        else:
+          selector_patch = RangeSelector(vectorKey="patch", op="ge", threshold=0)
+
+        ref_matched = FluxConfig(
+            key_flux="refcat_flux_model_hsc-{band}",
+            name_flux="HSC Sersic",
+            name_flux_short="HSC_sersic",
+            key_flux_error=None,
+        )
+        lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
+        lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
+        lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)
+        lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
+        lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
+        lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
+
   diff_matched_cosmos_acs:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
@@ -198,12 +368,14 @@ tasks:
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.prep.selectors.patch: selector_patch
+      atools.matchedRefCompleteness.selector_all: selector_all
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCompleteness.selector_ref_all: selector_obj
       atools.matchedRefCompleteness.selector_ref_star: selector_star
 
       atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
       atools.matchedRefAngularSeparationDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
       atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
@@ -211,6 +383,7 @@ tasks:
 
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
       atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
@@ -221,6 +394,7 @@ tasks:
       atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagChi.prep.selectors.patch: selector_patch
       atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_all: selector_all
       atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
       atools.matchedRefCModelMagChi.selector_ref_star: selector_star
@@ -231,6 +405,7 @@ tasks:
       atools.matchedRefPositionRaDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaDiff.coord_meas: coord_ra
       atools.matchedRefPositionRaDiff.coord_ref: parameters.cosmos_acs_coord_ra
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
       atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
@@ -242,6 +417,7 @@ tasks:
       atools.matchedRefPositionRaChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaChi.coord_meas: coord_ra
       atools.matchedRefPositionRaChi.coord_ref: parameters.cosmos_acs_coord_ra
+      atools.matchedRefPositionRaChi.selector_all: selector_all
       atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
       atools.matchedRefPositionRaChi.selector_ref_star: selector_star
@@ -254,6 +430,7 @@ tasks:
       atools.matchedRefPositionDecDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecDiff.coord_meas: coord_dec
       atools.matchedRefPositionDecDiff.coord_ref: parameters.cosmos_acs_coord_dec
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
       atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
@@ -265,6 +442,7 @@ tasks:
       atools.matchedRefPositionDecChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecChi.coord_meas: coord_dec
       atools.matchedRefPositionDecChi.coord_ref: parameters.cosmos_acs_coord_dec
+      atools.matchedRefPositionDecChi.selector_all: selector_all
       atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
       atools.matchedRefPositionDecChi.selector_ref_star: selector_star
@@ -294,6 +472,7 @@ tasks:
         else:
           selector_patch = RangeSelector(vectorKey="patch", op="ge", threshold=0)
 
+        selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = ReferenceGalaxySelector(
           plotLabelKey="Selection: HST galaxies", vectorKey="refcat_mu_class", threshold=1,
         )
@@ -323,12 +502,14 @@ tasks:
 
       atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
       atools.matchedRefCompleteness.prep.selectors.patch: selector_patch
+      atools.matchedRefCompleteness.selector_all: selector_all
       atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCompleteness.selector_ref_all: selector_obj
       atools.matchedRefCompleteness.selector_ref_star: selector_star
 
       atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
       atools.matchedRefAngularSeparationDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
       atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
@@ -336,6 +517,7 @@ tasks:
       atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
       atools.matchedRefCModelColorDiff.prep.selectors.patch: selector_patch
       atools.matchedRefCModelColorDiff.bands: bands_color
+      atools.matchedRefCModelColorDiff.selector_all: selector_all
       atools.matchedRefCModelColorDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelColorDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelColorDiff.selector_ref_star: selector_star
@@ -346,6 +528,7 @@ tasks:
       atools.matchedRefCModelColorChi.prep.selectors.patch: selector_patch
       atools.matchedRefCModelColorChi.bands: bands_color
       atools.matchedRefCModelColorChi.compute_chi: true
+      atools.matchedRefCModelColorChi.selector_all: selector_all
       atools.matchedRefCModelColorChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelColorChi.selector_ref_all: selector_obj
       atools.matchedRefCModelColorChi.selector_ref_star: selector_star
@@ -354,6 +537,7 @@ tasks:
 
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
       atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
       atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
@@ -364,6 +548,7 @@ tasks:
       atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagChi.prep.selectors.patch: selector_patch
       atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_all: selector_all
       atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
       atools.matchedRefCModelMagChi.selector_ref_star: selector_star
@@ -372,6 +557,7 @@ tasks:
 
       atools.matchedRefSersicMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefSersicMagDiff.prep.selectors.patch: selector_patch
+      atools.matchedRefSersicMagDiff.selector_all: selector_all
       atools.matchedRefSersicMagDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefSersicMagDiff.selector_ref_all: selector_obj
       atools.matchedRefSersicMagDiff.selector_ref_star: selector_star
@@ -384,6 +570,7 @@ tasks:
       atools.matchedRefSersicMagChi: MatchedRefCoaddDiffMagTool
       atools.matchedRefSersicMagChi.prep.selectors.patch: selector_patch
       atools.matchedRefSersicMagChi.compute_chi: true
+      atools.matchedRefSersicMagChi.selector_all: selector_all
       atools.matchedRefSersicMagChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefSersicMagChi.selector_ref_all: selector_obj
       atools.matchedRefSersicMagChi.selector_ref_star: selector_star
@@ -397,6 +584,7 @@ tasks:
       atools.matchedRefPositionRaDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaDiff.coord_ref: parameters.rc2_hsc_coord_ra
       atools.matchedRefPositionRaDiff.coord_ref_cos: parameters.rc2_hsc_coord_dec
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
       atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
@@ -408,6 +596,7 @@ tasks:
       atools.matchedRefPositionRaChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionRaChi.coord_ref: parameters.rc2_hsc_coord_ra
       atools.matchedRefPositionRaChi.coord_ref_cos: parameters.rc2_hsc_coord_dec
+      atools.matchedRefPositionRaChi.selector_all: selector_all
       atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
       atools.matchedRefPositionRaChi.selector_ref_star: selector_star
@@ -419,6 +608,7 @@ tasks:
       atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecDiff.coord_ref: parameters.rc2_hsc_coord_dec
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
       atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
@@ -429,6 +619,7 @@ tasks:
       atools.matchedRefPositionDecChi: MatchedRefCoaddDiffCoordDecTool
       atools.matchedRefPositionDecChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionDecChi.coord_ref: parameters.rc2_hsc_coord_dec
+      atools.matchedRefPositionDecChi.selector_all: selector_all
       atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
       atools.matchedRefPositionDecChi.selector_ref_star: selector_star
@@ -442,6 +633,7 @@ tasks:
       atools.matchedRefPositionSersicRaDiff.coord_meas: sersic_ra
       atools.matchedRefPositionSersicRaDiff.coord_ref: refcat_sersic_ra
       atools.matchedRefPositionSersicRaDiff.coord_ref_cos: refcat_sersic_dec
+      atools.matchedRefPositionSersicRaDiff.selector_all: selector_all
       atools.matchedRefPositionSersicRaDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionSersicRaDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionSersicRaDiff.selector_ref_star: selector_star
@@ -454,6 +646,7 @@ tasks:
       atools.matchedRefPositionSersicRaChi.coord_meas: sersic_ra
       atools.matchedRefPositionSersicRaChi.coord_ref: refcat_sersic_ra
       atools.matchedRefPositionSersicRaChi.coord_ref_cos: refcat_sersic_dec
+      atools.matchedRefPositionSersicRaChi.selector_all: selector_all
       atools.matchedRefPositionSersicRaChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionSersicRaChi.selector_ref_all: selector_obj
       atools.matchedRefPositionSersicRaChi.selector_ref_star: selector_star
@@ -466,6 +659,7 @@ tasks:
       atools.matchedRefPositionSersicDecDiff.prep.selectors.patch: selector_patch
       atools.matchedRefPositionSersicDecDiff.coord_meas: sersic_dec
       atools.matchedRefPositionSersicDecDiff.coord_ref: refcat_sersic_dec
+      atools.matchedRefPositionSersicDecDiff.selector_all: selector_all
       atools.matchedRefPositionSersicDecDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionSersicDecDiff.selector_ref_all: selector_obj
       atools.matchedRefPositionSersicDecDiff.selector_ref_star: selector_star
@@ -477,6 +671,7 @@ tasks:
       atools.matchedRefPositionSersicDecChi.prep.selectors.patch: selector_patch
       atools.matchedRefPositionSersicDecChi.coord_meas: sersic_dec
       atools.matchedRefPositionSersicDecChi.coord_ref: refcat_sersic_dec
+      atools.matchedRefPositionSersicDecChi.selector_all: selector_all
       atools.matchedRefPositionSersicDecChi.selector_ref_galaxy: selector_galaxy
       atools.matchedRefPositionSersicDecChi.selector_ref_all: selector_obj
       atools.matchedRefPositionSersicDecChi.selector_ref_star: selector_star
@@ -500,6 +695,7 @@ tasks:
         
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
         
+        selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = GalaxySelector(
           plotLabelKey="Selection: galaxies", vectorKey="refcat_refExtendedness",
         )
