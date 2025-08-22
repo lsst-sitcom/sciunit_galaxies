@@ -11,7 +11,7 @@ data:
   run: u/dtaranu/DM-50135/cosmos2020
   records:
   - dataset_id:
-    - !uuid '96929b09-11af-43d9-89b1-ef9662e416cf'
+    - !uuid 'a41fa499-ba06-41fd-890b-3f84a8401e5a'
     data_id: {}
     path: COSMOS2020_CLASSIC_R1_v2.2_p3.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter

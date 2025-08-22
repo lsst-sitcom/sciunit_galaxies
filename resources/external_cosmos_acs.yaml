@@ -11,7 +11,7 @@ data:
   run: u/dtaranu/DM-50135/cosmos_acs
   records:
   - dataset_id:
-    - !uuid 'da135476-6089-4e90-883f-1d9429574bcf'
+    - !uuid '489bac36-5ad3-4b04-94c4-7d1c128c3dad'
     data_id: {}
     path: cosmos_acs_iphot_200709.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
