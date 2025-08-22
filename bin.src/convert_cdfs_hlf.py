@@ -94,6 +94,7 @@ patches = np.array(
     dtype=np.int16,
 )
 tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
 
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)

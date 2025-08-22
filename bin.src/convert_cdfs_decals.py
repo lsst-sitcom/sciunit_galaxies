@@ -1,11 +1,19 @@
 import astropy.table as apTab
 import astropy.units as u
+import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import astropy_to_arrow, compute_row_group_size
+from lsst.geom import degrees, SpherePoint
+import numpy as np
 import pyarrow.parquet as pq
 
 # from https://www.legacysurvey.org/viewer/ls-dr10/cat.fits?ralo=52.14077598745257&rahi=54.03427611473381&declo=-28.35063896360024&dechi=-26.684313552983653
 
-name_tab = "decals_dr10_lsst_cells_v1_5063"
+skymap = "lsst_cells_v1"
+tract = 5063
+butler = dafButler.Butler("/repo/main", collections="skymaps")
+tractInfo = butler.get("skyMap", skymap=skymap)[tract]
+
+name_tab = f"decals_dr10_{skymap}_{tract}"
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
 
 columns = (
@@ -156,11 +164,25 @@ for values in columns:
             # The above line makes a new column object for some reason
             column = tab_ap[name]
         column.unit = unit
-        column.description = desc
+        column.descr = desc
     else:
         print(f"{name_lower} column not found")
+
+coords = [
+    SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["RA"], tab_ap["DEC"])
+]
+within = np.array([tractInfo.contains(coord) for coord in coords])
+if np.sum(within) != len(within):
+    tab_ap = tab_ap[within]
+    coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
+patches = np.array(
+    [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
+    dtype=np.int16,
+)
+tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
 
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
 
-pq.write_table(tab_arrow, f"{name_tab}.parq")
+pq.write_table(tab_arrow, f"{name_tab}.parq", row_group_size=row_group_size)

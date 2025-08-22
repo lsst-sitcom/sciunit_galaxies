@@ -6,7 +6,7 @@ from lsst.geom import degrees, SpherePoint
 import numpy as np
 import pyarrow.parquet as pq
 
-# from https://datalab.noirlab.edu/query.php?name=des_dr1.y3_gold
+# from https://datalab.noirlab.edu/query.php?name=des_dr1.y6_gold
 # downloaded in nine chunks because the whole query didn't work
 # ra: 52.14077598745257, 54.03427611473381 (1.89)
 
@@ -412,7 +412,7 @@ for values in columns:
             unit_new = u.nJy**2
 
         column.unit = unit_new
-        column.description = desc
+        column.descr = desc
     else:
         print(f"{name} column not found")
 
@@ -444,6 +444,7 @@ patches = np.array(
     dtype=np.int16,
 )
 tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
 
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)

@@ -56,8 +56,9 @@ patches = np.array(
     dtype=np.int16,
 )
 tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
 
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
 
-pq.write_table(tab_arrow, "COSMOS2020_CLASSIC_R1_v2.2_p3.parq")
+pq.write_table(tab_arrow, "COSMOS2020_CLASSIC_R1_v2.2_p3.parq", row_group_size=row_group_size)

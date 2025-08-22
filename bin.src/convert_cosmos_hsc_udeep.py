@@ -5,13 +5,14 @@ import numpy as np
 import pyarrow.parquet as pq
 
 skymap = "lsst_cells_v1"
+skymap_hsc = "hsc_rings_v1"
 tract = 9813
 name_tab = f"rc2_object_hsc_{skymap}_{tract}"
 butler = dafButler.Butler("/repo/main", collections="skymaps")
 tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 
 # Or you can butler get it
-tab_ap = arrow_to_astropy(pq.read_table("objectTable_tract_9813_hsc_rings_v1.parq"))
+tab_ap = arrow_to_astropy(pq.read_table(f"objectTable_tract_9813_{skymap_hsc}.parq"))
 tab_ap = tab_ap[tab_ap["detect_isPrimary"] == True]
 del tab_ap["detect_isPrimary"]
 del tab_ap["merge_peak_sky"]
@@ -29,6 +30,8 @@ patches = np.array(
 )
 tab_ap["patch_original"] = tab_ap["patch"]
 tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
+tab_ap["patch_original"].description = f"{skymap_hsc} patch index"
 
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)

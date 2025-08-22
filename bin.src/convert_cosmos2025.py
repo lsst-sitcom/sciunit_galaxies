@@ -24,6 +24,10 @@ unit_substitutes = {
     "M_sol/yr": u.M_sun/u.yr,
 }
 
+unit_conversions = {
+    u.uJy: u.nJy,
+}
+
 columns = {
     1: {
         "id": "Unique ID of the source",
@@ -37,7 +41,7 @@ columns = {
         "a_image": "Isophotal major axis in pixels",
         "b_image": "Isophotal minor axis in pixels",
         "theta_image": "Isophotal image position angle (relative to the image x-axis)",
-        "theta_world": "Isophotoal position angle (N of E, offset 20 deg)",
+        "theta_world": "Isophotal position angle (N of E, offset 20 deg)",
         "chi2_max": "Peak value of the chi2pos detection image within r=0.1 of the source centroid",
         "mode": "Detection mode (hot or cold) this source was identified with",
         "snr_hst-f814w": "Detection significance, measured from native-resolution (i.e. non-PSF homogenized) images in 0.2 diameter apertures",
@@ -1208,8 +1212,14 @@ for idx_tab, columns_tab in columns.items():
                 unit = u.Unit(name_unit)
             except ValueError:
                 unit = unit_substitutes[name_unit]
-                if unit is not None:
-                    unit = u.Unit(unit)
+                if (unit_new := unit_conversions.get(unit)) is not None:
+                    try:
+                        factor = unit.to(unit_new, 1.0)
+                        tab_ap[column.name] *= factor
+                        print(f"multiplying {column.name} values by {factor=}")
+                        unit = unit_new
+                    except Exception as exc:
+                        print(f"converting unit_new={unit} got {exc=}")
             if unit is not None:
                 column.unit = unit
             description = description[:idx_suffix].strip()
@@ -1241,7 +1251,7 @@ for idx_tab, columns_tab in columns.items():
             tab_ap[column].unit = unit
     for name_fix, description_new in columns_fix.items():
         column = tab_ap[name_fix]
-        column.description = description
+        column.description = description_new
         column.byteswap(inplace=True)
         column.dtype = column.dtype.newbyteorder()
         dtype = column.dtype
@@ -1283,6 +1293,7 @@ patches = np.array(
     dtype=np.int16,
 )
 tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
 
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
