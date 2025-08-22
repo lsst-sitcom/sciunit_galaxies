@@ -181,10 +181,17 @@ tasks:
       connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.euclid_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
+      match_multiple_target: true
+      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      coord_format.column_ref_coord1: parameters.euclid_coord_ra
+      coord_format.column_ref_coord2: parameters.euclid_coord_dec
+      include_unmatched: true
+
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
         fluxes_ref = ["flux_vis_sersic"]
