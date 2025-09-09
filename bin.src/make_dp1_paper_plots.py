@@ -66,6 +66,8 @@ for do_galaxies in (False, True):
                     "produce": {
                         "label_shift": -0.15,
                         "legendLocation": "outside upper center",
+                        "mag_ref_label": "{band}-band Injected Magnitude",
+                        "reference_label": "Injected",
                         "show_purity": False,
                     },
                     "reconfigure": {"use_any": do_galaxies, "use_galaxies": False, "use_stars": not do_galaxies},
