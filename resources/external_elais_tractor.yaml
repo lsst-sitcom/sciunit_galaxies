@@ -1,0 +1,42 @@
+description: Import ELAIS Zou 21 (Tractor) catalogs
+version: 1.0.0
+data:
+- type: dataset_type
+  name: elais_tractor_zou21
+  dimensions: [skymap, tract]
+  storage_class: ArrowAstropy
+  is_calibration: false
+- type: dataset
+  dataset_type: elais_tractor_zou21
+  run: u/dtaranu/DM-50135/elais_tractor_zou21
+  records:
+  - dataset_id:
+    - !uuid 'f4dbe4a6-50f3-4dfc-a45c-5ba2298bc41f'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 2703}
+    path: ES1phot_lsst_cells_v1_2703.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'd70a76a2-9bde-4f64-af60-caae9e3651cb'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 2704}
+    path: ES1phot_lsst_cells_v1_2704.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '0323135f-5937-4698-97f7-9d1b09d8ce70'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 2876}
+    path: ES1phot_lsst_cells_v1_2876.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'b204642f-ce78-4f7b-a860-a39a43a32eb6'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 2877}
+    path: ES1phot_lsst_cells_v1_2877.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'e1b3e5a9-4082-4952-816e-9a3d9ae240c8'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 3053}
+    path: ES1phot_lsst_cells_v1_3053.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '7de6a896-f89d-4f1a-bc3e-2644c325c5da'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 3054}
+    path: ES1phot_lsst_cells_v1_3054.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
