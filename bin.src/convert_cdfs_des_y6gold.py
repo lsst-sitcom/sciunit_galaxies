@@ -7,24 +7,24 @@ import numpy as np
 import pyarrow.parquet as pq
 
 # from https://datalab.noirlab.edu/query.php?name=des_dr1.y6_gold
-# downloaded in nine chunks because the whole query didn't work
-# ra: 52.14077598745257, 54.03427611473381 (1.89)
-
-# dec: -28.35063896360024, -27.8, -27.25, -26.684313552983653 (1.666)
-# (dec >= -27.25) AND (dec < -26.684313552983653)
-
+# log in to download full files to vospace - the download link will not appear
+# to anonymous users for files larger than ~100M whereas a full tract is >1GB
+#
+# 5063:
 # select * from des_dr2.y6_gold WHERE (ra > 52.14077598745257) AND (ra < 54.03427611473381) #
 # AND (dec > -28.35063896360024) AND (dec < -26.684313552983653)
 
-skymap = "lsst_cells_v1"
-tract = 5063
-name_tab = f"des_y6gold_{skymap}_{tract}"
-butler = dafButler.Butler("/repo/main", collections="skymaps")
-tractInfo = butler.get("skyMap", skymap=skymap)[tract]
+# 4848:
+# select * from des_dr2.y6_gold WHERE (ra >= 51.30841) AND (ra < 52.99066) #
+# AND (dec >= -29.75207) AND (dec < -28.26446)
+#
+# 4849:
+# select * from des_dr2.y6_gold WHERE (ra >= 52.99065) AND (ra < 54.67290) #
+# AND (dec >= -29.75207) AND (dec < -28.26446)
+#
 
-tab_ap = apTab.Table.read(f"{name_tab}.csv")
-# I can't figure out how to specify csv with commented header
-tab_ap.rename_columns(("# a_fiducial_g",), ("a_fiducial_g",))
+skymap = "lsst_cells_v1"
+butler = dafButler.Butler("/repo/main", collections="skymaps")
 
 columns = (
     ("bdf_mag_err_z", "mag", "double", "Uncertainty on BDF_MAG_Z"),
@@ -381,72 +381,78 @@ units = {
     "pixels": "pix",
 }
 
-for values in columns:
-    if len(values) != 4:
-        print(f"{values[0]} len={len(values)}")
-        continue
-    name, unit, dtype, desc = values
-    if name in tab_ap.colnames:
-        column = tab_ap[name]
-        if dtype.startswith("char"):
-            print(f"{dtype=} vs {column.dtype=}")
+for tract in (4848, 4849, 5063):
+    name_tab = f"des_y6gold_{skymap}_{tract}"
+    tractInfo = butler.get("skyMap", skymap=skymap)[tract]
+
+    tab_ap = apTab.Table.read(f"{name_tab}.csv")
+
+    for values in columns:
+        if len(values) != 4:
+            print(f"{values[0]} len={len(values)}")
+            continue
+        name, unit, dtype, desc = values
+        if name in tab_ap.colnames:
+            column = tab_ap[name]
+            if dtype.startswith("char"):
+                print(f"{dtype=} vs {column.dtype=}")
+            else:
+                dtype_spec = np.dtype(dtype)
+                if column.dtype != dtype_spec:
+                    try:
+                        # This seems to change the dtype without changing
+                        # anything in memory and does bad things to ints
+                        # column.dtype = dtype_spec
+                        tab_ap[name] = tab_ap[name].astype(dtype_spec)
+                    except Exception as e:
+                        print(f"Couldn't set {name=} dtype to {dtype_spec=} due to:\n{e}")
+                    print(f"{name} {column.dtype=} != {dtype=}")
+
+            unit_new = units.get(unit, unit)
+            unit_obj = u.Unit(unit_new)
+            if unit_obj.is_equivalent(u.nJy):
+                column *= (unit_obj/u.nJy).scale
+                unit_new = u.nJy
+            elif unit_obj.is_equivalent(u.nJy**2):
+                column *= (unit_obj / u.nJy**2).scale
+                unit_new = u.nJy**2
+
+            column.unit = unit_new
+            column.description = desc
         else:
-            dtype_spec = np.dtype(dtype)
-            if column.dtype != dtype_spec:
-                try:
-                    # This seems to change the dtype without changing
-                    # anything in memory and does bad things to ints
-                    # column.dtype = dtype_spec
-                    tab_ap[name] = tab_ap[name].astype(dtype_spec)
-                except Exception as e:
-                    print(f"Couldn't set {name=} dtype to {dtype_spec=} due to:\n{e}")
-                print(f"{name} {column.dtype=} != {dtype=}")
+            print(f"{name} column not found")
 
-        unit_new = units.get(unit, unit)
-        unit_obj = u.Unit(unit_new)
-        if unit_obj.is_equivalent(u.nJy):
-            column *= (unit_obj/u.nJy).scale
-            unit_new = u.nJy
-        elif unit_obj.is_equivalent(u.nJy**2):
-            column *= (unit_obj / u.nJy**2).scale
-            unit_new = u.nJy**2
+    # This catalog doesn't seem to have RA/dec errors
+    # The BDF fits have errors on the x/y centroids (which hopefully are RA/dec)
+    # Add a systematic term and a maximum error (some are huge)
+    bdf_cen_err_sys_asec = 1e-3
+    bdf_cen_err_max_asec = 1.0
 
-        column.unit = unit_new
-        column.descr = desc
-    else:
-        print(f"{name} column not found")
+    for col_in, col_out, desc in (
+        ("bdf_pars_err_1", "ra_err", "Right Ascension"),
+        ("bdf_pars_err_2", "dec_err", "Declination"),
+    ):
+        tab_ap[col_out] = np.clip(
+            np.sqrt(tab_ap[col_in]**2 + bdf_cen_err_sys_asec**2), 0, bdf_cen_err_max_asec
+        ).to(u.degree)
+        tab_ap[col_out].description = (f'{desc} error, estimated as clip(sqrt({col_in}**2 + '
+                                       f'{bdf_cen_err_sys_asec}"**2), 0", 1"')
 
-# This catalog doesn't seem to have RA/dec errors
-# The BDF fits have errors on the x/y centroids (which hopefully are RA/dec)
-# Add a systematic term and a maximum error (some are huge)
-bdf_cen_err_sys_asec = 1e-3
-bdf_cen_err_max_asec = 1.0
+    coords = [
+        SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["alphawin_j2000"], tab_ap["deltawin_j2000"])
+    ]
+    within = np.array([tractInfo.contains(coord) for coord in coords])
+    if np.sum(within) != len(within):
+        tab_ap = tab_ap[within]
+        coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
+    patches = np.array(
+        [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
+        dtype=np.int16,
+    )
+    tab_ap["patch"] = patches
+    tab_ap["patch"].description = f"{skymap} patch index"
 
-for col_in, col_out, desc in (
-    ("bdf_pars_err_1", "ra_err", "Right Ascension"),
-    ("bdf_pars_err_2", "dec_err", "Declination"),
-):
-    tab_ap[col_out] = np.clip(
-        np.sqrt(tab_ap[col_in]**2 + bdf_cen_err_sys_asec**2), 0, bdf_cen_err_max_asec
-    ).to(u.degree)
-    tab_ap[col_out].description = (f'{desc} error, estimated as clip(sqrt({col_in}**2 + '
-                                   f'{bdf_cen_err_sys_asec}"**2), 0", 1"')
+    tab_arrow = astropy_to_arrow(tab_ap)
+    row_group_size = compute_row_group_size(tab_arrow.schema)
 
-coords = [
-    SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["alphawin_j2000"], tab_ap["deltawin_j2000"])
-]
-within = np.array([tractInfo.contains(coord) for coord in coords])
-if np.sum(within) != len(within):
-    tab_ap = tab_ap[within]
-    coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
-patches = np.array(
-    [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
-    dtype=np.int16,
-)
-tab_ap["patch"] = patches
-tab_ap["patch"].description = f"{skymap} patch index"
-
-tab_arrow = astropy_to_arrow(tab_ap)
-row_group_size = compute_row_group_size(tab_arrow.schema)
-
-pq.write_table(tab_arrow, f"{name_tab}.parq", row_group_size=row_group_size)
+    pq.write_table(tab_arrow, f"{name_tab}.parq", row_group_size=row_group_size)

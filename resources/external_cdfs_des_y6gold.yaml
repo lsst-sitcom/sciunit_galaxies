@@ -8,10 +8,20 @@ data:
   is_calibration: false
 - type: dataset
   dataset_type: des_y6gold
-  run: u/dtaranu/DM-50091/cdfs_des_y6gold
+  run: u/dtaranu/DM-50135/cdfs_des_y6gold
   records:
   - dataset_id:
-    - !uuid 'f6e1136c-e63a-48d7-b104-8f85f1e55915'
+    - !uuid '0340866b-018e-4b45-b709-cd026bf8fd84'
     data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
     path: des_y6gold_lsst_cells_v1_5063.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '809d2048-84be-41e9-8910-ef91ba86e870'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 4848}
+    path: des_y6gold_lsst_cells_v1_4848.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '9cb6ceb2-7997-4e5a-88d3-f9a01307289a'
+    data_id: {'skymap': 'lsst_cells_v1', 'tract': 4849}
+    path: des_y6gold_lsst_cells_v1_4849.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
