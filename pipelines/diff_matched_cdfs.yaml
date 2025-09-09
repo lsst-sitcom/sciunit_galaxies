@@ -55,17 +55,27 @@ parameters:
   prefix_des_y6g: "des_"
   prefix_euclid: "euclid_"
 tasks:
-  matchObjectToCdfsDesY6Gold:
+  match_object_to_cdfs_des_y6gold:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: des_y6gold
       connections.name_input_cat_target: object
+
       match_tract_catalog.coord_format.column_ref_coord1: parameters.des_y6gold_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.des_y6gold_coord_dec
+      match_tract_catalog.mag_faintest_ref: 27.0
+      match_tract_catalog.match_dist_max: 1.0
+      match_multiple_target: true
+      diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.des_y6gold_coord_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.des_y6gold_coord_dec
+      diff_matched_catalog.include_unmatched: true
+      output_matched_catalog: true
 
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
 
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = [f"bdf_flux_{band}_corrected" for band in parameters.bands_match_des_y6gold]
@@ -77,22 +87,7 @@ tasks:
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
-        # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 27.0
-        config.match_tract_catalog.columns_ref_copy = ["coadd_object_id"]
-        config.match_tract_catalog.columns_target_copy = ["objectId"]
-  compareObjectToCdfsDesY6Gold:
-    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
-    config:
-      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
-      connections.name_input_cat_ref: des_y6gold
-      connections.name_input_cat_target: object
-      coord_format.column_ref_coord1: parameters.des_y6gold_coord_ra
-      coord_format.column_ref_coord2: parameters.des_y6gold_coord_dec
-      include_unmatched: true
 
-      python: |
-        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
         for band in parameters.bands_lsst:
@@ -106,23 +101,33 @@ tasks:
                 fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
-        config.columns_flux = columns_flux
-        config.columns_ref_copy = parameters.columns_des_y6gold_copy
-        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+        config.diff_matched_catalog.columns_flux = columns_flux
+        config.diff_matched_catalog.columns_ref_copy = parameters.columns_des_y6gold_copy
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
-  matchObjectToCdfsAcs:
+  match_object_to_cdfs_acs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_hlf_v2p1
       connections.name_input_cat_target: object
+      match_tract_catalog.mag_faintest_ref: 29.0
+      match_tract_catalog.columns_ref_copy: ["id"]
+      match_tract_catalog.columns_target_copy: ["objectId"]
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
       refcat_sharding_type: "none"
+      diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
+      diff_matched_catalog.include_unmatched: true
+      output_matched_catalog: true
+
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
 
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
@@ -136,23 +141,7 @@ tasks:
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
-        # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 29.0
-        config.match_tract_catalog.columns_ref_copy = ["id"]
-        config.match_tract_catalog.columns_target_copy = ["objectId"]
-  compareObjectToCdfsAcs:
-    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
-    config:
-      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
-      connections.name_input_cat_ref: cdfs_hlf_v2p1
-      connections.name_input_cat_target: object
-      coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
-      coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
-      refcat_sharding_type: "none"
-      include_unmatched: true
 
-      python: |
-        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
         for band in parameters.bands_lsst:
@@ -167,25 +156,27 @@ tasks:
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
 
-        config.columns_flux = columns_flux
-        config.columns_ref_copy = parameters.columns_hlf_copy
-        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+        config.diff_matched_catalog.columns_flux = columns_flux
+        config.diff_matched_catalog.columns_ref_copy = parameters.columns_hlf_copy
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         config.columns_ref_copy = parameters.columns_hlf_copy
-  matchObjectToCdfsEuclid:
+  match_object_to_euclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: euclid_q1
       connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: parameters.euclid_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
+      match_tract_catalog.mag_faintest_ref: 28
       match_multiple_target: true
-      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
-      coord_format.column_ref_coord1: parameters.euclid_coord_ra
-      coord_format.column_ref_coord2: parameters.euclid_coord_dec
-      include_unmatched: true
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.euclid_coord_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
+      diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      diff_matched_catalog.include_unmatched: true
+      output_matched_catalog: true
 
       python: |
         # Target settings are likely common to all object tables
@@ -203,19 +194,6 @@ tasks:
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
-        # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 29
-        config.match_tract_catalog.columns_ref_copy = ["object_id"]
-        config.match_tract_catalog.columns_target_copy = ["objectId"]
-  compareObjectToCdfsEuclid:
-    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
-    config:
-      columns_target_coord_err: ["coord_raErr", "coord_decErr"]
-      connections.name_input_cat_ref: euclid_q1
-      connections.name_input_cat_target: object
-      coord_format.column_ref_coord1: parameters.euclid_coord_ra
-      coord_format.column_ref_coord2: parameters.euclid_coord_dec
-      include_unmatched: true
 
       python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
@@ -232,29 +210,41 @@ tasks:
                 fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
-        config.columns_flux = columns_flux
-        config.columns_ref_copy = parameters.columns_euclid_copy
-        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+        config.diff_matched_catalog.columns_flux = columns_flux
+        config.diff_matched_catalog.columns_ref_copy = parameters.columns_euclid_copy
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
-  matchCdfsDesY6GoldToCdfsAcs:
+  match_cdfs_des_y6gold_to_cdfs_acs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_hlf_v2p1
       connections.name_input_cat_target: des_y6gold
-      match_tract_catalog.columns_target_select_false: []
-      match_tract_catalog.columns_target_select_true: []
+      match_multiple_target: true
+      refcat_sharding_type: "none"
       match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
       match_tract_catalog.coord_format.column_target_coord1: parameters.des_y6gold_coord_ra
       match_tract_catalog.coord_format.column_target_coord2: parameters.des_y6gold_coord_dec
-      refcat_sharding_type: "none"
+      match_tract_catalog.mag_faintest_ref: 29.0
+      match_tract_catalog.match_dist_max: 1.0
+      diff_matched_catalog.column_matched_prefix_ref: parameters.prefix_acs
+      diff_matched_catalog.column_matched_prefix_target: parameters.prefix_des_y6g
+      diff_matched_catalog.columns_target_coord_err: ["ra_err", "dec_err"]
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
+      diff_matched_catalog.coord_format.column_target_coord1: parameters.des_y6gold_coord_ra
+      diff_matched_catalog.coord_format.column_target_coord2: parameters.des_y6gold_coord_dec
+      diff_matched_catalog.include_unmatched: true
+      diff_matched_catalog.prefix_best_coord: "coord_best_"
+      output_matched_catalog: true
 
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = ["f_f775w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -271,48 +261,37 @@ tasks:
           "ra_err", "dec_err", f"bdf_flux_err_i_corrected",
         ]
         # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 29.0
         config.match_tract_catalog.columns_ref_copy = parameters.columns_hlf_copy
         config.match_tract_catalog.columns_target_copy = ["coadd_object_id"]
-  compareCdfsDesY6GoldToCdfsAcs:
-    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
-    config:
-      connections.name_input_cat_ref: cdfs_hlf_v2p1
-      connections.name_input_cat_target: des_y6gold
-      columns_target_select_false: []
-      columns_target_select_true: []
-      columns_target_coord_err: ["ra_err", "dec_err"]
-      coord_format.column_ref_coord1: parameters.cdfs_acs_coord_ra
-      coord_format.column_ref_coord2: parameters.cdfs_acs_coord_dec
-      coord_format.column_target_coord1: parameters.des_y6gold_coord_ra
-      coord_format.column_target_coord2: parameters.des_y6gold_coord_dec
-      include_unmatched: true
-      prefix_best_coord: "coord_best_"
-      refcat_sharding_type: "none"
-      column_matched_prefix_ref: parameters.prefix_acs
-      column_matched_prefix_target: parameters.prefix_des_y6g
 
-      python: |
-        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         fluxes_meas_other = [f"bdf_flux_{band}_corrected" for band in parameters.bands_match_des_y6gold]
-        config.columns_ref_copy = parameters.columns_hlf_copy
-        config.columns_target_copy = [
+        config.diff_matched_catalog.columns_ref_copy = parameters.columns_hlf_copy
+        config.diff_matched_catalog.columns_target_copy = [
           parameters.des_y6gold_coord_ra, parameters.des_y6gold_coord_dec,
         ] + parameters.columns_des_y6gold_copy + fluxes_meas_other + [
           f"bdf_flux_err_{band}_corrected" for band in parameters.bands_match_des_y6gold
         ]
-  matchObjectToCdfsAcsDes:
+  match_object_to_cdfs_acs_des_y6gold:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_des_y6gold
       connections.name_input_cat_target: object
       match_tract_catalog.coord_format.column_ref_coord1: coord_best_ra
       match_tract_catalog.coord_format.column_ref_coord2: coord_best_dec
+      match_tract_catalog.mag_faintest_ref: 29.0
+      diff_matched_catalog.prefix_best_coord: "coord_best_"
+      diff_matched_catalog.column_matched_prefix_ref: ""
+      diff_matched_catalog.columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
+      diff_matched_catalog.coord_format.column_ref_coord1: coord_best_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: coord_best_dec
+      diff_matched_catalog.include_unmatched: true
+      output_matched_catalog: true
 
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
         fluxes_ref = [f"{parameters.prefix_acs}f_f775w", f"{parameters.prefix_des_y6g}bdf_flux_i_corrected"]
@@ -328,25 +307,11 @@ tasks:
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
         # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 29.0
         config.match_tract_catalog.columns_ref_copy = [
           f"{parameters.prefix_acs}id", f"{parameters.prefix_des_y6g}coadd_object_id",
         ]
         config.match_tract_catalog.columns_target_copy = ["objectId"]
-  compareObjectToCdfsAcsDes:
-    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
-    config:
-      columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
-      connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_des_y6gold
-      connections.name_input_cat_target: object
-      coord_format.column_ref_coord1: coord_best_ra
-      coord_format.column_ref_coord2: coord_best_dec
-      include_unmatched: true
-      prefix_best_coord: "coord_best_"
-      column_matched_prefix_ref: ""
 
-      python: |
-        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
         for band in parameters.bands_lsst:
@@ -360,14 +325,14 @@ tasks:
                 fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
-        config.columns_flux = columns_flux
-        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+        config.diff_matched_catalog.columns_flux = columns_flux
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         prefix_matched = "matched_"
-        config.column_matched_prefix_ref = prefix_matched
-        config.columns_ref_copy = [
+        config.diff_matched_catalog.column_matched_prefix_ref = prefix_matched 
+        config.diff_matched_catalog.columns_ref_copy = [
           f"{parameters.prefix_acs}{col_ref}" for col_ref in parameters.columns_hlf_copy
         ] + [
           f"{parameters.prefix_des_y6g}{col_ref}" for col_ref in [
@@ -376,7 +341,7 @@ tasks:
             f"bdf_flux_err_{band}_corrected" for band in parameters.bands_match_des_y6gold
           ]
         ]
-  matchCdfsAcsToEuclid:
+  match_cdfs_acs_to_euclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: euclid_q1
@@ -387,7 +352,21 @@ tasks:
       match_tract_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
       match_tract_catalog.coord_format.column_target_coord1: parameters.cdfs_acs_coord_ra
       match_tract_catalog.coord_format.column_target_coord2: parameters.cdfs_acs_coord_dec
+      match_tract_catalog.mag_faintest_ref: 28.0
+      match_tract_catalog.match_dist_max: 1.0
       target_sharding_type: "none"
+      match_multiple_target: true
+      diff_matched_catalog.columns_target_coord_err: ["ra_gaia_est_error", "dec_gaia_est_error"]
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.euclid_coord_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
+      diff_matched_catalog.coord_format.column_target_coord1: parameters.cdfs_acs_coord_ra
+      diff_matched_catalog.coord_format.column_target_coord2: parameters.cdfs_acs_coord_dec
+      diff_matched_catalog.include_unmatched: true
+      diff_matched_catalog.prefix_best_coord: "coord_best_"
+      diff_matched_catalog.target_sharding_type: "none"
+      diff_matched_catalog.column_matched_prefix_ref: parameters.prefix_euclid
+      diff_matched_catalog.column_matched_prefix_target: parameters.prefix_acs
+      output_matched_catalog: true
 
       python: |
         # Target settings are likely common to all object tables
@@ -405,8 +384,6 @@ tasks:
           parameters.cdfs_acs_coord_ra, parameters.cdfs_acs_coord_dec,
         ] + fluxes_meas
 
-        config.match_tract_catalog.match_dist_max = 1.0
-
         config.match_tract_catalog.columns_target_err = [
          "ra_gaia_est_error", "dec_gaia_est_error", f"e_f775w",
         ]
@@ -418,29 +395,11 @@ tasks:
         config.match_tract_catalog.mag_faintest_ref = 26.0
         config.match_tract_catalog.columns_ref_copy = ["object_id"]
         config.match_tract_catalog.columns_target_copy = ["id"]
-  compareCdfsAcsToEuclid:
-    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
-    config:
-      connections.name_input_cat_ref: euclid_q1
-      connections.name_input_cat_target: cdfs_hlf_v2p1
-      columns_target_select_false: []
-      columns_target_select_true: []
-      columns_target_coord_err: ["ra_gaia_est_error", "dec_gaia_est_error"]
-      coord_format.column_ref_coord1: parameters.euclid_coord_ra
-      coord_format.column_ref_coord2: parameters.euclid_coord_dec
-      coord_format.column_target_coord1: parameters.cdfs_acs_coord_ra
-      coord_format.column_target_coord2: parameters.cdfs_acs_coord_dec
-      include_unmatched: true
-      prefix_best_coord: "coord_best_"
-      target_sharding_type: "none"
-      column_matched_prefix_ref: parameters.prefix_euclid
-      column_matched_prefix_target: parameters.prefix_acs
 
-      python: |
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        config.columns_ref_copy = parameters.columns_euclid_copy
-        config.columns_target_copy = parameters.columns_hlf_copy
-  matchObjectToEuclidCdfsAcs:
+        config.diff_matched_catalog.columns_ref_copy = parameters.columns_euclid_copy
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_hlf_copy
+  match_object_to_euclid_cdfs_acs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_euclid_q1_cdfs_hlf_v2p1
@@ -449,11 +408,23 @@ tasks:
       match_tract_catalog.coord_format.column_ref_coord2: coord_best_dec
       match_tract_catalog.columns_target_select_false: []
       match_tract_catalog.columns_target_select_true: []
+      match_tract_catalog.mag_faintest_ref: 29.0
+      match_multiple_target: true
+      diff_matched_catalog.column_match_candidate_ref: None
+      diff_matched_catalog.column_match_candidate_target: None
+      diff_matched_catalog.column_matched_prefix_ref: ""
+      diff_matched_catalog.columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
+      diff_matched_catalog.coord_format.column_ref_coord1: coord_best_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: coord_best_dec
+      diff_matched_catalog.include_unmatched: true
+      diff_matched_catalog.prefix_best_coord: "coord_best_"
+      output_matched_catalog: true
 
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
         prefix_hst = parameters.prefix_acs
@@ -469,26 +440,6 @@ tasks:
         columns_meas = ["sersic_ra", "sersic_dec", "sersic_ra", "sersic_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
-        # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 28.0
-        config.match_tract_catalog.columns_ref_copy = [f"{prefix_hst}id", f"{prefix_euclid}object_id"]
-        config.match_tract_catalog.columns_target_copy = ["objectId"]
-  compareObjectToEuclidCdfsAcs:
-    class: lsst.pipe.tasks.diff_matched_tract_catalog.DiffMatchedTractCatalogTask
-    config:
-      column_match_candidate_ref: None
-      column_match_candidate_target: None
-      columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
-      connections.name_input_cat_ref: matched_euclid_q1_cdfs_hlf_v2p1
-      connections.name_input_cat_target: object
-      coord_format.column_ref_coord1: coord_best_ra
-      coord_format.column_ref_coord2: coord_best_dec
-      include_unmatched: true
-      prefix_best_coord: "coord_best_"
-      column_matched_prefix_ref: ""
-
-      python: |
-        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
 
         prefix_hst = parameters.prefix_acs
         prefix_euclid = parameters.prefix_euclid
@@ -507,12 +458,12 @@ tasks:
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
 
-        config.columns_flux = columns_flux
-        config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+        config.diff_matched_catalog.columns_flux = columns_flux
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
-        config.columns_ref_copy = [
+        config.diff_matched_catalog.columns_ref_copy = [
           f"{prefix_hst}{col_ref}" for col_ref in parameters.columns_hlf_copy
         ] + [
           f"{prefix_euclid}{col_ref}" for col_ref in parameters.columns_euclid_copy
