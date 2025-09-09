@@ -2,17 +2,17 @@ description: Import external catalogs
 version: 1.0.0
 data:
 - type: dataset_type
-  name: cosmos2020_classic_v2p2
+  name: cdfs_hlf_v2p1
   dimensions: []
   storage_class: ArrowAstropy
   is_calibration: false
 - type: dataset
-  dataset_type: cosmos2020_classic_v2p2
-  run: u/dtaranu/DM-44000/cosmos2020
+  dataset_type: cdfs_hlf_v2p1
+  run: u/dtaranu/DM-50091/cdfs_hlf
   records:
   - dataset_id:
-    - !uuid '96929b09-11af-43d9-89b1-ef9662e416cf'
+    - !uuid 'ed3840fd-4655-4ccf-b533-eccf6a5ed2b0'
     data_id: {}
-    path: COSMOS2020_CLASSIC_R1_v2.2_p3.parq
+    path: hlsp_hlf_hst_60mas_goodss_v2.1_catalog.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
 
