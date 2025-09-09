@@ -8,10 +8,10 @@ data:
   is_calibration: false
 - type: dataset
   dataset_type: decals_dr10
-  run: u/dtaranu/DM-48367/cdfs_decals
+  run: u/dtaranu/DM-50135/cdfs_decals
   records:
   - dataset_id:
-    - !uuid 'fe90bb3c-3a78-425f-9975-68d190f75475'
+    - !uuid '1eee63e9-b624-4732-aadf-6f2664c1bd4f'
     data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
     path: decals_dr10_lsst_cells_v1_5063.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
