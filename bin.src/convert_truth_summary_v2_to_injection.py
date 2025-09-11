@@ -19,11 +19,11 @@ if is_hsc:
     skymap_name_out = "hsc_rings_v1"
     tracts = ((3828, 9813),)
 else:
-    is_abell_360 = True
+    is_abell_360 = False
     bands = ("u", "g", "r", "i", "z", "y")
     butler_out = dafButler.Butler(
-        "/repo/main",
-        collections=["LSSTComCam/runs/DRP/DP1/v29_0_0_rc6/DM-50098"],
+        "/repo/dp1_prep",
+        collections=["LSSTComCam/runs/DRP/DP1/v29_0_0/DM-50260"],
     )
     skymap_name_out = "lsst_cells_v1"
     if is_abell_360:
