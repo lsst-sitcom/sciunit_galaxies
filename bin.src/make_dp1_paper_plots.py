@@ -20,10 +20,10 @@ reconfigure_diff_matched_defaults(
     use_stars=False,
 )
 
-collection = "u/dtaranu/DM-50425/injected_dp1_v29_0_0_rc6/plots"
+collection = "u/dtaranu/DM-50124/injected_dp1_v29_1_1/plots"
 dataset = "matched_injected_deep_coadd_predetection_catalog_tract_injected_object_all"
 
-butler = dafButler.Butler("/repo/main", collections=collection)
+butler = dafButler.Butler("/repo/dp1_prep", collections=collection)
 data = butler.get(dataset, skymap=skymap, tract=tract, storageClass="ArrowAstropy")
 plotInfo = {
     "run": collection,
