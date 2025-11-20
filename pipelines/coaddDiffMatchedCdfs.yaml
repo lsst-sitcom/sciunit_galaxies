@@ -172,9 +172,9 @@ tasks:
             selector_tract_patches = CompositeSelector(combine_by_and=False)
             for tract_string in parameters.patches.split(";"):
               tract, patches = tract_string.split(":")
-              values = [int(x) for x in patches.split(",")]
+              values = [int(x) for x in patches.split(",")] if patches else [int(tract)]
               selector_tract = MatchedTractSelector(tract=int(tract), patches=values) if patches else (
-                SetSelector(vectorKeys=["tract", "refcat_tract"], values=[tract]))
+                SetSelector(vectorKeys=["tract", "refcat_tract"], values=values))
               setattr(selector_tract_patches.selectors, f"tract_{tract}", selector_tract)
             selector_comp.selectors.tract_patches = selector_tract_patches
           else:
@@ -469,14 +469,14 @@ tasks:
           vectorKey="refcat_mumax_minus_mag", threshold=-2.6, op="ge",
         )
         selector_obj = ReferenceObjectSelector(vectorKey="refcat_spurious_prob", minimum=0, maximum=0.1)
-        selector_star = ReferenceStarSelector(| grep 
+        selector_star = ReferenceStarSelector( 
           plotLabelValue="Euclid mumax_minus_mag < -2.6",
           vectorKey="refcat_mumax_minus_mag",
           threshold=-2.6, op="le",
         )
         ref_matched = FluxConfig(
             key_flux="refcat_flux_vis_sersic",
-            name_flux="Reference",
+            name_flux="Euclid VIS Sersic",
             name_flux_short="Sersic_vis",
             key_flux_error=None,
         )
@@ -492,9 +492,9 @@ tasks:
             selector_tract_patches = CompositeSelector(combine_by_and=False)
             for tract_string in parameters.patches.split(";"):
               tract, patches = tract_string.split(":")
-              values = [int(x) for x in patches.split(",")]
+              values = [int(x) for x in patches.split(",")] if patches else [int(tract)]
               selector_tract = MatchedTractSelector(tract=int(tract), patches=values) if patches else (
-                SetSelector(vectorKeys=["tract", "refcat_tract"], values=[tract]))
+                SetSelector(vectorKeys=["tract", "refcat_tract"], values=values))
               setattr(selector_tract_patches.selectors, f"tract_{tract}", selector_tract)
             selector_comp.selectors.tract_patches = selector_tract_patches
           else:

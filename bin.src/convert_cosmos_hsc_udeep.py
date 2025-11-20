@@ -5,10 +5,10 @@ import numpy as np
 import pyarrow.parquet as pq
 
 skymap = "lsst_cells_v1"
-skymap_hsc = "hsc_rings_v1"
+skymap_hsc = "hsc_rings_cells_v1"
 tract = 9813
 name_tab = f"rc2_object_hsc_{skymap}_{tract}"
-butler = dafButler.Butler("/repo/main", collections="skymaps")
+butler = dafButler.Butler("main", collections="skymaps")
 tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 
 # Or you can butler get it

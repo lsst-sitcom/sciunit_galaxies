@@ -42,8 +42,8 @@ parameters:
   cosmos2025_coord_dec: "refcat_dec"
   cosmos_acs_coord_ra: "refcat_ra"
   cosmos_acs_coord_dec: "refcat_dec"
-  rc2_hsc_coord_ra: "refcat_coord_ra"
-  rc2_hsc_coord_dec: "refcat_coord_dec"
+  rc2_hsc_coord_ra: "refcat_sersic_ra"
+  rc2_hsc_coord_dec: "refcat_sersic_dec"
 tasks:
   diff_matched_cosmos2020:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask

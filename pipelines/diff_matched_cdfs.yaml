@@ -54,6 +54,9 @@ parameters:
   ]
   columns_obj_copy: [
     "objectId", "patch", "refExtendedness",
+    "g_bdReB", "r_bdReB", "i_bdReB", "z_bdReB",
+    "g_bdReD", "r_bdReD", "i_bdReD", "z_bdReD",
+    "exponential_delta_lnL_fit_linear", "exponential_delta_lnL_fit_ps",
   ]
   columns_sersic_copy: [
     "sersic_x", "sersic_y", "sersic_xErr", "sersic_yErr",
@@ -176,7 +179,6 @@ tasks:
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
-        config.columns_ref_copy = parameters.columns_hlf_copy
   match_object_to_euclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:

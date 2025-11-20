@@ -25,6 +25,7 @@ unit_substitutes = {
 }
 
 unit_conversions = {
+    u.deg: u.arcsec,
     u.uJy: u.nJy,
 }
 
@@ -1215,13 +1216,13 @@ for idx_tab, columns_tab in columns.items():
                 if (unit_new := unit_conversions.get(unit)) is not None:
                     try:
                         factor = unit.to(unit_new, 1.0)
-                        tab_ap[column.name] *= factor
-                        print(f"multiplying {column.name} values by {factor=}")
+                        tab_ap[name] *= factor
+                        print(f"multiplying {name} values by {factor=}")
                         unit = unit_new
                     except Exception as exc:
                         print(f"converting unit_new={unit} got {exc=}")
             if unit is not None:
-                column.unit = unit
+                tab_ap[name].unit = unit
             description = description[:idx_suffix].strip()
 
         if column.data.ndim > 1:
@@ -1280,6 +1281,15 @@ for idx_tab, columns_tab in columns.items():
 
 tab_ap = apTab.hstack(tables)
 tab_ap.meta["inputs"] = meta_inputs
+
+for coord in ("ra", "dec", "ra_detec_bd", "dec_detec_bd"):
+    tab_ap[coord].unit = u.degree
+
+for column in ["ra", "dec"]:
+    column_error = f"{column}_est_error"
+    tab_ap[column_error] = np.full(len(tab_ap), 0.01 / 3600, dtype=np.float32)
+    tab_ap[column_error].description = f"Placeholder {column_error} error (constant 10 mas)"
+    tab_ap[column_error].unit = u.deg
 
 coords = [
     SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["ra"], tab_ap["dec"])

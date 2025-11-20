@@ -1,4 +1,5 @@
 import argparse
+import glob
 import logging
 import os.path
 
@@ -25,6 +26,9 @@ if __name__ == '__main__':
     tracts = [int(x) for x in args.tracts.split(",")]
 
     for tract in tracts:
+        tmpFiles = glob.glob(f"{args.save_directory}/tmp*")
+        for tmpFile in tmpFiles:
+            os.remove(tmpFile)
         table, queries, jobs = query_tract_catalog(
             tractInfo=skymap[tract],
             name_skymap=args.skymap_name,

@@ -4,7 +4,7 @@ from astropy.visualization import make_lupton_rgb
 from copy import deepcopy
 import lsst.daf.butler as dafButler
 import lsst.gauss2d as g2d
-from lsst.geom import SpherePoint, degrees, Extent2I
+from lsst.geom import SpherePoint, degrees, Extent2I, Point2D
 from lsst.multiprofit.plotting.reference_data import bands_weights_lsst
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -14,6 +14,7 @@ get_hst = True
 # This will use a lot of memory - each patch image is 4.1GB
 keep_hst_full = True
 plot_hst = True
+use_dp1 = False
 use_ppm = True
 
 if get_hst:
@@ -41,15 +42,17 @@ mpl.rcParams.update({"image.origin": "lower", 'font.size': 13})
 kwargs_lup = dict(minimum=-2, Q=10, stretch=60)
 kwargs_lup_hst = dict(minimum=0, Q=8, stretch=1.3)
 
+# Some superspreaders around a ?bright star?
+ra_gal, dec_gal = 52.5325, -27.9426
 # A nice group of galaxies
-ra_gal, dec_gal = 53.12277768, -27.73640709
+# ra_gal, dec_gal = 53.12277768, -27.73640709
 # ra_gal, dec_gal = 53.124654379926724, -27.740377354687737
 # A region with some dubious detections
 # ra_gal, dec_gal = 53.11, -27.9
 # Another galaxy of some description
 # ra_gal, dec_gal = 53.124848804610785, -27.758377013546585
 # ra_gal, dec_gal = 52.9035204, -28.0243690  # nice galaxy but not fully covered
-bands_lsst_rgb = (("y", "z"), ("i", "r"), ("g", "u"))
+bands_lsst_rgb = (("y", "z") if use_dp1 else ("i",), ("i", "r") if use_dp1 else ("r",), ("g", "u") if use_dp1 else ("g",))
 bands_lsst = tuple(band for bands in bands_lsst_rgb for band in bands)
 bands_hst = ("F775W", "F606W", "F435W")
 weight_mean = np.mean([bands_weights_lsst[band] for band in bands_lsst])
@@ -67,9 +70,11 @@ cutouts_hst = {}
 wcs_hst = {}
 full_hst = {}
 
-butler = dafButler.Butler("/repo/main")
+butler = dafButler.Butler("/repo/dp1_prep" if use_dp1 else "/repo/main")
 collections = [
-    "u/dtaranu/DM-50091/v29_0_0_rc6/match",
+    "u/dtaranu/DM-50135/DP1/matched",
+] if use_dp1 else [
+    "u/dtaranu/DM-50135/w_2025_33/matched_cdfs"
 ]
 
 n_collections = len(collections)
@@ -85,7 +90,7 @@ patch = patchInfo.sequential_index
 # "best" available astrometry from a hierarchy of reference catalogs
 # HST, DES, then ComCam
 matched = butler.get(
-    "matched_matched_cdfs_hlf_v2p1_euclid_q1_object",
+    "matched_matched_euclid_q1_cdfs_hlf_v2p1_object",
     skymap=name_skymap, tract=tract, storageClass="ArrowAstropy", collections=collections[0],
 )
 
@@ -269,17 +274,23 @@ for idx, (collection, cutouts_bands) in enumerate(cutouts.items()):
     if use_ppm:
         fig_ax_imgs.append((fig_ppm, ax_ppm, img_ppm))
 
-    radec_begin = cutout.wcs.pixel_to_world(0, 0)
-    radec_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
-    (ra_begin, dec_begin), (ra_end, dec_end) = (
-        (radec.ra.value, radec.dec.value) for radec in (radec_begin, radec_end)
-    )
-    extent = (
-        radec_begin.ra.value, radec_end.ra.value, radec_begin.dec.value, radec_end.dec.value,
-    )
+    if get_hst:
+        cutout = cutout_hst
+        radec_begin = cutout.wcs.pixel_to_world(0, 0)
+        radec_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
+        (ra_begin, dec_begin), (ra_end, dec_end) = (
+            (radec.ra.value, radec.dec.value) for radec in (radec_begin, radec_end)
+        )
+    else:
+        cutout = next(iter(cutouts.values()))["r"]
+        bbox = cutout.getBBox()
+        ra_begin, dec_begin = (x.asDegrees() for x in cutout.wcs.pixelToSky(Point2D(bbox.getBegin())))
+        ra_end, dec_end = (x.asDegrees() for x in cutout.wcs.pixelToSky(Point2D(bbox.getEnd())))
+    extent = (ra_begin, dec_begin, ra_end, dec_end)
 
     for fig, axes, img in fig_ax_imgs:
-        axis = (axes[idx, 0] if get_hst else axes[idx]) if (n_collections > 1) else axes[0]
+        axis = (axes[idx, 0] if get_hst else axes[idx]) if (n_collections > 1) else (
+            axes[0] if get_hst else axes)
         axis.imshow(img, extent=extent)
         axis.set_title(title)
 

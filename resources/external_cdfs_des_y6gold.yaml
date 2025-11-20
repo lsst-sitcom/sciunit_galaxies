@@ -12,16 +12,16 @@ data:
   records:
   - dataset_id:
     - !uuid '0340866b-018e-4b45-b709-cd026bf8fd84'
-    data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5063}
     path: des_y6gold_lsst_cells_v1_5063.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
   - dataset_id:
     - !uuid '809d2048-84be-41e9-8910-ef91ba86e870'
-    data_id: {'skymap': 'lsst_cells_v1', 'tract': 4848}
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4848}
     path: des_y6gold_lsst_cells_v1_4848.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
   - dataset_id:
     - !uuid '9cb6ceb2-7997-4e5a-88d3-f9a01307289a'
-    data_id: {'skymap': 'lsst_cells_v1', 'tract': 4849}
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4849}
     path: des_y6gold_lsst_cells_v1_4849.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter

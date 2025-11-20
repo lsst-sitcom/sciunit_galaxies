@@ -13,6 +13,8 @@ butler = dafButler.Butler("/repo/main", collections="skymaps")
 tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
+# The ID is an integer; unsure how it ended up as a float
+tab_ap["id"] = tab_ap["id"].astype(int)
 
 # The ID is an integer; unsure how it ended up as a float
 tab_ap["id"] = tab_ap["id"].astype(int)

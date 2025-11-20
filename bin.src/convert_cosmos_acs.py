@@ -35,6 +35,12 @@ patches = np.array(
 tab_ap["patch"] = patches
 tab_ap["patch"].description = f"{skymap} patch index"
 
+for column in ["ra", "dec"]:
+    column_error = f"{column}_est_error"
+    tab_ap[column_error] = np.full(len(tab_ap), 0.01 / 3600, dtype=np.float32)
+    tab_ap[column_error].description = f"Placeholder {column_error} error (constant 10 mas)"
+    tab_ap[column_error].unit = u.deg
+
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
 

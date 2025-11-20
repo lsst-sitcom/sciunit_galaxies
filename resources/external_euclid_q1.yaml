@@ -12,7 +12,7 @@ data:
   records:
   - dataset_id:
     - !uuid 'a71bdb6c-e321-4dc7-806d-131c6bd48879'
-    data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5063}
     path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5063/euclid_q1_5063_lsst_cells_v1.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
 - type: dataset
@@ -21,7 +21,7 @@ data:
   records:
   - dataset_id:
     - !uuid '70e3f1ea-faf9-4bbd-b846-5024bb926cb7'
-    data_id: {'skymap': 'lsst_cells_v1', 'tract': 4848}
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4848}
     path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4848/euclid_q1_4848_lsst_cells_v1.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
 - type: dataset
@@ -30,6 +30,33 @@ data:
   records:
   - dataset_id:
     - !uuid '56527d6e-3b33-40e1-8fdb-5c8812742f3f'
-    data_id: {'skymap': 'lsst_cells_v1', 'tract': 4849}
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4849}
     path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4849/euclid_q1_4849_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '1b5d889d-8ab8-4126-bfa5-766d1124cd14'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5062}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5062/euclid_q1_5062_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '6f3c631d-3337-4d84-9657-7e5fd26fb1e2'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5064}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5064/euclid_q1_5064_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'df112362-277b-4748-90e3-f117a56aaeda'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5279}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5279/euclid_q1_5279_lsst_cells_v1.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter

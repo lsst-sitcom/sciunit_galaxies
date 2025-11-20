@@ -27,7 +27,7 @@ parameters:
     "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
     "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
   ]
-  models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic"]
+  models_other: ["psf", "gaap1p0", "kron", "sersic"]
   prefix_tractor_elais: "hst_"
 tasks:
   match_object_to_tractor_elais:

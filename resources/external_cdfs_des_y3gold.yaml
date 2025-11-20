@@ -12,6 +12,6 @@ data:
   records:
   - dataset_id:
     - !uuid '95c96e57-0d58-49c5-9865-bb830b9dde57'
-    data_id: {'skymap': 'lsst_cells_v1', 'tract': 5063}
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5063}
     path: des_y3gold_lsst_cells_v1_5063.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
