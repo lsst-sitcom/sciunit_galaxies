@@ -74,7 +74,7 @@ def get_cutouts_euclid(
     patch: int,
     bands: Iterable[str],
     position: SkyCoord,
-    cutout_size: int,
+    cutout_size,
     fits_euclid: dict | None = None,
     keep_fits: bool = False,
 ) -> tuple[dict[str, Cutout2D], tuple[float, float, float, float]]:
