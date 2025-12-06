@@ -8,6 +8,9 @@ name_tab = "hlsp_hlf_hst_60mas_goodss_v2.1_catalog"
 
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
 
+# The ID is an integer; unsure how it ended up as a float
+tab_ap["id"] = tab_ap["id"].astype(int)
+
 columns = {
     "id": ("Unique identifier", ""),
     "x": ("X centroid in image coordinates", "pix"),
