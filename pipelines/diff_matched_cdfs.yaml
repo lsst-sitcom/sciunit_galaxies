@@ -33,7 +33,15 @@ parameters:
     "gal_ebv", "gal_ebv_err", "phz_classification", "patch",
     "det_quality_flag",
   ]
-  columns_obj_copy: ["objectId", "patch", "refExtendedness"]
+  columns_exponential_copy: [
+    "exponential_x", "exponential_y", "exponential_xErr", "exponential_yErr",
+    "exponential_ra", "exponential_dec", "exponential_raErr", "exponential_decErr",
+    "exponential_rho", "exponential_rhoErr",
+    "exponential_reff_x", "exponential_reff_xErr", "exponential_reff_y", "exponential_reff_yErr",
+  ]
+  columns_obj_copy: [
+    "objectId", "patch", "refExtendedness",
+  ]
   columns_sersic_copy: [
     "sersic_x", "sersic_y", "sersic_xErr", "sersic_yErr",
     "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
@@ -42,7 +50,7 @@ parameters:
   ]
   euclid_coord_ra: "right_ascension"
   euclid_coord_dec: "declination"
-  models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic"]
+  models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic", "exponential"]
   prefix_acs: "hst_"
   prefix_des_y6g: "des_"
   prefix_euclid: "euclid_"
@@ -100,6 +108,7 @@ tasks:
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
   matchObjectToCdfsAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
@@ -155,6 +164,7 @@ tasks:
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         config.columns_ref_copy = parameters.columns_hlf_copy
   matchObjectToCdfsEuclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
@@ -209,6 +219,7 @@ tasks:
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
   matchCdfsDesY6GoldToCdfsAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
@@ -332,6 +343,7 @@ tasks:
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         prefix_matched = "matched_"
         config.column_matched_prefix_ref = prefix_matched 
         config.columns_ref_copy = [
@@ -480,6 +492,7 @@ tasks:
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         config.columns_ref_copy = [
           f"{prefix_hst}{col_ref}" for col_ref in parameters.columns_hlf_copy
         ] + [
