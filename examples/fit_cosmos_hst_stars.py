@@ -1,11 +1,12 @@
 import logging
 import os
+import pathlib
 
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import astropy.units as u
 from lsst.daf.butler.formatters.parquet import arrow_to_astropy
-import lsst.gauss2d.fit as g2f
+
 from lsst.multiprofit import ComponentGroupConfig, GaussianComponentConfig, ModelConfig, SourceConfig
 from lsst.multiprofit.fitting import CatalogSourceFitterConfigData
 from lsst.sitcom.sciunit.galaxies.fit_cosmos_hst import CatalogExposureCosmosHstBase
@@ -21,6 +22,7 @@ import pyarrow.parquet as pq
 testdata_cosmos_dir = os.environ["TESTDATA_COSMOS_DIR"]
 tract: int = 9813
 patch: int = 40
+save: bool = True
 
 bands_hsc = {"g", "r", "i"}
 
@@ -85,11 +87,13 @@ catexp_hst = CatalogExposureCosmosHstStars(
 )
 config_data = CatalogSourceFitterConfigData(config=config_fit, channels=[catexp_hst.channel])
 
+if save:
+    filepath = f"{testdata_cosmos_dir}/{get_psf_model_fits_filepath(tract=tract, patch=patch, band=band_hst)}"
+    pathlib.Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+
 results = fitter.fit(catalog_multi=catalog_ref_hsc, catexps=[catexp_hst], config_data=config_data)
 CatalogExposureCosmosHstStars.populate_psf_table(results, config_data, catalog_ref_hsc, band=band_hst)
 
-save = True
 if save:
     from lsst.daf.butler.formatters.parquet import astropy_to_arrow
-    filepath = get_psf_model_fits_filepath(tract=tract, patch=patch, band=band_hst)
-    pq.write_table(astropy_to_arrow(results), f"{testdata_cosmos_dir}/{filepath}")
+    pq.write_table(astropy_to_arrow(results), filepath)

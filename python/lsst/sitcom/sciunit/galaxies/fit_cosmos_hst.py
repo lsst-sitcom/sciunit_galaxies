@@ -1,26 +1,30 @@
 import warnings
 from functools import cached_property
 import math
-from typing import Any, ClassVar, Iterable
+from typing import Iterable
 
 from astropy.coordinates import SkyCoord
 import astropy.io.fits as fits
 from astropy.table import Table
 import astropy.units as u
 from astropy.wcs import WCS
-from lsst.afw.table import SourceCatalog
 import lsst.gauss2d as g2d
 import lsst.gauss2d.fit as g2f
 from lsst.meas.extensions.multiprofit.errors import CatalogError
-from lsst.meas.extensions.multiprofit.fit_coadd_multiband import MultiProFitSourceConfig
+from lsst.meas.extensions.multiprofit.fit_coadd_multiband import (
+    CatalogExposureSourcesDataclassConfig, CatalogExposureSourcesWcsBase,
+)
+from lsst.meas.extensions.multiprofit.wrappedskywcs import WrappedWcsBase
 from lsst.multiprofit.componentconfig import (
     GaussianComponentConfig,
     ParameterConfig,
 )
-from lsst.multiprofit.fitting import CatalogExposureSourcesABC, CatalogSourceFitterConfigData
+from lsst.multiprofit.fitting import CatalogSourceFitterConfigData
 from lsst.multiprofit.utils import get_params_uniq
 import numpy as np
 import pydantic
+
+from .wrappedastropywcs import WrappedAstropyWcs
 
 __all__ = [
     "NoHstSourceFoundError", "NotBrightHstStarError", "CatalogExposureCosmosHstBase",
@@ -43,19 +47,12 @@ class NotBrightHstStarError(CatalogError):
         return "not_hst_bright_star_flag"
 
 
-class CatalogExposureCosmosHstBase(CatalogExposureSourcesABC, pydantic.BaseModel):
-    """A class to store a catalog, exposure, and metadata for a given dataId.
-
-    The intent is to store an exposure and an associated measurement catalog.
-    Users may omit one but not both (e.g. if the intent is just to attach
-    a dataId and metadata to a catalog or exposure).
+@pydantic.dataclasses.dataclass(frozen=True, kw_only=True, config=CatalogExposureSourcesDataclassConfig)
+class CatalogExposureCosmosHstBase(CatalogExposureSourcesWcsBase):
+    """CatalogExposure for a COSMOS HST coadd.
     """
 
-    model_config: ClassVar = pydantic.ConfigDict(arbitrary_types_allowed=True, extra="forbid", frozen=True)
-
     catalog_hst: Table = pydantic.Field(title="The HST source catalog")
-    catalog_ref_hsc: SourceCatalog = pydantic.Field(title="The HSC reference catalog")
-    config_fit: MultiProFitSourceConfig = pydantic.Field(title="Config for fitting options")
     cos_dec_hst: float = pydantic.Field(title="The cosine of the average declination of the HST observation")
     dataId: dict = pydantic.Field(title="A DataCoordinate or dict containing a 'band' item")
     id_tract_patch: int = pydantic.Field(0, title="A unique ID for this tract-patch pair")
@@ -72,7 +69,14 @@ class CatalogExposureCosmosHstBase(CatalogExposureSourcesABC, pydantic.BaseModel
         return g2f.Channel.get(self.band)
 
     def get_catalog(self) -> Iterable:
-        return self.catalog_ref_hsc
+        return self.catalog
+
+    def get_wcs(self) -> WrappedWcsBase:
+        return self.wcs
+
+    @cached_property
+    def wcs(self):
+        return WrappedAstropyWcs(wcs=self.wcs_hst)
 
     # TODO: Implement stitching multiple image/weight pairs into a single
     # patch if needed
@@ -175,11 +179,6 @@ class CatalogExposureCosmosHstBase(CatalogExposureSourcesABC, pydantic.BaseModel
             channel=g2f.Channel.get(band),
         )
         return observation, wcs_obs, cos_dec
-
-    def model_post_init(self, __context: Any):
-        super().model_post_init(__context)
-        if 'band' not in self.dataId:
-            raise ValueError(f"dataId={self.dataId} must have a band")
 
     @cached_property
     def psf_model_minimal_config(self) -> GaussianComponentConfig:

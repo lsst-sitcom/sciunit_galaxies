@@ -38,9 +38,9 @@ class CosmosTile(pydantic.BaseModel):
 
     channel: ClassVar[g2f.Channel.get] = g2f.Channel.get("F814W")
 
-    image: fits.hdu.image.PrimaryHDU = pydantic.Field(doc="The image data")
-    wcs: WCS = pydantic.Field(doc="The world coordinate system for the image")
-    weight: fits.hdu.image.PrimaryHDU = pydantic.Field(doc="The weight (inverse variance) data")
+    image: fits.hdu.image.PrimaryHDU = pydantic.Field(title="The image data")
+    wcs: WCS = pydantic.Field(title="The world coordinate system for the image")
+    weight: fits.hdu.image.PrimaryHDU = pydantic.Field(title="The weight (inverse variance) data")
 
     @classmethod
     def from_tile_table(cls, tile_name: str, tile_table: Table):
@@ -99,7 +99,7 @@ class CosmosTileTable(pydantic.BaseModel):
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
-    tile_table: Table = pydantic.Field(doc="A tile table as returned by make_tile_table")
+    tile_table: Table = pydantic.Field(title="A tile table as returned by make_tile_table")
 
     def find_tile_names(self, ra: float, dec: float):
         found = (ra >= self.tile_table["ra_min"]) & (ra <= self.tile_table["ra_max"]) & (

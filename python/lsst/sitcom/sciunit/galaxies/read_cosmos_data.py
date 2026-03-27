@@ -1,5 +1,6 @@
 from functools import cached_property
 import glob
+from typing import Any
 
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -9,20 +10,35 @@ from lsst.afw.image import ExposureF
 from lsst.afw.table import SourceCatalog
 from lsst.daf.butler.formatters.parquet import arrow_to_astropy, pq
 import lsst.gauss2d.fit as g2f
-from lsst.meas.extensions.multiprofit.fit_coadd_multiband import CatalogExposurePsfs
+from lsst.meas.extensions.multiprofit.fit_coadd_multiband import (
+    CatalogExposurePsfs, MagnitudeDependentSizePriorConfig, MakeInitializerActionBase,
+)
+from lsst.meas.extensions.multiprofit.fit_coadd_psf import MultiProFitPsfConfig
 from lsst.meas.extensions.multiprofit.plots import ObjectTableBase
-from lsst.multiprofit import ComponentGroupConfig, SersicComponentConfig, ModelConfig, SourceConfig
+from lsst.meas.extensions.multiprofit.wrappedskywcs import WrappedSkyWcs
+from lsst.multiprofit import (
+    ChannelGroupCentroidConfig, ComponentGroupConfig, MultiChannelCentroidConfig, ModelConfig,
+    SersicComponentConfig, SourceConfig,
+)
 from lsst.multiprofit.fitting import CatalogSourceFitterConfigData
+from lsst.multiprofit.fitting.fit_psf import CatalogPsfFitterConfig, CatalogPsfFitterConfigData
+from lsst.multiprofit.utils import set_config_from_dict
 from lsst.sitcom.sciunit.galaxies.fit_cosmos_hst import CatalogExposureCosmosHstBase
 from lsst.sitcom.sciunit.galaxies.fit_cosmos_hst_objects import (
     CatalogExposureCosmosHstObjects, MultiProFitCosmosHstObjectsConfig, MultiProFitCosmosHstObjectsFitter,
 )
-from lsst.sitcom.sciunit.galaxies.fit_cosmos_hst_stars import CatalogExposureCosmosHstStars
+from lsst.sitcom.sciunit.galaxies.fit_cosmos_hst_stars import (
+    CatalogExposureCosmosHstStars, MultiProFitCosmosHstStarsConfig,
+)
 import numpy as np
 import pydantic
 
 
-def get_dataset_filepath(dataset: str, tract: int = 9813, patch: int = 40, band=None, suffix: str = ".parq"):
+def get_dataset_filepath(
+    dataset: str, tract: int = 9813, patch: int = 40, band=None, suffix: str | None = None,
+):
+    if suffix is None:
+        suffix = ".parq"
     patch_dir = f"{patch}/" if patch else ''
     filedir = f"{dataset}/{tract}/{patch_dir}"
     suffix_band = ""
@@ -49,9 +65,11 @@ def get_psf_model_fits_filepath(tract: int = 9813, patch: int = 40, band="F814W"
     )
 
 
-def get_deblended_model_fits_filepath(model: str = "sersic", tract: int = 9813, patch: int = 40):
+def get_deblended_model_fits_filepath(
+    model: str = "sersic", tract: int = 9813, patch: int = 40, suffix: str | None = None
+):
     dataset = f"cosmos_hst_deblended_{model}_multiprofit"
-    return get_dataset_filepath(dataset=dataset, tract=tract, patch=patch)
+    return get_dataset_filepath(dataset=dataset, tract=tract, patch=patch, suffix=suffix)
 
 
 def get_tiles_from_patch(
@@ -155,31 +173,72 @@ def build_fit_inputs(
     testdata_cosmos_dir: str,
     bands_hsc: tuple[str] | list[str],
     tract: int, patch: int,
-    band_hsc_ref: str = "r", band_hst: str = "F814W"
+    band_hsc_ref: str = "r",
+    band_hst: str = "F814W",
+    chromatic_centroid: bool = False,
+    configs_sersic: dict[str, SersicComponentConfig] | None = None,
+    action_initializer: MakeInitializerActionBase | None = None,
+    kwargs_initializer: dict[str, Any] | None = None,
 ):
+    if configs_sersic is None:
+        configs_sersic: dict[str, SersicComponentConfig] = {
+            "sersic": SersicComponentConfig(
+                prior_axrat_mean=0.7,
+                prior_axrat_stddev=0.2,
+                prior_size_stddev=0.1,
+            ),
+        }
+    if kwargs_initializer is None:
+        kwargs_initializer = {}
+
     channels_hsc = {band: g2f.Channel.get(band) for band in bands_hsc}
 
     catexps_hsc, catalog_ref_hsc = read_data_hsc(testdata_path=testdata_cosmos_dir, bands=bands_hsc)
     wcs_hsc = catexps_hsc[band_hsc_ref][1].wcs
 
-    fitter = MultiProFitCosmosHstObjectsFitter(wcs=wcs_hsc)
+    kwargs_group = {}
+    if chromatic_centroid:
+        kwargs_group["centroids"] = {}
+        kwargs_group["centroids_chromatic"] = {
+            name_comp: ChannelGroupCentroidConfig(
+                achromatic=False,
+                groups={
+                    "hsc": MultiChannelCentroidConfig(
+                        channels=("g", "r", "i", "z", "y")
+                    ),
+                    "hst": MultiChannelCentroidConfig(channels=("F814W",)),
+                }
+            )
+            for name_comp in configs_sersic.keys()
+        }
+
+    errors_expected = MultiProFitCosmosHstObjectsFitter.add_missing_errors()
     config_fit = MultiProFitCosmosHstObjectsConfig(
         config_model=ModelConfig(
             sources={
                 "": SourceConfig(
                     component_groups={
                         "": ComponentGroupConfig(
-                            components_sersic={
-                                "sersic": SersicComponentConfig(),
-                            }
+                            components_sersic=configs_sersic,
+                            **kwargs_group
                         )
-                    }
+                    },
                 )
             }
         ),
-        flag_errors={v: str(k) for k, v in fitter.errors_expected.items()},
+        flag_errors={v: str(k) for k, v in errors_expected.items()},
         fit_isolated_only=True,
         apply_centroid_pixel_offset=False,
+        size_priors={
+            name_comp: MagnitudeDependentSizePriorConfig(
+                intercept_mag=22.6,
+                slope_median_per_mag=-0.15,
+                slope_stddev_per_mag=0,
+            )
+            for name_comp in configs_sersic.keys()
+        },
+        use_sky_coords=True,
+        action_initializer=action_initializer,
     )
 
     for band, catexp in catexps_hsc.items():
@@ -189,14 +248,18 @@ def build_fit_inputs(
                 kwargs_first={"suffix": "*.parq", "prefix_path": f"{testdata_cosmos_dir}/"},
             )
         ))
+        config_fit_psf = MultiProFitPsfConfig()
+        if (config_dict := table_psf_fits_hsc.meta.get("config")) is not None:
+            set_config_from_dict(config_fit_psf, config_dict)
+        psf_model_data = CatalogPsfFitterConfigData(config=config_fit_psf)
         catexp = CatalogExposurePsfs(
             catalog=catexp[0],
             exposure=catexp[1],
             channel=channels_hsc[band],
             config_fit=config_fit,
             dataId={"tract": tract, "patch": patch, "band": band},
+            psf_model_data=psf_model_data,
             table_psf_fits=table_psf_fits_hsc,
-            use_sky_coords=True,
         )
         catexps_hsc[band] = catexp
 
@@ -224,16 +287,25 @@ def build_fit_inputs(
         tiles_within, radec_min=radec_min, radec_max=radec_max, band=band_hst,
     )
 
+    config_fit_psf = MultiProFitCosmosHstStarsConfig()
+    if (config_dict := table_psf_fits_hst.meta.get("config")) is not None:
+        set_config_from_dict(config_fit_psf, config_dict, initialize_none=True)
+
+    config_psf = CatalogPsfFitterConfig(model=next(iter(config_fit_psf.config_model.sources.values())))
+    psf_model_data = CatalogPsfFitterConfigData(config=config_psf)
+
     catexp_hst = CatalogExposureCosmosHstObjects(
+        catalog=catalog_ref_hsc,
         catalog_hst=catalog_hst,
-        catalog_ref_hsc=catalog_ref_hsc,
         config_fit=config_fit,
         cos_dec_hst=cos_dec_hst,
         dataId={"tract": 9813, "patch": patch, "band": band_hst},
         observation_hst=obs_hst,
+        psf_model_data=psf_model_data,
         table_psf_fits=table_psf_fits_hst,
         wcs_ref=wcs_hsc,
         wcs_hst=wcs_hst,
+        psf_fit_in_sky_coords=True,
     )
     channels_all = list(channels_hsc.values()) + [catexp_hst.channel]
     config_fit.bands_fit = [channel.name for channel in channels_all]
@@ -242,8 +314,13 @@ def build_fit_inputs(
         config=config_fit,
         channels=channels_all,
     )
-
     catexps = list(catexps_hsc.values()) + [catexp_hst]
+    initializer = config_fit.action_initializer(
+        catalog_multi=catalog_ref_hsc, catexps=catexps, config_data=config_data, **kwargs_initializer,
+    )
+    wcs = WrappedSkyWcs(wcs=wcs_hsc)
+    fitter = MultiProFitCosmosHstObjectsFitter(wcs=wcs, initializer=initializer)
+
     return catexps, catalog_ref_hsc, catalog_hst, config_data, fitter
 
 
