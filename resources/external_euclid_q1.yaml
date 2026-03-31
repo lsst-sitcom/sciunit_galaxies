@@ -11,9 +11,261 @@ data:
   run: u/dtaranu/DM-50135/euclid_q1
   records:
   - dataset_id:
-    - !uuid 'a71bdb6c-e321-4dc7-806d-131c6bd48879'
-    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5063}
-    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5063/euclid_q1_5063_lsst_cells_v1.parq
+    - !uuid 'a14e90f0-79be-421b-981d-cc6978b1680f'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2078}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2078/euclid_q1_2078_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '04a7bf02-69ae-4d9d-bb50-ae9d4dd4792f'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2079}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2079/euclid_q1_2079_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '701e2f9e-4c4b-4f5e-b993-5dea08dbf11b'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2080}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2080/euclid_q1_2080_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '48c85a04-b486-4f3d-9f78-b2611d6cca43'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2081}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2081/euclid_q1_2081_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '053d22f7-d9a9-45e0-a25b-d24036b8362e'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2233}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2233/euclid_q1_2233_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'd843ce05-dbf0-4a09-87b8-07cad18e6504'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2234}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2234/euclid_q1_2234_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '4da98daa-fa6b-4d8c-8686-2c309a8ab457'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2235}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2235/euclid_q1_2235_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'ca616ced-008f-4fd9-a92b-fc99c25908a1'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2236}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2236/euclid_q1_2236_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '8222a8f6-39be-4478-b15d-5b857bfe263a'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2237}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2237/euclid_q1_2237_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '70390faf-3724-4baa-8e9f-abc3dcc7b607'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2392}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2392/euclid_q1_2392_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'b33359f5-10bb-43e4-8617-1cfb87477c4f'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2393}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2393/euclid_q1_2393_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '1e530dc4-de5e-425e-a9ab-3ddeb71a1a4b'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2394}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2394/euclid_q1_2394_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '3c9aec88-bf7c-4689-bfff-2c37a8579dea'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2395}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2395/euclid_q1_2395_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '2cc7a90a-7ce1-4de3-b6c8-f06609289844'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2396}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2396/euclid_q1_2396_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '38a87f2a-21b4-4011-8ff1-de81c40f8c6d'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2397}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2397/euclid_q1_2397_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '1384e381-35c5-43c8-bd52-53cf60d4d435'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2558}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2558/euclid_q1_2558_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '84537a2d-8d0b-4bd7-8552-30e97080bbb8'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2559}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2559/euclid_q1_2559_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'd40c823d-16df-45cc-a9a0-31a473e73a4b'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2560}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2560/euclid_q1_2560_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '0fae4615-098f-4964-97f0-5850cd020583'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2561}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2561/euclid_q1_2561_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '21256088-1a53-410b-900c-2838cdfaae92'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2562}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2562/euclid_q1_2562_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '5894da88-b9c2-4729-a786-079e0111050e'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2728}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2728/euclid_q1_2728_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '141a595e-2924-4304-8cb7-c2f9b33f3bd4'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2729}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2729/euclid_q1_2729_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '5f20d5c1-3f23-499f-bbad-8f93b6d34724'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2730}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2730/euclid_q1_2730_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '6d1511e2-a574-4f09-8c02-1380af28d60f'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2731}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/2731/euclid_q1_2731_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'b91345a4-dcf4-4b47-b8c5-7676dbe8a233'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4636}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4636/euclid_q1_4636_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '33099981-8f01-4db3-8763-8dcc79255d24'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4637}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4637/euclid_q1_4637_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'b6fb4045-54ea-4720-abc2-a7e86e9e32e6'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4638}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4638/euclid_q1_4638_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'bba8f4b3-1a53-4a5f-a30b-1c34bebf4eaa'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4639}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4639/euclid_q1_4639_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '8b798a8b-6846-4082-a887-8d9e3d29d148'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4847}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4847/euclid_q1_4847_lsst_cells_v1.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
 - type: dataset
   dataset_type: euclid_q1
@@ -38,9 +290,27 @@ data:
   run: u/dtaranu/DM-50135/euclid_q1
   records:
   - dataset_id:
+    - !uuid 'a0441790-67a4-4bce-9a73-ad9823c47cf9'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4850}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/4850/euclid_q1_4850_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
     - !uuid '1b5d889d-8ab8-4126-bfa5-766d1124cd14'
     data_id: {'skymap': 'lsst_cells_v2', 'tract': 5062}
     path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5062/euclid_q1_5062_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid 'a71bdb6c-e321-4dc7-806d-131c6bd48879'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5063}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5063/euclid_q1_5063_lsst_cells_v1.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
 - type: dataset
   dataset_type: euclid_q1
@@ -59,4 +329,22 @@ data:
     - !uuid 'df112362-277b-4748-90e3-f117a56aaeda'
     data_id: {'skymap': 'lsst_cells_v2', 'tract': 5279}
     path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5279/euclid_q1_5279_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '811a3a6c-8f60-4cbf-be5b-5cefb42926dc'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5280}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5280/euclid_q1_5280_lsst_cells_v1.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+- type: dataset
+  dataset_type: euclid_q1
+  run: u/dtaranu/DM-50135/euclid_q1
+  records:
+  - dataset_id:
+    - !uuid '8a6f432e-6bb4-4544-b2cc-1a474ca62745'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5281}
+    path: /sdf/data/rubin/shared/euclid/q1/lsst_cells_v1/5281/euclid_q1_5281_lsst_cells_v1.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
