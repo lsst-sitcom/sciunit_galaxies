@@ -1,11 +1,8 @@
 description: Catalog matching and analysis for HSC with COSMOS
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/diff_matched_wide.yaml
 parameters:
-  bands_lsst: ["u", "g", "r", "i", "z", "y"]
-  bands_match_des_y6gold: ["g", "r", "i", "z", "y"]
   bands_match_acs: ["i"]
-  bands_match_euclid: ["i"]
-  des_y6gold_coord_ra: "alphawin_j2000"
-  des_y6gold_coord_dec: "deltawin_j2000"
   cdfs_acs_coord_ra: "ra_gaia"
   cdfs_acs_coord_dec: "dec_gaia"
   cdfs_jades_coord_ra: "RA"
@@ -22,7 +19,7 @@ parameters:
     "f_f160w", "e_f160w",
     "z_spec", "star_flag", "flags", "detection_flag", "kron_radius", "flux_radius", "patch",
   ]
-  columns_jades_copy: [
+  columns_jades_v2_copy: [
     "ID", "RA", "DEC",
     "F090W_FLAG", "F115W_FLAG", "F150W_FLAG", "F090W_TEXP", "F115W_TEXP", "F150W_TEXP",
     "F090W_WHT", "F115W_WHT", "F150W_WHT",
@@ -33,97 +30,37 @@ parameters:
     "F090W_SEG_e", "F115W_SEG_e", "F150W_SEG_e", "F090W_KRON_e", "F115W_KRON_e", "F150W_KRON_e",
     "F090W_SEG_ei", "F115W_SEG_ei", "F150W_SEG_ei", "F090W_KRON_ei", "F115W_KRON_ei", "F150W_KRON_ei",
   ]
-  columns_des_y6gold_copy: ["coadd_object_id", "ext_mash", "patch"]
-  columns_euclid_copy: [
-    "object_id", "right_ascension", "declination", "vis_det",
-    "flux_vis_psf", "flux_y_templfit", "flux_j_templfit", "flux_h_templfit",
-    "flux_vis_sersic", "flux_y_sersic", "flux_j_sersic", "flux_h_sersic",
-    "fluxerr_vis_psf", "fluxerr_y_templfit", "fluxerr_j_templfit", "fluxerr_h_templfit",
-    "fluxerr_vis_sersic", "fluxerr_y_sersic", "fluxerr_j_sersic", "fluxerr_h_sersic",
-    "point_like_prob", "point_like_flag", "mumax_minus_mag", "spurious_flag", "spurious_prob",
-    "ellipticity", "ellipticity_err", "semimajor_axis", "semimajor_axis_err",
-    "position_angle", "position_angle_err", "kron_radius", "kron_radius_err",
-    "gal_ebv", "gal_ebv_err", "phz_classification", "patch",
-    "det_quality_flag",
+  columns_jades_v5_copy: [
+    "ID", "RA", "DEC", "patch", "FLAG_BN",
+    "F090W_FLAG", "F115W_FLAG", "F150W_FLAG", "F090W_TEXP", "F115W_TEXP", "F150W_TEXP",
+    "F090W_WHT", "F115W_WHT", "F150W_WHT",
+    "R_KRON_U", "A_KRON", "B_KRON", "THETA_KRON",
+    "A", "B", "FWHM", "THETA", "GINI",
+    "A_KRON_S", "B_KRON_S", "THETA_KRON_S",
+    "F070W_KRON", "F090W_KRON", "F115W_KRON", "F150W_KRON", "F435W_KRON", "F606W_KRON", "F775W_KRON", "F814W_KRON",
+    "F070W_KRON_S", "F090W_KRON_S", "F115W_KRON_S", "F150W_KRON_S", "F435W_KRON_S", "F606W_KRON_S", "F775W_KRON_S", "F814W_KRON_S",
+    "F070W_KRON_e", "F090W_KRON_e", "F115W_KRON_e", "F150W_KRON_e", "F435W_KRON_e", "F606W_KRON_e", "F775W_KRON_e", "F814W_KRON_e",
+    "F070W_KRON_ei", "F090W_KRON_ei", "F115W_KRON_ei", "F150W_KRON_ei", "F435W_KRON_ei", "F606W_KRON_ei", "F775W_KRON_ei", "F814W_KRON_ei",
+    "F070W_KRON_S_e", "F090W_KRON_S_e", "F115W_KRON_S_e", "F150W_KRON_S_e", "F435W_KRON_S_e", "F606W_KRON_S_e", "F775W_KRON_S_e", "F814W_KRON_S_e",
+    "F070W_KRON_S_ei", "F090W_KRON_S_ei", "F115W_KRON_S_ei", "F150W_KRON_S_ei", "F435W_KRON_S_ei", "F606W_KRON_S_ei", "F775W_KRON_S_ei", "F814W_KRON_S_ei",
+    "pz_z_spec", "pz_z_a", "pz_z_ml", "pz_chi_a",
+    "pz_l68", "pz_u68", "pz_l95", "pz_u95", "pz_l99", "pz_u99",
+    "pz_nfilt", "pz_z_peak", "pz_chi_peak",
+    "pz_z025", "pz_z160", "pz_z500", "pz_z840", "pz_z975",
+    "pz_Prob_gt_5", "pz_Prob_gt_6", "pz_Prob_gt_7", "pz_Prob_gt_8", "pz_Prob_gt_9",
+    "pz_chisq_z_lt_7", "pz_z_chisq_z_lt_7", "pz_chisq_z_lt_6", "pz_z_chisq_z_lt_6",
+    "pz_chisq_z_lt_5", "pz_z_chisq_z_lt_5", "pz_chisq_z_lt_4", "pz_z_chisq_z_lt_4",
+    "pz_kron_z_spec", "pz_kron_z_a", "pz_kron_z_ml", "pz_kron_chi_a",
+    "pz_kron_l68", "pz_kron_u68", "pz_kron_l95", "pz_kron_u95", "pz_kron_l99", "pz_kron_u99",
+    "pz_kron_nfilt", "pz_kron_z_peak", "pz_kron_chi_peak", "pz_kron_z025",
+    "pz_kron_z160", "pz_kron_z500", "pz_kron_z840", "pz_kron_z975",
+    "pz_kron_Prob_gt_5", "pz_kron_Prob_gt_6", "pz_kron_Prob_gt_7", "pz_kron_Prob_gt_8", "pz_kron_Prob_gt_9",
+    "pz_kron_chisq_z_lt_7", "pz_kron_z_chisq_z_lt_7", "pz_kron_chisq_z_lt_6", "pz_kron_z_chisq_z_lt_6",
+    "pz_kron_chisq_z_lt_5", "pz_kron_z_chisq_z_lt_5", "pz_kron_chisq_z_lt_4", "pz_kron_z_chisq_z_lt_4",
   ]
-  columns_exponential_copy: [
-    "exponential_x", "exponential_y", "exponential_xErr", "exponential_yErr",
-    "exponential_ra", "exponential_dec", "exponential_raErr", "exponential_decErr",
-    "exponential_rho", "exponential_rhoErr",
-    "exponential_reff_x", "exponential_reff_xErr", "exponential_reff_y", "exponential_reff_yErr",
-  ]
-  columns_obj_copy: [
-    "objectId", "patch", "refExtendedness",
-    "g_bdReB", "r_bdReB", "i_bdReB", "z_bdReB",
-    "g_bdReD", "r_bdReD", "i_bdReD", "z_bdReD",
-    "exponential_delta_lnL_fit_linear", "exponential_delta_lnL_fit_ps",
-  ]
-  columns_sersic_copy: [
-    "sersic_x", "sersic_y", "sersic_xErr", "sersic_yErr",
-    "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
-    "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
-    "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
-  ]
-  euclid_coord_ra: "right_ascension"
-  euclid_coord_dec: "declination"
-  models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic", "exponential"]
   prefix_acs: "hst_"
-  prefix_des_y6g: "des_"
-  prefix_euclid: "euclid_"
   prefix_jades: "jades_"
 tasks:
-  match_object_to_cdfs_des_y6gold:
-    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
-    config:
-      connections.name_input_cat_ref: des_y6gold
-      connections.name_input_cat_target: object
-
-      match_tract_catalog.coord_format.column_ref_coord1: parameters.des_y6gold_coord_ra
-      match_tract_catalog.coord_format.column_ref_coord2: parameters.des_y6gold_coord_dec
-      match_tract_catalog.mag_faintest_ref: 27.0
-      match_tract_catalog.match_dist_max: 1.0
-      match_multiple_target: true
-      diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
-      diff_matched_catalog.coord_format.column_ref_coord1: parameters.des_y6gold_coord_ra
-      diff_matched_catalog.coord_format.column_ref_coord2: parameters.des_y6gold_coord_dec
-      diff_matched_catalog.include_unmatched: true
-      output_matched_catalog: true
-
-      python: |
-        # Target settings are likely common to all object tables
-        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-
-        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        fluxes_ref = [f"bdf_flux_{band}_corrected" for band in parameters.bands_match_des_y6gold]
-        config.match_tract_catalog.columns_ref_flux = fluxes_ref
-        config.match_tract_catalog.columns_ref_meas = [
-          parameters.des_y6gold_coord_ra, parameters.des_y6gold_coord_dec,
-        ] + fluxes_ref
-        fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match_des_y6gold]
-        columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
-        config.match_tract_catalog.columns_target_meas = columns_meas
-        config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
-
-        columns_flux = {}
-        fluxes_meas_other = []
-        for band in parameters.bands_lsst:
-            if band in parameters.bands_match_des_y6gold:
-                columns_flux[band] = MatchedCatalogFluxesConfig(
-                    column_ref_flux=f"bdf_flux_{band}_corrected",
-                    columns_target_flux=[f"{band}_cModelFlux",],
-                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
-                )
-            else:
-                fluxes_meas_other.append(f"{band}_cModelFlux")
-            for model in parameters.models_other:
-                fluxes_meas_other.append(f"{band}_{model}Flux")
-        config.diff_matched_catalog.columns_flux = columns_flux
-        config.diff_matched_catalog.columns_ref_copy = parameters.columns_des_y6gold_copy
-        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
-          f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
-        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
   match_object_to_cdfs_acs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
@@ -154,7 +91,7 @@ tasks:
           parameters.cdfs_acs_coord_ra, parameters.cdfs_acs_coord_dec,
         ] + fluxes_ref
         config.match_tract_catalog.match_dist_max = 1.0
-        fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match_acs]
+        fluxes_meas = [f"{band}_sersicFlux" for band in parameters.bands_match_acs]
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
@@ -165,11 +102,11 @@ tasks:
             if band in parameters.bands_match_acs:
                 columns_flux[band] = MatchedCatalogFluxesConfig(
                     column_ref_flux=f"f_f775w",
-                    columns_target_flux=[f"{band}_cModelFlux",],
-                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                    columns_target_flux=[f"{band}_sersicFlux",],
+                    columns_target_flux_err=[f"{band}_sersicFluxErr",],
                 )
             else:
-                fluxes_meas_other.append(f"{band}_cModelFlux")
+                fluxes_meas_other.append(f"{band}_sersicFlux")
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
 
@@ -179,18 +116,20 @@ tasks:
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
-  match_object_to_euclid:
+  match_object_to_cdfs_jades_v2p0:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
-      connections.name_input_cat_ref: euclid_q1
+      connections.name_input_cat_ref: cdfs_jades_v2p0
       connections.name_input_cat_target: object
-      match_tract_catalog.coord_format.column_ref_coord1: parameters.euclid_coord_ra
-      match_tract_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
+      match_tract_catalog.columns_ref_copy: parameters.columns_jades_v2_copy
+      match_tract_catalog.columns_target_copy: parameters.columns_obj_copy
+      match_tract_catalog.coord_format.column_ref_coord1: parameters.cdfs_jades_coord_ra
+      match_tract_catalog.coord_format.column_ref_coord2: parameters.cdfs_jades_coord_dec
       match_tract_catalog.mag_faintest_ref: 28
-      match_multiple_target: true
-      diff_matched_catalog.coord_format.column_ref_coord1: parameters.euclid_coord_ra
-      diff_matched_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
-      diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      refcat_sharding_type: "none"
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.cdfs_jades_coord_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.cdfs_jades_coord_dec
+      diff_matched_catalog.columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
       diff_matched_catalog.include_unmatched: true
       output_matched_catalog: true
 
@@ -198,16 +137,16 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
-        fluxes_ref = ["flux_vis_sersic"]
+        fluxes_ref = ["F090W_SEG"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
-          parameters.euclid_coord_ra, parameters.euclid_coord_dec,
+          parameters.cdfs_jades_coord_ra, parameters.cdfs_jades_coord_dec,
         ] + fluxes_ref
-        fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match_acs]
-        columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
+        fluxes_meas = [f"{band}_sersicFlux" for band in parameters.bands_match_acs]
+        columns_meas = ["sersic_ra", "sersic_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
 
@@ -215,23 +154,6 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
-        for band in parameters.bands_lsst:
-            if band in parameters.bands_match_euclid:
-                columns_flux[band] = MatchedCatalogFluxesConfig(
-                    column_ref_flux=f"flux_vis_sersic",
-                    columns_target_flux=[f"{band}_cModelFlux",],
-                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
-                )
-            else:
-                fluxes_meas_other.append(f"{band}_cModelFlux")
-            for model in parameters.models_other:
-                fluxes_meas_other.append(f"{band}_{model}Flux")
-        config.diff_matched_catalog.columns_flux = columns_flux
-        config.diff_matched_catalog.columns_ref_copy = parameters.columns_euclid_copy
-        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
-          f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
-        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
   match_cdfs_des_y6gold_to_cdfs_acs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
@@ -334,11 +256,11 @@ tasks:
             if band in parameters.bands_match_acs:
                 columns_flux[band] = MatchedCatalogFluxesConfig(
                     column_ref_flux=f"{parameters.prefix_acs}f_f775w",
-                    columns_target_flux=[f"{band}_cModelFlux",],
-                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                    columns_target_flux=[f"{band}_sersicFlux",],
+                    columns_target_flux_err=[f"{band}_sersicFluxErr",],
                 )
             else:
-                fluxes_meas_other.append(f"{band}_cModelFlux")
+                fluxes_meas_other.append(f"{band}_sersicFlux")
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
         config.diff_matched_catalog.columns_flux = columns_flux
@@ -357,10 +279,10 @@ tasks:
             f"bdf_flux_err_{band}_corrected" for band in parameters.bands_match_des_y6gold
           ]
         ]
-  match_cdfs_acs_to_cdfs_jades:
+  match_cdfs_acs_to_cdfs_jades_v5p0:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
-      connections.name_input_cat_ref: cdfs_jades_v2p0
+      connections.name_input_cat_ref: cdfs_jades_v5p0
       connections.name_input_cat_target: cdfs_hlf_v2p1
       match_tract_catalog.columns_target_select_false: []
       match_tract_catalog.columns_target_select_true: []
@@ -372,7 +294,9 @@ tasks:
       refcat_sharding_type: "none"
       target_sharding_type: "none"
       match_multiple_target: false
+      diff_matched_catalog.columns_ref_copy: parameters.columns_jades_v5_copy
       diff_matched_catalog.columns_target_coord_err: ["ra_gaia_est_error", "dec_gaia_est_error"]
+      diff_matched_catalog.columns_target_copy: parameters.columns_hlf_copy
       diff_matched_catalog.coord_format.column_ref_coord1: parameters.cdfs_jades_coord_ra
       diff_matched_catalog.coord_format.column_ref_coord2: parameters.cdfs_jades_coord_dec
       diff_matched_catalog.coord_format.column_target_coord1: parameters.cdfs_acs_coord_ra
@@ -390,41 +314,26 @@ tasks:
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
 
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        fluxes_ref = ["F090W_SEG"]
+        fluxes_ref = ["F070W_KRON", "F070W_KRON", "F090W_KRON"]
         config.match_tract_catalog.columns_ref_meas = [
-          parameters.cdfs_acs_coord_ra, parameters.cdfs_acs_coord_dec,
-        ] + fluxes_ref
-
-        fluxes_meas = ["flux_vis_sersic"]
-        config.match_tract_catalog.columns_target_meas = [
           parameters.cdfs_jades_coord_ra, parameters.cdfs_jades_coord_dec,
         ] + fluxes_ref
 
-        fluxes_meas = ["f_f775w"]
+        fluxes_meas = ["f_f606w", "f_f775w", "f_f814w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_target_meas = [
           parameters.cdfs_acs_coord_ra, parameters.cdfs_acs_coord_dec,
         ] + fluxes_meas
 
         config.match_tract_catalog.columns_target_err = [
-         "ra_gaia_est_error", "dec_gaia_est_error", f"e_f775w",
+         "ra_gaia_est_error", "dec_gaia_est_error", "e_f606w", "e_f775w", "e_f814w"
         ]
         # Not supported yet
-        # config.match_tract_catalog.columns_ref_err = [
-        #  "right_ascension_est_error", "declination_est_error", f"fluxerr_vis_sersic",
-        # ]
-        # Might need adjusting for different survey depths
-        config.match_tract_catalog.mag_faintest_ref = 27.0
-        config.match_tract_catalog.columns_ref_copy = ["ID"]
-        config.match_tract_catalog.columns_target_copy = ["id"]
-
-        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        config.diff_matched_catalog.columns_ref_copy = parameters.columns_jades_copy
-        config.diff_matched_catalog.columns_target_copy = parameters.columns_hlf_copy
+        # config.match_tract_catalog.columns_ref_err = []
   match_cdfs_mast_to_euclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
-      connections.name_input_cat_ref: matched_cdfs_jades_v2p0_cdfs_hlf_v2p1
+      connections.name_input_cat_ref: matched_cdfs_jades_v5p0_cdfs_hlf_v2p1
       connections.name_input_cat_target: euclid_q1
       connections.cat_output_matched: matched_cdfs_mast_euclid_q1
       match_tract_catalog.columns_target_select_false: []
@@ -453,7 +362,7 @@ tasks:
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        fluxes_ref = [f"{parameters.prefix_acs}f_f775w", f"{parameters.prefix_jades}F090W_SEG"]
+        fluxes_ref = [f"{parameters.prefix_acs}f_f775w", f"{parameters.prefix_jades}F090W_KRON"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = ["coord_mast_ra", "coord_mast_dec"] + fluxes_ref
 
@@ -471,7 +380,7 @@ tasks:
         config.diff_matched_catalog.columns_ref_copy = ["coord_mast_ra", "coord_mast_dec"] + [
           f"{parameters.prefix_acs}{param}" for param in parameters.columns_hlf_copy
         ] + [
-          f"{parameters.prefix_jades}{param}" for param in parameters.columns_jades_copy
+          f"{parameters.prefix_jades}{param}" for param in parameters.columns_jades_v5_copy
         ]
         config.diff_matched_catalog.columns_target_copy = parameters.columns_euclid_copy
 
@@ -521,18 +430,17 @@ tasks:
         columns_meas = ["sersic_ra", "sersic_dec"]*3 + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
-        
         columns_flux = {}
         fluxes_meas_other = []
         for band in parameters.bands_lsst:
             if band in parameters.bands_match_acs:
                 columns_flux[band] = MatchedCatalogFluxesConfig(
                     column_ref_flux=f"{parameters.prefix_acs}f_f775w",
-                    columns_target_flux=[f"{band}_cModelFlux",],
-                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                    columns_target_flux=[f"{band}_sersicFlux",],
+                    columns_target_flux_err=[f"{band}_sersicFluxErr",],
                 )
             else:
-                fluxes_meas_other.append(f"{band}_cModelFlux")
+                fluxes_meas_other.append(f"{band}_sersicFlux")
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
 
@@ -544,7 +452,7 @@ tasks:
         config.diff_matched_catalog.columns_ref_copy = [
           "coord_best_ra", "coord_best_dec", "coord_mast_ra", "coord_mast_dec",
         ] + [
-          f"{prefix_jades}{col_ref}" for col_ref in parameters.columns_jades_copy
+          f"{prefix_jades}{col_ref}" for col_ref in parameters.columns_jades_v5_copy
         ] + [
           f"{prefix_hst}{col_ref}" for col_ref in parameters.columns_hlf_copy
         ] + [

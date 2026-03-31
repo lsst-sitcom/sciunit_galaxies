@@ -1,11 +1,13 @@
 description: Catalog matching and analysis for HSC with COSMOS
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/diff_matched_wide.yaml
+    labeledSubsetModifyMode: EDIT
+    exclude:
+      - match_object_to_des_y6gold
+      - match_object_to_euclid
 parameters:
   bands_match: ["g", "r", "i", "z", "y"]
   bands_match_acs: ["i"]
-  columns_cosmos_acs_copy: [
-    "class_star", "flux_auto", "fluxerr_auto", "kron_radius", "mu_class", "number", "ra", "dec", "patch",
-    "flux_radius", "petro_radius",
-  ]
   columns_cosmos2020_copy: [
     "ALPHA_J2000", "DELTA_J2000", "FLAG_HSC", "FLAG_COMBINED", "lp_type", "patch",
     "HSC_g_FLUX_AUTO", "HSC_r_FLUX_AUTO", "HSC_i_FLUX_AUTO", "HSC_z_FLUX_AUTO", "HSC_y_FLUX_AUTO",
@@ -29,24 +31,21 @@ parameters:
     "flux_err-uncal_model_hsc-i", "flux_err-uncal_model_hsc-z", "flux_err-uncal_model_hsc-y",
     "warn_flag", "zfinal", "type",
   ]
+  columns_cosmos_acs_copy: [
+    "class_star", "flux_auto", "fluxerr_auto", "kron_radius", "mu_class", "number", "ra", "dec", "patch",
+    "flux_radius", "petro_radius",
+  ]
+  columns_cosmos_desi_copy: [
+    'TARGETID', 'TARGET_RA', 'TARGET_DEC', 'TARGET_RA_est_error', 'TARGET_DEC_est_error',
+    'patch', 'PMRA', 'PMDEC',
+    'OBJTYPE', 'SPECTYPE', 'SUBTYPE',
+    'Z', 'ZERR', 'ZWARN', 'BEST_Z', 'DZ', 'QUALITY_Z', 'DELTACHI2', 'CHI2',
+    'SURVEY', 'PROGRAM',
+  ]
   columns_rc2_object_hsc_copy: [
     "objectId", "patch", "refExtendedness", "refSizeExtendedness",
     "sersic_ra", "sersic_dec",
     "g_psfFlux_flag", "r_psfFlux_flag", "i_psfFlux_flag", "z_psfFlux_flag", "y_psfFlux_flag",
-  ]
-  columns_obj_copy: [
-    "objectId", "patch", "refExtendedness", "refSizeExtendedness",
-    "sersic_x", "sersic_y", "sersic_xErr", "sersic_yErr",
-    "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
-    "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
-    "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
-  ]
-  columns_exponential_copy: [
-    "exponential_x", "exponential_y", "exponential_xErr", "exponential_yErr",
-    "exponential_ra", "exponential_dec", "exponential_raErr", "exponential_decErr",
-    "exponential_rho", "exponential_rhoErr",
-    "exponential_reff_x", "exponential_reff_xErr", "exponential_reff_y", "exponential_reff_yErr",
-    "exponential_delta_lnL_fit_linear", "exponential_delta_lnL_fit_ps",
   ]
   cosmos2020_coord_ra: "ALPHA_J2000"
   cosmos2020_coord_dec: "DELTA_J2000"
@@ -54,11 +53,14 @@ parameters:
   cosmos2025_coord_dec: "dec"
   cosmos_acs_coord_ra: "ra"
   cosmos_acs_coord_dec: "dec"
+  cosmos_desi_coord_ra: "TARGET_RA"
+  cosmos_desi_coord_dec: "TARGET_DEC"
   object_ra: "sersic_ra"
   object_dec: "sersic_dec"
 
   prefix_acs: "hst_"
   prefix_cosmos2025: "cosmos2025_"
+  prefix_desi: "desi_"
 
   models_other: ["psf", "gaap1p0", "kron", "exponential", "cModel"]
 tasks:
@@ -217,14 +219,17 @@ tasks:
 
         columns_flux = {}
         fluxes_meas_other = []
-        for band in parameters.bands_match_acs:
-            columns_flux[band] = MatchedCatalogFluxesConfig(
-                column_ref_flux=f"flux_auto",
-                columns_target_flux=[f"{band}_sersicFlux",],
-                columns_target_flux_err=[f"{band}_sersicFluxErr",],
-            )
+        for band in parameters.bands_lsst:
+            if band in parameters.bands_match_acs:
+              columns_flux[band] = MatchedCatalogFluxesConfig(
+                  column_ref_flux=f"flux_auto",
+                  columns_target_flux=[f"{band}_sersicFlux"],
+                  columns_target_flux_err=[f"{band}_sersicFluxErr"],
+              )
+            else:
+                fluxes_meas_other.append(f"{band}_sersicFlux")
             for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")
+                fluxes_meas_other.append(f"{band}_{model}Flux")
         config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
@@ -346,14 +351,69 @@ tasks:
 
         config.diff_matched_catalog.columns_ref_copy = parameters.columns_cosmos2025_copy
         config.diff_matched_catalog.columns_target_copy = parameters.columns_cosmos_acs_copy
-  matchObjectToCosmosMast:
+  matchCosmosMastToDesi:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_cosmos_mast
-      connections.name_input_cat_target: object
-      connections.cat_output_matched: matched_cosmos_mast_object
+      connections.name_input_cat_target: desi_cosmos_v2p0
+      connections.cat_output_matched: matched_cosmos_mast_desi
       match_tract_catalog.coord_format.column_ref_coord1: coord_mast_ra
       match_tract_catalog.coord_format.column_ref_coord2: coord_mast_dec
+      match_tract_catalog.columns_ref_flux: fluxes_ref
+      match_tract_catalog.columns_ref_meas: ["coord_mast_ra", "coord_mast_dec"]
+      match_tract_catalog.columns_target_select_false: []
+      match_tract_catalog.columns_target_select_true: []
+      refcat_sharding_type: "none"
+      target_sharding_type: "none"
+
+      diff_matched_catalog.column_match_candidate_ref: None
+      diff_matched_catalog.column_match_candidate_target: None
+      diff_matched_catalog.column_matched_prefix_ref: ""
+      diff_matched_catalog.columns_target_coord_err: ["TARGET_RA_est_error", "TARGET_DEC_est_error"]
+      diff_matched_catalog.coord_format.column_ref_coord1: coord_mast_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: coord_mast_dec
+      diff_matched_catalog.include_unmatched: true
+      diff_matched_catalog.prefix_best_coord: "coord_mastdesi_"
+      diff_matched_catalog.refcat_sharding_type: "none"
+      diff_matched_catalog.target_sharding_type: "none"
+      output_matched_catalog: true
+
+      python: |
+        # Target settings are likely common to all object tables
+        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        
+        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        
+        prefix_hst = parameters.prefix_acs
+        prefix_cosmos2025 = parameters.prefix_cosmos2025
+                        
+        fluxes_ref = [f"{prefix_hst}flux_auto", f"{prefix_cosmos2025}flux_auto_hst-f814w"]
+        columns_meas = [parameters.cosmos_desi_coord_ra, parameters.cosmos_desi_coord_dec] 
+        config.match_tract_catalog.columns_target_meas = columns_meas
+        config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
+        # Might need adjusting for different survey depths
+        columns_ref_copy = [f"{prefix_hst}number", f"{prefix_cosmos2025}id"]
+        config.match_tract_catalog.columns_ref_copy = columns_ref_copy
+
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+
+        config.diff_matched_catalog.columns_flux = []
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_cosmos_desi_copy
+        config.diff_matched_catalog.columns_ref_copy = [
+          "coord_mast_ra", "coord_mast_dec",
+        ] + [
+          f"{prefix_hst}{col_ref}" for col_ref in parameters.columns_cosmos_acs_copy
+        ] + [
+          f"{prefix_cosmos2025}{col_ref}" for col_ref in parameters.columns_cosmos2025_copy
+        ]
+  matchObjectToCosmosMastDesi:
+    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
+    config:
+      connections.name_input_cat_ref: matched_cosmos_mast_desi
+      connections.name_input_cat_target: object
+      connections.cat_output_matched: matched_cosmos_mast_desi_object
+      match_tract_catalog.coord_format.column_ref_coord1: coord_mastdesi_ra
+      match_tract_catalog.coord_format.column_ref_coord2: coord_mastdesi_dec
       match_tract_catalog.columns_target_select_false: []
       match_tract_catalog.columns_target_select_true: []
       refcat_sharding_type: "none"
@@ -362,8 +422,8 @@ tasks:
       diff_matched_catalog.column_match_candidate_target: None
       diff_matched_catalog.column_matched_prefix_ref: ""
       diff_matched_catalog.columns_target_coord_err: ["sersic_raErr", "sersic_decErr"]
-      diff_matched_catalog.coord_format.column_ref_coord1: coord_mast_ra
-      diff_matched_catalog.coord_format.column_ref_coord2: coord_mast_dec
+      diff_matched_catalog.coord_format.column_ref_coord1: coord_mastdesi_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: coord_mastdesi_dec
       diff_matched_catalog.include_unmatched: true
       diff_matched_catalog.prefix_best_coord: "coord_best_"
       diff_matched_catalog.refcat_sharding_type: "none"
@@ -377,10 +437,8 @@ tasks:
         
         prefix_hst = parameters.prefix_acs
         prefix_cosmos2025 = parameters.prefix_cosmos2025
-        
-        config.diff_matched_catalog.column_matched_prefix_target 
-        config.diff_matched_catalog.column_matched_prefix_ref
-        
+        prefix_desi = parameters.prefix_desi
+                
         fluxes_ref = [f"{prefix_hst}flux_auto", f"{prefix_cosmos2025}flux_auto_hst-f814w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -417,9 +475,11 @@ tasks:
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         config.diff_matched_catalog.columns_ref_copy = [
-          "coord_mast_ra", "coord_mast_dec",
+          "coord_mast_ra", "coord_mast_dec", "coord_mastdesi_ra", "coord_mastdesi_dec",
         ] + [
           f"{prefix_hst}{col_ref}" for col_ref in parameters.columns_cosmos_acs_copy
         ] + [
           f"{prefix_cosmos2025}{col_ref}" for col_ref in parameters.columns_cosmos2025_copy
+        ] + [
+          f"{prefix_desi}{col_ref}" for col_ref in parameters.columns_cosmos2025_copy
         ]

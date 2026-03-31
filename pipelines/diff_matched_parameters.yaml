@@ -1,0 +1,40 @@
+description: Parameters for catalog matching for wide-area surveys
+parameters:
+  bands_lsst: ["u", "g", "r", "i", "z", "y"]
+  columns_exponential_copy: [
+    "exponential_ra", "exponential_dec", "exponential_raErr", "exponential_decErr",
+    "exponential_rho", "exponential_rhoErr",
+    "exponential_reff_x", "exponential_reff_xErr", "exponential_reff_y", "exponential_reff_yErr",
+    "exponential_reff_major", "exponential_reff_minor", "exponential_theta",
+    "exponential_n_iter", "exponential_delta_lnL_fit_linear", "exponential_delta_lnL_fit_ps",
+  ]
+  columns_obj_copy: [
+    "objectId", "patch", "refExtendedness", "griz_model_extendedness",
+    "g_model_extendedness", "r_model_extendedness", "i_model_extendedness", "z_model_extendedness",
+    "u_cModel_dev_reff_major", "g_cModel_dev_reff_major", "r_cModel_dev_reff_major",
+    "i_cModel_dev_reff_major", "z_cModel_dev_reff_major", "y_cModel_dev_reff_major",
+    "u_cModel_exp_reff_major", "g_cModel_exp_reff_major", "r_cModel_exp_reff_major",
+    "i_cModel_exp_reff_major", "z_cModel_exp_reff_major", "y_cModel_exp_reff_major",
+    "u_cModel_dev_reff_minor", "g_cModel_dev_reff_minor", "r_cModel_dev_reff_minor",
+    "i_cModel_dev_reff_minor", "z_cModel_dev_reff_minor", "y_cModel_dev_reff_minor",
+    "u_cModel_exp_reff_minor", "g_cModel_exp_reff_minor", "r_cModel_exp_reff_minor",
+    "i_cModel_exp_reff_minor", "z_cModel_exp_reff_minor", "y_cModel_exp_reff_minor",
+    "u_cModel_dev_theta", "g_cModel_dev_theta", "r_cModel_dev_theta",
+    "i_cModel_dev_theta", "z_cModel_dev_theta", "y_cModel_dev_theta",
+    "u_cModel_exp_theta", "g_cModel_exp_theta", "r_cModel_exp_theta",
+    "i_cModel_exp_theta", "z_cModel_exp_theta", "y_cModel_exp_theta",
+    "u_kronRad", "g_kronRad", "r_kronRad", "i_kronRad", "z_kronRad", "y_kronRad",
+    "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
+    "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
+    "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
+    "sersic_reff_major", "sersic_reff_minor", "sersic_theta",
+    "sersic_n_iter",
+    "coord_flag",
+    "u_centroid_flag", "g_centroid_flag", "r_centroid_flag",
+    "i_centroid_flag", "z_centroid_flag", "y_centroid_flag",
+    "u_psfFlux_flag", "g_psfFlux_flag", "r_psfFlux_flag",
+    "i_psfFlux_flag", "z_psfFlux_flag", "y_psfFlux_flag",
+    "u_pixelFlags_saturatedCenter", "g_pixelFlags_saturatedCenter", "r_pixelFlags_saturatedCenter",
+    "i_pixelFlags_saturatedCenter", "z_pixelFlags_saturatedCenter", "y_pixelFlags_saturatedCenter",
+  ]
+  models_other: ["psf", "gaap1p0", "kron", "exponential", "cModel"]

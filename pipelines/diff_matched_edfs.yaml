@@ -1,0 +1,6 @@
+description: Catalog matching and analysis for Euclid Deep Field South
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/diff_matched_wide.yaml
+    labeledSubsetModifyMode: EDIT
+    exclude:
+      - match_object_to_des_y6gold

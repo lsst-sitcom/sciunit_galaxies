@@ -1,11 +1,13 @@
 description: Catalog matching and analysis for HSC with COSMOS
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/diff_matched_wide.yaml
+    labeledSubsetModifyMode: EDIT
+    exclude:
+      - match_object_to_euclid
 parameters:
-  bands_lsst: ["u", "g", "r", "i", "z", "y"]
   bands_match_tractor_elais: ["g", "r", "i", "z", "y"]
   tractor_elais_coord_ra: "RA"
   tractor_elais_coord_dec: "Dec"
-  cdfs_acs_coord_ra: "ra_gaia"
-  cdfs_acs_coord_dec: "dec_gaia"
   columns_tractor_elais_copy: [
     "ID_VIDEO", "RA", "Dec",
     "flux_ch2_DeepDrill", "flux_ch1_DeepDrill",
@@ -20,27 +22,19 @@ parameters:
     "fluxerr_u_VOICE",
     "nndist", "tract", "patch",
   ]
-  columns_obj_copy: ["objectId", "patch", "refExtendedness"]
-  columns_sersic_copy: [
-    "sersic_x", "sersic_y", "sersic_xErr", "sersic_yErr",
-    "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
-    "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
-    "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
-  ]
-  models_other: ["psf", "gaap1p0", "kron", "sersic"]
-  prefix_tractor_elais: "hst_"
+  prefix_tractor_elais: "zou21_"
 tasks:
   match_object_to_tractor_elais:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: elais_tractor_zou21
       connections.name_input_cat_target: object
-      match_tract_catalog.columns_ref_copy: ["ID_VIDEO"]
-      match_tract_catalog.columns_target_copy: ["objectId"]
+#      match_tract_catalog.columns_ref_copy: ["ID_VIDEO"]
+#      match_tract_catalog.columns_target_copy: ["objectId"]
       match_tract_catalog.coord_format.column_ref_coord1: parameters.tractor_elais_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.tractor_elais_coord_dec
       match_tract_catalog.mag_faintest_ref: 27.0
-      match_tract_catalog.match_dist_max: 1.0
+      match_tract_catalog.match_dist_max: 0.7
       match_multiple_target: true
       diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
       diff_matched_catalog.coord_format.column_ref_coord1: parameters.tractor_elais_coord_ra
@@ -59,7 +53,7 @@ tasks:
         config.match_tract_catalog.columns_ref_meas = [
           parameters.tractor_elais_coord_ra, parameters.tractor_elais_coord_dec,
         ] + fluxes_ref
-        fluxes_meas = [f"{band}_cModelFlux" for band in parameters.bands_match_tractor_elais]
+        fluxes_meas = [f"{band}_sersicFlux" for band in parameters.bands_match_tractor_elais]
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
@@ -70,15 +64,15 @@ tasks:
             if band in parameters.bands_match_tractor_elais:
                 columns_flux[band] = MatchedCatalogFluxesConfig(
                     column_ref_flux=f"flux_{band}_DES",
-                    columns_target_flux=[f"{band}_cModelFlux",],
-                    columns_target_flux_err=[f"{band}_cModelFluxErr",],
+                    columns_target_flux=[f"{band}_sersicFlux",],
+                    columns_target_flux_err=[f"{band}_sersicFluxErr",],
                 )
             else:
-                fluxes_meas_other.append(f"{band}_cModelFlux")
+                fluxes_meas_other.append(f"{band}_sersicFlux")
             for model in parameters.models_other:
                 fluxes_meas_other.append(f"{band}_{model}Flux")
         config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_ref_copy = parameters.columns_tractor_elais_copy
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
+        ]
