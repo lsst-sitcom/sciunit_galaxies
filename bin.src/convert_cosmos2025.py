@@ -9,9 +9,9 @@ import pyarrow.parquet as pq
 filename = "COSMOSWeb_mastercatalog_v1"
 path = f"{filename}.fits"
 
-skymap = "lsst_cells_v1"
+skymap = "lsst_cells_v2"
 tract = 9813
-butler = dafButler.Butler("/repo/main", collections="skymaps")
+butler = dafButler.Butler("main", collections="skymaps")
 tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 
 
@@ -1213,6 +1213,7 @@ for idx_tab, columns_tab in columns.items():
                 unit = u.Unit(name_unit)
             except ValueError:
                 unit = unit_substitutes[name_unit]
+            if unit is not None:
                 if (unit_new := unit_conversions.get(unit)) is not None:
                     try:
                         factor = unit.to(unit_new, 1.0)
@@ -1221,7 +1222,6 @@ for idx_tab, columns_tab in columns.items():
                         unit = unit_new
                     except Exception as exc:
                         print(f"converting unit_new={unit} got {exc=}")
-            if unit is not None:
                 tab_ap[name].unit = unit
             description = description[:idx_suffix].strip()
 
