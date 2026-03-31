@@ -374,7 +374,7 @@ def make_patch_cutouts(
 def query_tract_catalog(
     tractInfo: lsst.skymap.tractInfo.TractInfo,
     name_skymap: str,
-    n_patches: int = 5,
+    n_patches: int = 10,
     tmpFile: str | None = None,
     skip_existing: bool = True,
     verbose: bool = True,
