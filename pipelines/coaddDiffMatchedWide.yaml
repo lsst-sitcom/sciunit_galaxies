@@ -348,6 +348,7 @@ tasks:
       atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
       atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
       atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
+      atools.matchedRefAngularSeparationDiff.produce.plot.xLims: lims_mag_x
 
       atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
       atools.matchedRefCModelMagDiff.prep.selectors.match_candidate: selector_candidate
@@ -520,12 +521,16 @@ tasks:
           ReferenceStarSelector,
         )
         from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        from lsst.analysis.tools.actions.plot import CompletenessHist
         from lsst.analysis.tools.actions.vector import (
-          CompositeSelector, CoaddPlotFlagSelector, FlagSelector, GalaxySelector, MatchedTractSelector,
+          CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, MatchedTractSelector,
           RangeSelector, SetSelector, StarSelector,
         )
         
-        selector_all = SetSelector(vectorKeys=["match_candidate"], values=[1])
+        CompletenessHist.mag_ref_label.default = "Sersic VIS (mag)"
+        CompletenessHist.mag_target_label.default = "{name_flux} {band} (mag)"
+        
+        selector_all = SetSelector(vectorKeys=["match_candidate", "refcat_match_candidate"], values=[1])
         selector_galaxy = ReferenceGalaxySelector(
           plotLabelValue="Euclid mumax_minus_mag >= -2.6",
           vectorKey="refcat_mumax_minus_mag", threshold=-2.6, op="ge",
