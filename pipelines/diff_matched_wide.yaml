@@ -5,6 +5,7 @@ parameters:
   bands_lsst: ["u", "g", "r", "i", "z", "y"]
   bands_match_des_y6gold: [ "g", "r", "i", "z", "y" ]
   bands_match_euclid: ["i"]
+  bands_shear: ["g", "r", "i", "z"]
   columns_des_y6gold_copy: ["coadd_object_id", "ext_mash", "patch"]
   columns_euclid_copy: [
     "object_id", "right_ascension", "declination", "vis_det",
@@ -26,7 +27,8 @@ parameters:
     "exponential_n_iter", "exponential_delta_lnL_fit_linear", "exponential_delta_lnL_fit_ps",
   ]
   columns_obj_copy: [
-    "objectId", "patch", "refExtendedness", "griz_model_extendedness",
+    "objectId", "patch", "refBand",
+    "refExtendedness", "refSizeExtendedness", "griz_model_extendedness",
     "g_model_extendedness", "r_model_extendedness", "i_model_extendedness", "z_model_extendedness",
     "u_cModel_dev_reff_major", "g_cModel_dev_reff_major", "r_cModel_dev_reff_major",
     "i_cModel_dev_reff_major", "z_cModel_dev_reff_major", "y_cModel_dev_reff_major",
@@ -42,9 +44,10 @@ parameters:
     "i_cModel_exp_theta", "z_cModel_exp_theta", "y_cModel_exp_theta",
     "u_kronRad", "g_kronRad", "r_kronRad", "i_kronRad", "z_kronRad", "y_kronRad",
     "sersic_ra", "sersic_dec", "sersic_raErr", "sersic_decErr",
-    "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
+    "sersic_rho", "sersic_rhoErr",
     "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
     "sersic_reff_major", "sersic_reff_minor", "sersic_theta",
+    "sersic_index", "sersic_indexErr",
     "sersic_n_iter",
     "coord_flag",
     "u_centroid_flag", "g_centroid_flag", "r_centroid_flag",
@@ -54,15 +57,77 @@ parameters:
     "u_pixelFlags_saturatedCenter", "g_pixelFlags_saturatedCenter", "r_pixelFlags_saturatedCenter",
     "i_pixelFlags_saturatedCenter", "z_pixelFlags_saturatedCenter", "y_pixelFlags_saturatedCenter",
   ]
+  columns_shear_copy: [
+    "shearObjectId",
+    "tract",
+    "patch",
+    "cell_x",
+    "cell_y",
+    "is_cell_inner",
+    "is_patch_inner",
+    "is_tract_inner",
+    "is_primary",
+    "metaStep",
+    "image_flags",
+    "ra",
+    "dec",
+    "psfOriginal_flags",
+    "psfOriginal_g1",
+    "psfOriginal_g2",
+    "psfOriginal_T",
+    "bmask_flags",
+    "ormask_flags",
+    "mfrac",
+    "gauss_psfReconvolved_flags",
+    "gauss_psfReconvolved_g1",
+    "gauss_psfReconvolved_g2",
+    "gauss_psfReconvolved_T",
+    "gauss_g1",
+    "gauss_g2",
+    "gauss_g1_g1_Cov",
+    "gauss_g1_g2_Cov",
+    "gauss_g2_g2_Cov",
+    "gauss_snr",
+    "gauss_T",
+    "gauss_TErr",
+    "gauss_shape_flags",
+    "gauss_object_flags",
+    "gauss_flags",
+    "g_gaussFlux_flags",
+    "r_gaussFlux_flags",
+    "i_gaussFlux_flags",
+    "z_gaussFlux_flags",
+    "pgauss_snr",
+    "pgauss_T",
+    "pgauss_TErr",
+    "pgauss_shape_flags",
+    "pgauss_object_flags",
+    "pgauss_flags",
+    "g_pgaussFlux_flags",
+    "r_pgaussFlux_flags",
+    "i_pgaussFlux_flags",
+    "z_pgaussFlux_flags",
+  ]
+  columns_select_true_shear: [
+    "is_tract_inner", "is_patch_inner", "is_cell_inner",
+  ]
+  columns_values_allowed_shear:
+    metaStep: "ns"
   des_y6gold_coord_ra: "alphawin_j2000"
   des_y6gold_coord_dec: "deltawin_j2000"
   euclid_coord_ra: "right_ascension"
   euclid_coord_dec: "declination"
   models_other: ["psf", "gaap1p0", "kron", "exponential", "cModel"]
+  object_ra: "coord_ra"
+  object_ra_err: "coord_raErr"
+  object_dec: "coord_dec"
+  object_dec_err: "coord_decErr"
   prefix_des_y6g: "desy6g_"
   prefix_euclid: "euclid_"
+  shear_ra: "ra"
+  shear_dec: "dec"
 tasks:
-  match_object_to_des_y6gold:
+  matchObjectToDesY6Gold:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: des_y6gold
@@ -74,7 +139,7 @@ tasks:
       match_tract_catalog.mag_faintest_ref: 27.0
       match_tract_catalog.match_dist_max: 0.5
       match_multiple_target: true
-      diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      diff_matched_catalog.columns_target_coord_err: coords_err
       diff_matched_catalog.coord_format.column_ref_coord1: parameters.des_y6gold_coord_ra
       diff_matched_catalog.coord_format.column_ref_coord2: parameters.des_y6gold_coord_dec
       diff_matched_catalog.include_unmatched: true
@@ -86,6 +151,8 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
 
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        
+        coords_err = [parameters.object_ra_err, parameters.object_dec_err]
         fluxes_ref = [f"bdf_flux_{band}_corrected" for band in parameters.bands_match_des_y6gold]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -114,7 +181,7 @@ tasks:
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
-  match_object_to_euclid:
+  matchObjectToEuclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: euclid_q1
@@ -127,7 +194,7 @@ tasks:
       match_multiple_target: true
       diff_matched_catalog.coord_format.column_ref_coord1: parameters.euclid_coord_ra
       diff_matched_catalog.coord_format.column_ref_coord2: parameters.euclid_coord_dec
-      diff_matched_catalog.columns_target_coord_err: ["coord_raErr", "coord_decErr"]
+      diff_matched_catalog.columns_target_coord_err: coords_err
       diff_matched_catalog.include_unmatched: true
       output_matched_catalog: true
 
@@ -138,6 +205,7 @@ tasks:
         
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         
+        coords_err = [parameters.object_ra_err, parameters.object_dec_err]
         fluxes_ref = ["flux_vis_sersic"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -166,3 +234,132 @@ tasks:
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
+  matchObjectToHsc:
+    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
+    config:
+      connections.name_input_cat_ref: rc2_object_hsc
+      connections.name_input_cat_target: object
+      match_tract_catalog.coord_format.column_ref_coord1: parameters.object_ra
+      match_tract_catalog.coord_format.column_ref_coord2: parameters.object_dec
+      match_tract_catalog.coord_format.column_target_coord1: parameters.object_ra
+      match_tract_catalog.coord_format.column_target_coord2: parameters.object_dec
+
+      match_tract_catalog.columns_target_select_true: []
+      match_tract_catalog.columns_target_select_false: []
+
+      diff_matched_catalog.columns_target_coord_err: coords_err
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.object_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.object_dec
+      diff_matched_catalog.coord_format.column_target_coord1: parameters.object_ra
+      diff_matched_catalog.coord_format.column_target_coord2: parameters.object_dec
+      diff_matched_catalog.include_unmatched: true
+      output_matched_catalog: true
+
+      python: |
+        # Target settings are likely common to all object tables
+        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        
+        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        
+        coords_err = [parameters.object_ra_err, parameters.object_dec_err]
+        fluxes_ref = [f"{band}_sersicFlux" for band in parameters.bands_match]
+        config.match_tract_catalog.columns_ref_flux = fluxes_ref
+        config.match_tract_catalog.columns_ref_meas = [parameters.object_ra, parameters.object_dec] + fluxes_ref
+        fluxes_meas = [f"{band}_sersicFlux" for band in parameters.bands_match]
+        columns_meas = [parameters.object_ra, parameters.object_dec] + fluxes_meas
+        config.match_tract_catalog.columns_target_meas = columns_meas
+        config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
+        # Might need adjusting for different survey depths
+        config.match_tract_catalog.mag_faintest_ref = 29.0
+        config.match_tract_catalog.columns_ref_copy = ["objectId"]
+        config.match_tract_catalog.columns_target_copy = ["objectId"]
+
+        columns_flux = {}
+        fluxes_meas_other = []
+        fluxes_ref_other = []
+        for band in parameters.bands_lsst:
+            if band in parameters.bands_match:
+              columns_flux[band] = MatchedCatalogFluxesConfig(
+                  column_ref_flux=f"{band}_sersicFlux",
+                  columns_target_flux=[f"{band}_sersicFlux",],
+                  columns_target_flux_err=[f"{band}_sersicFluxErr",],
+              )
+            for model in parameters.models_other:
+              column = f"{band}_{model}Flux"
+              fluxes_meas_other.append(column)
+              if band in ("g", "r", "i", "z", "y"):
+                fluxes_ref_other.append(column)
+        config.diff_matched_catalog.columns_flux = columns_flux  
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+          f"{col}Err" for col in fluxes_meas_other
+        ]
+        config.diff_matched_catalog.columns_ref_copy = [
+          col for col in parameters.columns_obj_copy if not col.startswith("u_")
+        ] + fluxes_ref_other + [f"{col}Err" for col in fluxes_ref_other]
+  matchObjectToShear:
+    class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
+    config:
+      connections.name_input_cat_ref: object_shear_all
+      connections.name_input_cat_target: object
+      connections.cat_output_matched: matched_object_shear_object
+      match_tract_catalog.coord_format.column_ref_coord1: parameters.shear_ra
+      match_tract_catalog.coord_format.column_ref_coord2: parameters.shear_dec
+      match_tract_catalog.coord_format.column_target_coord1: parameters.object_ra
+      match_tract_catalog.coord_format.column_target_coord2: parameters.object_dec
+      match_tract_catalog.columns_ref_select_true: parameters.columns_select_true_shear
+      match_tract_catalog.columns_ref_values_allowed: parameters.columns_values_allowed_shear
+
+      diff_matched_catalog.column_matched_prefix_ref: shear_
+      diff_matched_catalog.columns_target_coord_err: coords_err
+      diff_matched_catalog.coord_format.column_ref_coord1: parameters.shear_ra
+      diff_matched_catalog.coord_format.column_ref_coord2: parameters.shear_dec
+      diff_matched_catalog.coord_format.column_target_coord1: parameters.object_ra
+      diff_matched_catalog.coord_format.column_target_coord2: parameters.object_dec
+      diff_matched_catalog.include_unmatched: true
+      output_matched_catalog: true
+
+      python: |
+        from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
+        from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
+        
+        config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
+        
+        coords_err = [parameters.object_ra_err, parameters.object_dec_err]
+        fluxes_ref = [f"{band}_pgaussFlux" for band in parameters.bands_shear if band in parameters.bands_match]
+        config.match_tract_catalog.columns_ref_flux = fluxes_ref
+        config.match_tract_catalog.columns_ref_meas = [
+          parameters.shear_ra, parameters.shear_dec
+        ] + fluxes_ref
+        fluxes_meas = [f"{band}_sersicFlux" for band in parameters.bands_shear if band in parameters.bands_match]
+        columns_meas = [parameters.object_ra, parameters.object_dec] + fluxes_meas
+        config.match_tract_catalog.columns_target_meas = columns_meas
+        config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
+
+        config.match_tract_catalog.columns_ref_copy = ["shearObjectId"]
+        config.match_tract_catalog.columns_target_copy = ["objectId"]
+
+        columns_flux = {}
+        fluxes_meas_other = []
+        fluxes_ref_other = []
+        for band in parameters.bands_shear:
+            if band in parameters.bands_match:
+              columns_flux[band] = MatchedCatalogFluxesConfig(
+                  column_ref_flux=f"{band}_pgaussFlux",
+                  columns_target_flux=[f"{band}_sersicFlux",],
+                  columns_target_flux_err=[f"{band}_sersicFluxErr",],
+              )
+            for model in parameters.models_other:
+              column = f"{band}_{model}Flux"
+              fluxes_meas_other.append(column)
+            for model in parameters.models_other_shear:
+              column = f"{band}_{model}Flux"
+              fluxes_ref_other.append(column)
+        config.diff_matched_catalog.columns_flux = columns_flux  
+        config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
+          f"{col}Err" for col in fluxes_meas_other] + (
+          parameters.columns_exponential_copy if "exponential" in parameters.models_other else []
+        )
+        config.diff_matched_catalog.columns_ref_copy = parameters.columns_shear_copy + fluxes_ref_other + [
+          f"{col}Err" for col in fluxes_ref_other
+        ]

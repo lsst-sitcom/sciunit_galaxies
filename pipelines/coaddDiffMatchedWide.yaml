@@ -14,11 +14,15 @@ parameters:
   pos_diff_max: 200
   pos_chi_min: -5
   pos_chi_max: 5
+  hsc_ra: "refcat_sersic_ra"
+  hsc_dec: "refcat_sersic_dec"
+  shear_ra: "shear_ra"
+  shear_dec: "shear_dec"
   use_extendedness_for_des_y6gold: False
   select_target_true: "match_candidate"
   select_target_false: ""
 tasks:
-  diff_matched_cdfs_des_y6gold:
+  diff_matched_des_y6gold:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["g", "r", "i", "z", "y"]
@@ -318,7 +322,7 @@ tasks:
         lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
         lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
         lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
-  diff_matched_cdfs_euclid:
+  diff_matched_euclid:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["u", "g", "r", "i", "z", "y"]
@@ -515,7 +519,6 @@ tasks:
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffDistanceTool,
           MatchedRefCoaddRatioTool,
-          RangeSelector,
           ReferenceGalaxySelector,
           ReferenceObjectSelector,
           ReferenceStarSelector,
@@ -583,6 +586,827 @@ tasks:
           selector_comp.selectors.candidate = selector_candidate
           selector_candidate = selector_comp
 
+        lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
+        lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
+        lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)
+        lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
+        lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
+        lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
+  diff_matched_hsc:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      bands: ["g", "r", "i", "z", "y"]
+      connections.inputName: matched_rc2_object_hsc_object
+      connections.outputName: diff_matched_rc2_object_hsc_object
+
+      atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompleteness.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompleteness.selector_all: selector_all
+      atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompleteness.selector_ref_all: selector_obj
+      atools.matchedRefCompleteness.selector_ref_star: selector_star
+
+      atools.matchedRefCompletenessModelExtend: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompletenessModelExtend.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompletenessModelExtend.selector_all: selector_all
+      atools.matchedRefCompletenessModelExtend.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompletenessModelExtend.selector_ref_all: selector_obj
+      atools.matchedRefCompletenessModelExtend.selector_ref_star: selector_star
+      atools.matchedRefCompletenessModelExtend.selector_galaxy: selector_galaxy_mod
+      atools.matchedRefCompletenessModelExtend.selector_star: selector_star_mod
+      atools.matchedRefCompletenessModelExtend.mag_target: sersic_err
+
+      atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
+      atools.matchedRefAngularSeparationDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
+      atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
+      atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
+
+      atools.matchedRefCModelColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefCModelColorDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCModelColorDiff.bands: bands_color
+      atools.matchedRefCModelColorDiff.selector_all: selector_all
+      atools.matchedRefCModelColorDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelColorDiff.selector_ref_all: selector_obj
+      atools.matchedRefCModelColorDiff.selector_ref_star: selector_star
+      atools.matchedRefCModelColorDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelColorDiff.produce.plot.yLims: lims_color_diff
+
+      atools.matchedRefCModelColorChi: MatchedRefCoaddDiffColorTool
+      atools.matchedRefCModelColorChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCModelColorChi.bands: bands_color
+      atools.matchedRefCModelColorChi.compute_chi: true
+      atools.matchedRefCModelColorChi.selector_all: selector_all
+      atools.matchedRefCModelColorChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelColorChi.selector_ref_all: selector_obj
+      atools.matchedRefCModelColorChi.selector_ref_star: selector_star
+      atools.matchedRefCModelColorChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelColorChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
+      atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
+      atools.matchedRefCModelMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefCModelMagDiff.fluxes_default.ref_matched: ref_matched
+
+      atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_all: selector_all
+      atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
+      atools.matchedRefCModelMagChi.selector_ref_star: selector_star
+      atools.matchedRefCModelMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefSersicMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefSersicMagDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicMagDiff.selector_all: selector_all
+      atools.matchedRefSersicMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefSersicMagDiff.selector_ref_star: selector_star
+      atools.matchedRefSersicMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefSersicMagDiff.fluxes: ref_sersic_dict
+      atools.matchedRefSersicMagDiff.mag_x: ref_sersic
+      atools.matchedRefSersicMagDiff.mag_y: sersic_err
+
+      atools.matchedRefSersicMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefSersicMagChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicMagChi.compute_chi: true
+      atools.matchedRefSersicMagChi.selector_all: selector_all
+      atools.matchedRefSersicMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicMagChi.selector_ref_all: selector_obj
+      atools.matchedRefSersicMagChi.selector_ref_star: selector_star
+      atools.matchedRefSersicMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicMagChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefSersicMagChi.fluxes: ref_sersic_dict
+      atools.matchedRefSersicMagChi.mag_x: ref_sersic
+      atools.matchedRefSersicMagChi.mag_y: sersic_err
+
+      atools.matchedRefPositionRaDiff: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionRaDiff.coord_ref: parameters.hsc_ra
+      atools.matchedRefPositionRaDiff.coord_ref_cos: parameters.hsc_dec
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
+      atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionRaChi: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionRaChi.coord_ref: parameters.hsc_ra
+      atools.matchedRefPositionRaChi.coord_ref_cos: parameters.hsc_dec
+      atools.matchedRefPositionRaChi.selector_all: selector_all
+      atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaChi.selector_ref_star: selector_star
+      atools.matchedRefPositionRaChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionRaChi.scale_factor: 3600000
+      atools.matchedRefPositionRaChi.compute_chi: true
+
+      atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionDecDiff.coord_ref: parameters.hsc_dec
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
+      atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionDecDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionDecChi: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionDecChi.coord_ref: parameters.hsc_dec
+      atools.matchedRefPositionDecChi.selector_all: selector_all
+      atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecChi.selector_ref_star: selector_star
+      atools.matchedRefPositionDecChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionDecChi.scale_factor: 3600000
+      atools.matchedRefPositionDecChi.compute_chi: true
+
+      atools.matchedRefPositionSersicRaDiff: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionSersicRaDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicRaDiff.coord_meas: sersic_ra
+      atools.matchedRefPositionSersicRaDiff.coord_ref: refcat_sersic_ra
+      atools.matchedRefPositionSersicRaDiff.coord_ref_cos: refcat_sersic_dec
+      atools.matchedRefPositionSersicRaDiff.selector_all: selector_all
+      atools.matchedRefPositionSersicRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionSersicRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionSersicRaChi: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionSersicRaChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicRaChi.coord_meas: sersic_ra
+      atools.matchedRefPositionSersicRaChi.coord_ref: refcat_sersic_ra
+      atools.matchedRefPositionSersicRaChi.coord_ref_cos: refcat_sersic_dec
+      atools.matchedRefPositionSersicRaChi.selector_all: selector_all
+      atools.matchedRefPositionSersicRaChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicRaChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicRaChi.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicRaChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicRaChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionSersicRaChi.scale_factor: 3600000
+      atools.matchedRefPositionSersicRaChi.compute_chi: true
+
+      atools.matchedRefPositionSersicDecDiff: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionSersicDecDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicDecDiff.coord_meas: sersic_dec
+      atools.matchedRefPositionSersicDecDiff.coord_ref: refcat_sersic_dec
+      atools.matchedRefPositionSersicDecDiff.selector_all: selector_all
+      atools.matchedRefPositionSersicDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionSersicDecDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionSersicDecChi: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionSersicDecChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicDecChi.coord_meas: sersic_dec
+      atools.matchedRefPositionSersicDecChi.coord_ref: refcat_sersic_dec
+      atools.matchedRefPositionSersicDecChi.selector_all: selector_all
+      atools.matchedRefPositionSersicDecChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicDecChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicDecChi.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicDecChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicDecChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
+      atools.matchedRefPositionSersicDecChi.compute_chi: true
+
+      python: |        
+        from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddCompurityTool,
+          MatchedRefCoaddDiffColorTool,
+          MatchedRefCoaddDiffDistanceTool,
+          MatchedRefCoaddDiffMagTool,
+          MatchedRefCoaddDiffCoordRaTool,
+          MatchedRefCoaddDiffCoordDecTool,
+        )
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        from lsst.analysis.tools.actions.vector import (
+          CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
+          SetSelector, StarSelector,
+        )
+        
+        bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
+        
+        selector_all = RangeSelector(vectorKey="objectId")
+        selector_galaxy = GalaxySelector(
+          plotLabelKey="Selection: galaxies", vectorKey="refcat_refExtendedness",
+        )
+        selector_obj = GalaxySelector(
+          plotLabelKey="Selection: objects", vectorKey="refcat_refExtendedness",
+          extendedness_minimum=-1,
+        )
+        selector_star = StarSelector(
+          plotLabelKey="Selection: stars", vectorKey="refcat_refExtendedness",
+        )
+        selector_galaxy_mod = GalaxySelector(
+          vectorKey="griz_model_extendedness", extendedness_minimum=0.2,
+        )
+        selector_star_mod = StarSelector(
+          vectorKey="griz_model_extendedness", extendedness_maximum=0.2,
+        )
+        selector_candidate = CompositeSelector(combine_by_and=False)
+        selector_candidate.selectors.ref = FlagSelector(selectWhenTrue=["refcat_match_candidate"])
+        selector_candidate.selectors.target = CoaddPlotFlagSelector(
+          bands=config.bands,
+          selectWhenFalse=parameters.select_target_false.split(",") if parameters.select_target_false else [],
+          selectWhenTrue=parameters.select_target_true.split(",") if parameters.select_target_true else [],
+        )
+
+        if parameters.patches_hsc:
+          selector_patch = SetSelector(
+            vectorKeys=["patch", "refcat_patch"],
+            values=parameters.patches_hsc,
+          )
+        else:
+          selector_patch = RangeSelector(vectorKey="patch", op="ge", threshold=0)
+
+        ref_matched = FluxConfig(
+            key_flux="refcat_{band}_cModelFlux",
+            name_flux="HSC CModel",
+            name_flux_short="HSC_CModel",
+            key_flux_error=None,
+        )
+
+        ref_sersic_config = FluxConfig(
+            key_flux="refcat_{band}_sersicFlux",
+            name_flux="HSC Sersic",
+            name_flux_short="HSC_Sersic",
+            key_flux_error=None,
+        )
+        ref_sersic_dict = {"ref_sersic": ref_sersic_config}
+
+        lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
+        lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
+        lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)
+        lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
+        lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
+        lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
+
+  diff_matched_hsc_shear:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      bands: ["g", "r", "i", "z"]
+      connections.inputName: matched_cosmos_mast_desi_hsc_shear
+      connections.outputName: diff_matched_cosmos_mast_desi_hsc_shear
+
+      atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompleteness.fluxes: fluxes_dict
+      atools.matchedRefCompleteness.key_match_distance: mast_desi_hsc_shear_match_distance
+      atools.matchedRefCompleteness.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompleteness.selector_all: selector_all
+      atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy_hsc
+      atools.matchedRefCompleteness.selector_ref_all: selector_obj_hsc
+      atools.matchedRefCompleteness.selector_ref_star: selector_star_hsc
+      atools.matchedRefCompleteness.selector_galaxy: selector_galaxy_mod
+      atools.matchedRefCompleteness.selector_star: selector_star_mod
+      atools.matchedRefCompleteness.mag_target: gauss_err
+
+      atools.matchedRefCompletenessModelExtend: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompletenessModelExtend.fluxes: fluxes_dict
+      atools.matchedRefCompletenessModelExtend.key_match_distance: mast_desi_hsc_shear_match_distance
+      atools.matchedRefCompletenessModelExtend.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompletenessModelExtend.selector_all: selector_all
+      atools.matchedRefCompletenessModelExtend.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompletenessModelExtend.selector_ref_all: selector_obj
+      atools.matchedRefCompletenessModelExtend.selector_ref_star: selector_star
+      atools.matchedRefCompletenessModelExtend.selector_galaxy: selector_galaxy_mod
+      atools.matchedRefCompletenessModelExtend.selector_star: selector_star_mod
+      atools.matchedRefCompletenessModelExtend.mag_target: gauss_err
+
+      atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
+      atools.matchedRefAngularSeparationDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefAngularSeparationDiff.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefAngularSeparationDiff.fluxes: fluxes_dict
+      atools.matchedRefAngularSeparationDiff.key_dist: mast_desi_hsc_shear_match_distance
+      atools.matchedRefAngularSeparationDiff.key_dist_err: mast_desi_hsc_shear_match_distanceErr
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
+      atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
+      atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
+
+      atools.matchedRefGaussColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefGaussColorDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefGaussColorDiff.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefGaussColorDiff.bands: bands_color
+      atools.matchedRefGaussColorDiff.fluxes: fluxes_dict
+      atools.matchedRefGaussColorDiff.selector_all: selector_all
+      atools.matchedRefGaussColorDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefGaussColorDiff.selector_ref_all: selector_obj
+      atools.matchedRefGaussColorDiff.selector_ref_star: selector_star
+      atools.matchedRefGaussColorDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefGaussColorDiff.produce.plot.yLims: lims_color_diff
+      atools.matchedRefGaussColorDiff.mag_y1: gauss_err
+
+      atools.matchedRefGaussColorChi: MatchedRefCoaddDiffColorTool
+      atools.matchedRefGaussColorChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefGaussColorChi.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefGaussColorChi.bands: bands_color
+      atools.matchedRefGaussColorChi.compute_chi: true
+      atools.matchedRefGaussColorChi.fluxes: fluxes_dict
+      atools.matchedRefGaussColorChi.selector_all: selector_all
+      atools.matchedRefGaussColorChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefGaussColorChi.selector_ref_all: selector_obj
+      atools.matchedRefGaussColorChi.selector_ref_star: selector_star
+      atools.matchedRefGaussColorChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefGaussColorChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefGaussColorChi.mag_y1: gauss_err
+
+      atools.matchedRefGaussMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefGaussMagDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefGaussMagDiff.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefGaussMagDiff.fluxes: fluxes_dict
+      atools.matchedRefGaussMagDiff.selector_all: selector_all
+      atools.matchedRefGaussMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefGaussMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefGaussMagDiff.selector_ref_star: selector_star
+      atools.matchedRefGaussMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefGaussMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefGaussMagDiff.mag_y: gauss_err
+
+      atools.matchedRefGaussMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefGaussMagChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefGaussMagChi.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefGaussMagChi.compute_chi: true
+      atools.matchedRefGaussMagChi.fluxes: fluxes_dict
+      atools.matchedRefGaussMagChi.selector_all: selector_all
+      atools.matchedRefGaussMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefGaussMagChi.selector_ref_all: selector_obj
+      atools.matchedRefGaussMagChi.selector_ref_star: selector_star
+      atools.matchedRefGaussMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefGaussMagChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefGaussMagChi.mag_y: gauss_err
+
+      atools.matchedRefPGaussColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefPGaussColorDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPGaussColorDiff.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefPGaussColorDiff.bands: bands_color
+      atools.matchedRefPGaussColorDiff.fluxes: fluxes_dict
+      atools.matchedRefPGaussColorDiff.selector_all: selector_all
+      atools.matchedRefPGaussColorDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPGaussColorDiff.selector_ref_all: selector_obj
+      atools.matchedRefPGaussColorDiff.selector_ref_star: selector_star
+      atools.matchedRefPGaussColorDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPGaussColorDiff.produce.plot.yLims: lims_color_diff
+      atools.matchedRefPGaussColorDiff.mag_y1: pgauss_err
+
+      atools.matchedRefPGaussColorChi: MatchedRefCoaddDiffColorTool
+      atools.matchedRefPGaussColorChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPGaussColorChi.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefPGaussColorChi.bands: bands_color
+      atools.matchedRefPGaussColorChi.compute_chi: true
+      atools.matchedRefPGaussColorChi.fluxes: fluxes_dict
+      atools.matchedRefPGaussColorChi.selector_all: selector_all
+      atools.matchedRefPGaussColorChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPGaussColorChi.selector_ref_all: selector_obj
+      atools.matchedRefPGaussColorChi.selector_ref_star: selector_star
+      atools.matchedRefPGaussColorChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPGaussColorChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefPGaussColorChi.mag_y1: pgauss_err
+
+      atools.matchedRefPGaussMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefPGaussMagDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPGaussMagDiff.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefPGaussMagDiff.fluxes: fluxes_dict
+      atools.matchedRefPGaussMagDiff.selector_all: selector_all
+      atools.matchedRefPGaussMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPGaussMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefPGaussMagDiff.selector_ref_star: selector_star
+      atools.matchedRefPGaussMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPGaussMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefPGaussMagDiff.mag_y: pgauss_err
+
+      atools.matchedRefPGaussMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefPGaussMagChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPGaussMagChi.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefPGaussMagChi.compute_chi: true
+      atools.matchedRefPGaussMagChi.fluxes: fluxes_dict
+      atools.matchedRefPGaussMagChi.selector_all: selector_all
+      atools.matchedRefPGaussMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPGaussMagChi.selector_ref_all: selector_obj
+      atools.matchedRefPGaussMagChi.selector_ref_star: selector_star
+      atools.matchedRefPGaussMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPGaussMagChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefPGaussMagChi.mag_y: pgauss_err
+
+      atools.matchedRefPositionRaDiff: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionRaDiff.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefPositionRaDiff.coord_meas: ra
+      atools.matchedRefPositionRaDiff.coord_ref: coord_best_ra
+      atools.matchedRefPositionRaDiff.coord_ref_cos: coord_best_dec
+      atools.matchedRefPositionRaDiff.fluxes: fluxes_dict
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
+      atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionDecDiff.prep.selectors.matched.vectorKey: mast_desi_hsc_shear_match_distance
+      atools.matchedRefPositionDecDiff.coord_meas: dec
+      atools.matchedRefPositionDecDiff.coord_ref: coord_best_dec
+      atools.matchedRefPositionDecDiff.fluxes: fluxes_dict
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
+      atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionDecDiff.scale_factor: 3600000
+
+      python: |        
+        from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddCompurityTool,
+          MatchedRefCoaddDiffColorTool,
+          MatchedRefCoaddDiffDistanceTool,
+          MatchedRefCoaddDiffMagTool,
+          MatchedRefCoaddDiffCoordRaTool,
+          MatchedRefCoaddDiffCoordDecTool,
+        )
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        from lsst.analysis.tools.actions.vector import (
+          CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
+          ReferenceGalaxySelector, ReferenceObjectSelector, ReferenceStarSelector,
+          SetSelector, StarSelector,
+        )
+        
+        bands_color = {"g": "r", "r": "i", "i": "z"}
+        
+        selector_all = RangeSelector(vectorKey="shearObjectId")
+        selector_galaxy = ReferenceGalaxySelector(
+          plotLabelKey="Selection: HST galaxies", vectorKey="hst_mu_class", threshold=1,
+        )
+        selector_obj = ReferenceObjectSelector(
+          plotLabelKey="Selection: HST objects", vectorKey="hst_mu_class", maximum=3,
+        )
+        selector_star = ReferenceStarSelector(
+          plotLabelKey="Selection: HST stars", vectorKey="hst_mu_class", threshold=2,
+        )
+
+        selector_galaxy_hsc = ReferenceGalaxySelector(
+          plotLabelKey="Selection: HSC galaxies", vectorKey="hsc_griz_model_extendedness", op="ge",
+        )
+        selector_obj_hsc = ReferenceObjectSelector(
+          plotLabelKey="Selection: HSC objects", vectorKey="hsc_griz_model_extendedness",
+        )
+        selector_star_hsc = StarSelector(
+          plotLabelKey="Selection: stars", vectorKey="hsc_griz_model_extendedness", extendedness_maximum=0.2,
+        )
+        selector_galaxy_mod = GalaxySelector(
+          vectorKey="hsc_griz_model_extendedness", extendedness_minimum=0.2,
+        )
+        selector_star_mod = StarSelector(
+          vectorKey="hsc_griz_model_extendedness", extendedness_maximum=0.2,
+        )
+        selector_candidate = CompositeSelector(combine_by_and=False)
+        selector_candidate.selectors.ref = FlagSelector(selectWhenTrue=["mast_desi_hsc_match_candidate"])
+        selector_candidate.selectors.target = CoaddPlotFlagSelector(
+          bands=config.bands,
+          selectWhenFalse=parameters.select_target_false.split(",") if parameters.select_target_false else [],
+          selectWhenTrue=parameters.select_target_true.split(",") if parameters.select_target_true else [],
+        )
+
+        if parameters.patches_hst:
+          selector_patch = SetSelector(
+            vectorKeys=["patch", "refcat_patch"],
+            values=parameters.patches_hsc,
+          )
+        else:
+          selector_patch = RangeSelector(vectorKey="patch", op="ge", threshold=0)
+
+        gauss = FluxConfig(
+            key_flux="{band}_gaussFlux",
+            name_flux="metadetect Gaussian",
+            name_flux_short="meta_Gaussian",
+            key_flux_error="{band}_gaussFluxErr",
+        )
+        pgauss = FluxConfig(
+            key_flux="{band}_pgaussFlux",
+            name_flux="metadetect Gaussian",
+            name_flux_short="meta_Gaussian",
+            key_flux_error="{band}_pgaussFluxErr",
+        )
+        sersic = FluxConfig(
+            key_flux="hsc_{band}_sersicFlux",
+            name_flux="HSC Sersic",
+            name_flux_short="HSC_Sersic",
+            key_flux_error="hsc_{band}_sersicFluxErr",
+        )
+        fluxes_dict = {"gauss_err": gauss, "pgauss_err": pgauss, "ref_matched": sersic, "cmodel_err": sersic}
+
+        lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
+        lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
+        lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)
+        lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
+        lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
+        lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)
+  diff_matched_shear:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      bands: ["g", "r", "i", "z"]
+      connections.inputName: matched_object_shear_object
+      connections.outputName: diff_matched_object_shear_object
+
+      atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompleteness.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompleteness.selector_all: selector_all
+      atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompleteness.selector_ref_all: selector_obj
+      atools.matchedRefCompleteness.selector_ref_star: selector_star
+
+      atools.matchedRefCompletenessModelExtend: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompletenessModelExtend.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompletenessModelExtend.selector_all: selector_all
+      atools.matchedRefCompletenessModelExtend.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompletenessModelExtend.selector_ref_all: selector_obj
+      atools.matchedRefCompletenessModelExtend.selector_ref_star: selector_star
+      atools.matchedRefCompletenessModelExtend.selector_galaxy: selector_galaxy_mod
+      atools.matchedRefCompletenessModelExtend.selector_star: selector_star_mod
+      atools.matchedRefCompletenessModelExtend.mag_target: sersic_err
+
+      atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
+      atools.matchedRefAngularSeparationDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
+      atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
+      atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
+
+      atools.matchedRefGaap1p0PGaussColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefGaap1p0PGaussColorDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefGaap1p0PGaussColorDiff.bands: bands_color
+      atools.matchedRefGaap1p0PGaussColorDiff.fluxes: fluxes_dict
+      atools.matchedRefGaap1p0PGaussColorDiff.selector_all: selector_all
+      atools.matchedRefGaap1p0PGaussColorDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefGaap1p0PGaussColorDiff.selector_ref_all: selector_obj
+      atools.matchedRefGaap1p0PGaussColorDiff.selector_ref_star: selector_star
+      atools.matchedRefGaap1p0PGaussColorDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefGaap1p0PGaussColorDiff.produce.plot.yLims: lims_color_diff
+      atools.matchedRefGaap1p0PGaussColorDiff.mag_x: pgauss
+      atools.matchedRefGaap1p0PGaussColorDiff.mag_y1: gaap1p0_err
+
+      atools.matchedRefGaap1p0PGaussColorChi: MatchedRefCoaddDiffColorTool
+      atools.matchedRefGaap1p0PGaussColorChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefGaap1p0PGaussColorChi.bands: bands_color
+      atools.matchedRefGaap1p0PGaussColorChi.compute_chi: true
+      atools.matchedRefGaap1p0PGaussColorChi.fluxes: fluxes_dict
+      atools.matchedRefGaap1p0PGaussColorChi.selector_all: selector_all
+      atools.matchedRefGaap1p0PGaussColorChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefGaap1p0PGaussColorChi.selector_ref_all: selector_obj
+      atools.matchedRefGaap1p0PGaussColorChi.selector_ref_star: selector_star
+      atools.matchedRefGaap1p0PGaussColorChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefGaap1p0PGaussColorChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefGaap1p0PGaussColorChi.mag_x: pgauss
+      atools.matchedRefGaap1p0PGaussColorChi.mag_y1: gaap1p0_err
+
+      atools.matchedRefSersicPGaussColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefSersicPGaussColorDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicPGaussColorDiff.bands: bands_color
+      atools.matchedRefSersicPGaussColorDiff.fluxes: fluxes_dict
+      atools.matchedRefSersicPGaussColorDiff.selector_all: selector_all
+      atools.matchedRefSersicPGaussColorDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicPGaussColorDiff.selector_ref_all: selector_obj
+      atools.matchedRefSersicPGaussColorDiff.selector_ref_star: selector_star
+      atools.matchedRefSersicPGaussColorDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicPGaussColorDiff.produce.plot.yLims: lims_color_diff
+      atools.matchedRefSersicPGaussColorDiff.mag_x: pgauss
+      atools.matchedRefSersicPGaussColorDiff.mag_y1: sersic_err
+
+      atools.matchedRefSersicPGaussColorChi: MatchedRefCoaddDiffColorTool
+      atools.matchedRefSersicPGaussColorChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicPGaussColorChi.bands: bands_color
+      atools.matchedRefSersicPGaussColorChi.compute_chi: true
+      atools.matchedRefSersicPGaussColorChi.fluxes: fluxes_dict
+      atools.matchedRefSersicPGaussColorChi.selector_all: selector_all
+      atools.matchedRefSersicPGaussColorChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicPGaussColorChi.selector_ref_all: selector_obj
+      atools.matchedRefSersicPGaussColorChi.selector_ref_star: selector_star
+      atools.matchedRefSersicPGaussColorChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicPGaussColorChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefSersicPGaussColorChi.mag_x: pgauss
+      atools.matchedRefSersicPGaussColorChi.mag_y1: sersic_err
+
+      atools.matchedRefSersicGaussColorDiff: MatchedRefCoaddDiffColorTool
+      atools.matchedRefSersicGaussColorDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicGaussColorDiff.bands: bands_color
+      atools.matchedRefSersicGaussColorDiff.selector_all: selector_all
+      atools.matchedRefSersicGaussColorDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicGaussColorDiff.selector_ref_all: selector_obj
+      atools.matchedRefSersicGaussColorDiff.selector_ref_star: selector_star
+      atools.matchedRefSersicGaussColorDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicGaussColorDiff.produce.plot.yLims: lims_color_diff
+      atools.matchedRefSersicGaussColorDiff.mag_y1: sersic_err
+
+      atools.matchedRefSersicGaussColorChi: MatchedRefCoaddDiffColorTool
+      atools.matchedRefSersicGaussColorChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicGaussColorChi.bands: bands_color
+      atools.matchedRefSersicGaussColorChi.compute_chi: true
+      atools.matchedRefSersicGaussColorChi.selector_all: selector_all
+      atools.matchedRefSersicGaussColorChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicGaussColorChi.selector_ref_all: selector_obj
+      atools.matchedRefSersicGaussColorChi.selector_ref_star: selector_star
+      atools.matchedRefSersicGaussColorChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicGaussColorChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefSersicGaussColorChi.mag_y1: sersic_err
+
+      atools.matchedRefSersicGaussMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefSersicGaussMagDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicGaussMagDiff.fluxes_default.ref_matched: gauss_flux
+      atools.matchedRefSersicGaussMagDiff.selector_all: selector_all
+      atools.matchedRefSersicGaussMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicGaussMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefSersicGaussMagDiff.selector_ref_star: selector_star
+      atools.matchedRefSersicGaussMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicGaussMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefSersicGaussMagDiff.mag_y: sersic_err
+
+      atools.matchedRefSersicGaussMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefSersicGaussMagChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicGaussMagChi.compute_chi: true
+      atools.matchedRefSersicGaussMagChi.selector_all: selector_all
+      atools.matchedRefSersicGaussMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicGaussMagChi.selector_ref_all: selector_obj
+      atools.matchedRefSersicGaussMagChi.selector_ref_star: selector_star
+      atools.matchedRefSersicGaussMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicGaussMagChi.produce.plot.yLims: lims_mag_chi
+      atools.matchedRefSersicGaussMagChi.mag_y: sersic_err
+
+      atools.matchedRefPositionRaDiff: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionRaDiff.coord_ref: parameters.shear_ra
+      atools.matchedRefPositionRaDiff.coord_ref_cos: parameters.shear_dec
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
+      atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionRaChi: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionRaChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionRaChi.coord_ref: parameters.shear_ra
+      atools.matchedRefPositionRaChi.coord_ref_cos: parameters.shear_dec
+      atools.matchedRefPositionRaChi.selector_all: selector_all
+      atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaChi.selector_ref_star: selector_star
+      atools.matchedRefPositionRaChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionRaChi.scale_factor: 3600000
+      atools.matchedRefPositionRaChi.compute_chi: true
+
+      atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionDecDiff.coord_ref: parameters.shear_dec
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
+      atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionDecDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionDecChi: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionDecChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionDecChi.coord_ref: parameters.shear_dec
+      atools.matchedRefPositionDecChi.selector_all: selector_all
+      atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecChi.selector_ref_star: selector_star
+      atools.matchedRefPositionDecChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionDecChi.scale_factor: 3600000
+      atools.matchedRefPositionDecChi.compute_chi: true
+
+      atools.matchedRefPositionSersicRaDiff: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionSersicRaDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicRaDiff.coord_meas: sersic_ra
+      atools.matchedRefPositionSersicRaDiff.coord_ref: shear_ra
+      atools.matchedRefPositionSersicRaDiff.coord_ref_cos: shear_dec
+      atools.matchedRefPositionSersicRaDiff.selector_all: selector_all
+      atools.matchedRefPositionSersicRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionSersicRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionSersicRaChi: MatchedRefCoaddDiffCoordRaTool
+      atools.matchedRefPositionSersicRaChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicRaChi.coord_meas: sersic_ra
+      atools.matchedRefPositionSersicRaChi.coord_ref: shear_ra
+      atools.matchedRefPositionSersicRaChi.coord_ref_cos: shear_dec
+      atools.matchedRefPositionSersicRaChi.selector_all: selector_all
+      atools.matchedRefPositionSersicRaChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicRaChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicRaChi.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicRaChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicRaChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionSersicRaChi.scale_factor: 3600000
+      atools.matchedRefPositionSersicRaChi.compute_chi: true
+
+      atools.matchedRefPositionSersicDecDiff: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionSersicDecDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicDecDiff.coord_meas: sersic_dec
+      atools.matchedRefPositionSersicDecDiff.coord_ref: shear_dec
+      atools.matchedRefPositionSersicDecDiff.selector_all: selector_all
+      atools.matchedRefPositionSersicDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionSersicDecDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionSersicDecChi: MatchedRefCoaddDiffCoordDecTool
+      atools.matchedRefPositionSersicDecChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicDecChi.coord_meas: sersic_dec
+      atools.matchedRefPositionSersicDecChi.coord_ref: shear_dec
+      atools.matchedRefPositionSersicDecChi.selector_all: selector_all
+      atools.matchedRefPositionSersicDecChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicDecChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicDecChi.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicDecChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicDecChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
+      atools.matchedRefPositionSersicDecChi.compute_chi: true
+
+      python: |        
+        from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddCompurityTool,
+          MatchedRefCoaddDiffColorTool,
+          MatchedRefCoaddDiffDistanceTool,
+          MatchedRefCoaddDiffMagTool,
+          MatchedRefCoaddDiffCoordRaTool,
+          MatchedRefCoaddDiffCoordDecTool,
+        )
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        from lsst.analysis.tools.actions.vector import (
+          CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
+          SetSelector, StarSelector,
+        )
+        
+        bands_color = {"g": "r", "r": "i", "i": "z"}
+        
+        selector_all = RangeSelector(vectorKey="objectId")
+        selector_galaxy = RangeSelector(
+          plotLabelKey="Selection: galaxies", vectorKey="shear_gauss_T", minimum=0.01,
+        )
+        selector_obj = RangeSelector(
+          plotLabelKey="Selection: objects", vectorKey="shear_gauss_T",
+        )
+        selector_star = RangeSelector(
+          plotLabelKey="Selection: stars", vectorKey="shear_gauss_T", maximum=0.01,
+        )
+        selector_galaxy_mod = GalaxySelector(
+          vectorKey="griz_model_extendedness", extendedness_minimum=0.2,
+        )
+        selector_star_mod = StarSelector(
+          vectorKey="griz_model_extendedness", extendedness_maximum=0.2,
+        )
+        selector_candidate = CompositeSelector(combine_by_and=False)
+        selector_candidate.selectors.ref = FlagSelector(selectWhenTrue=["shear_match_candidate"])
+        selector_candidate.selectors.target = CoaddPlotFlagSelector(
+          bands=config.bands,
+          selectWhenFalse=parameters.select_target_false.split(",") if parameters.select_target_false else [],
+          selectWhenTrue=parameters.select_target_true.split(",") if parameters.select_target_true else [],
+        )
+
+        pgauss_flux = FluxConfig(
+            key_flux="shear_{band}_pgaussFlux",
+            name_flux="PGauss",
+            name_flux_short="PGauss",
+            key_flux_error=None,
+        )
+        gauss_flux = FluxConfig(
+            key_flux="shear_{band}_gaussFlux",
+            name_flux="Gauss",
+            name_flux_short="Gauss",
+            key_flux_error=None,
+        )
+        fluxes_dict = {"ref_matched": gauss_flux, "pgauss": pgauss_flux}
+        
         lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
         lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
         lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)

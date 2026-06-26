@@ -1,0 +1,27 @@
+description:
+  Multitract version of CDFS matched difference
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/coaddDiffMatchedWide.yaml
+    labeledSubsetModifyMode: EDIT
+    rename:
+      diff_matched_des_y6gold: diff_matched_des_y6gold_multitract
+      diff_matched_euclid: diff_matched_euclid_multitract
+tasks:
+  diff_matched_des_y6gold_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.outputName: diff_matched_des_y6gold_multitract
+
+      load_multiple: True
+  diff_matched_euclid_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.outputName: diff_matched_euclid_q1_object_multitract
+
+      load_multiple: True
+  diff_matched_shear_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.outputName: diff_matched_object_shear_object_multitract
+
+      load_multiple: True

@@ -1,5 +1,10 @@
 description: |
   Matched difference (measured vs reference) plots/metrics for ELAIS-S1
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/coaddDiffMatchedWide.yaml
+    labeledSubsetModifyMode: EDIT
+    include:
+      - diff_matched_cdfs_des_y6gold
 parameters:
   color_diff_min: -250
   color_diff_max: 250
@@ -146,10 +151,11 @@ tasks:
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
         
         selector_all = RangeSelector(vectorKey="objectId")
-        selector_galaxy = StringSetSelector(vectorKeys=["SourceModel"], values=["ExpGal", "DevGal"])
-        selector_obj = StringSetSelector(vectorKeys=["SourceModel"], values=["PtSrc", "ExpGal", "DevGal"])
-        selector_star = StarSelector(vectorKeys=["SourceModel"], values=["PtSrc"], 
-                                     plotLabelKey="Stars: SourceModel == PtSrc")
+        selector_galaxy = StringSetSelector(vectorKeys=["refcat_SourceModel"], values=["ExpGal", "DevGal"])
+        selector_obj = StringSetSelector(vectorKeys=["refcat_SourceModel"], values=["PtSrc", "ExpGal", "DevGal"])
+        selector_star = StringSetSelector(
+          vectorKeys=["refcat_SourceModel"], values=["PtSrc"], plotLabelKey="Stars: SourceModel == PtSrc",
+        )
 
         selector_candidate = SetSelector(
           vectorKeys=("match_candidate", "refcat_match_candidate"),
@@ -161,8 +167,9 @@ tasks:
             selector_tract_patches = CompositeSelector(combine_by_and=False)
             for tract_string in parameters.patches.split(";"):
               tract, patches = tract_string.split(":")
-              values = [int(x) for x in patches.split(",")]
-              selector_tract = MatchedTractSelector(tract=int(tract), patches=values)
+              values = [int(x) for x in patches.split(",")] if patches else [int(tract)]
+              selector_tract = MatchedTractSelector(tract=int(tract), patches=values) if patches else (
+                SetSelector(vectorKeys=["tract", "refcat_tract"], values=values))
               setattr(selector_tract_patches.selectors, f"tract_{tract}", selector_tract)
             selector_comp.selectors.tract_patches = selector_tract_patches
           else:

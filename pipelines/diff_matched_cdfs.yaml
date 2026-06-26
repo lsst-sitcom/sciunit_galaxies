@@ -90,7 +90,6 @@ tasks:
         config.match_tract_catalog.columns_ref_meas = [
           parameters.cdfs_acs_coord_ra, parameters.cdfs_acs_coord_dec,
         ] + fluxes_ref
-        config.match_tract_catalog.match_dist_max = 1.0
         fluxes_meas = [f"{band}_sersicFlux" for band in parameters.bands_match_acs]
         columns_meas = ["coord_ra", "coord_dec"] + fluxes_meas
         config.match_tract_catalog.columns_target_meas = columns_meas
@@ -114,8 +113,7 @@ tasks:
         config.diff_matched_catalog.columns_ref_copy = parameters.columns_hlf_copy
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
-        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
+        ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
   match_object_to_cdfs_jades_v2p0:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
@@ -266,8 +264,7 @@ tasks:
         config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
-        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
+        ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         prefix_matched = "matched_"
         config.diff_matched_catalog.column_matched_prefix_ref = prefix_matched 
         config.diff_matched_catalog.columns_ref_copy = [
@@ -415,10 +412,7 @@ tasks:
         prefix_jades = parameters.prefix_jades
         prefix_hst = parameters.prefix_acs
         prefix_euclid = parameters.prefix_euclid
-        
-        config.diff_matched_catalog.column_matched_prefix_target 
-        config.diff_matched_catalog.column_matched_prefix_ref
-        
+                
         fluxes_ref = [f"{prefix_hst}f_f775w", f"{prefix_euclid}flux_vis_sersic"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -447,8 +441,7 @@ tasks:
         config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
-        ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
-        + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
+        ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         config.diff_matched_catalog.columns_ref_copy = [
           "coord_best_ra", "coord_best_dec", "coord_mast_ra", "coord_mast_dec",
         ] + [

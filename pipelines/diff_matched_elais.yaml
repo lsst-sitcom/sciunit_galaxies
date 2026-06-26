@@ -9,7 +9,7 @@ parameters:
   tractor_elais_coord_ra: "RA"
   tractor_elais_coord_dec: "Dec"
   columns_tractor_elais_copy: [
-    "ID_VIDEO", "RA", "Dec",
+    "ID_VIDEO", "RA", "Dec", "SourceModel",
     "flux_ch2_DeepDrill", "flux_ch1_DeepDrill",
     "flux_Ks_VIDEO", "flux_H_VIDEO", "flux_J_VIDEO", "flux_Y_VIDEO", "flux_Z_VIDEO",
     "flux_y_DES", "flux_z_DES", "flux_i_DES", "flux_r_DES", "flux_g_DES",
@@ -29,8 +29,6 @@ tasks:
     config:
       connections.name_input_cat_ref: elais_tractor_zou21
       connections.name_input_cat_target: object
-#      match_tract_catalog.columns_ref_copy: ["ID_VIDEO"]
-#      match_tract_catalog.columns_target_copy: ["objectId"]
       match_tract_catalog.coord_format.column_ref_coord1: parameters.tractor_elais_coord_ra
       match_tract_catalog.coord_format.column_ref_coord2: parameters.tractor_elais_coord_dec
       match_tract_catalog.mag_faintest_ref: 27.0
