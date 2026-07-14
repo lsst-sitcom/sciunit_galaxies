@@ -1,10 +1,8 @@
 from typing import Any
 
-import astropy.units as u
 import lsst.gauss2d as g2d
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import numpy as np
 from numpy.typing import NDArray
 
 from .lsst import scale_lsst_deg
