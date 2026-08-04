@@ -1,13 +1,15 @@
 description: |
   Matched difference (measured vs reference) plots/metrics for CDFS
 imports:
-  - location: $SCIUNIT_GALAXIES_DIR/pipelines/coaddDiffMatchedWide.yaml
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/compareMatchedWide.yaml
     labeledSubsetModifyMode: EDIT
     include:
       - diff_matched_cdfs_des_y6gold
       - diff_matched_cdfs_euclid
+parameters:
+  patches_hst: ""
 tasks:
-  diff_matched_cdfs_acs:
+  compareMatchedCdfsAcs:
     class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
     config:
       bands: ["i"]
@@ -221,8 +223,8 @@ tasks:
           selectWhenFalse=parameters.select_target_false.split(",") if parameters.select_target_false else [],
           selectWhenTrue=parameters.select_target_true.split(",") if parameters.select_target_true else [],
         )
-        if parameters.patches:
-          values = [int(x) for x in parameters.patches.split(",")]
+        if parameters.patches_hst:
+          values = [int(x) for x in parameters.patches_hst.split(",")]
           selector_candidate_new = CompositeSelector(combine_by_and=True)
           selector_candidate_new.selectors.flag = selector_candidate
           selector_candidate_new.patch = SetSelector(

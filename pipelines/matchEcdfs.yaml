@@ -1,6 +1,9 @@
 description: Catalog matching and analysis for HSC with COSMOS
 imports:
-  - location: $SCIUNIT_GALAXIES_DIR/pipelines/diff_matched_wide.yaml
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/matchWide.yaml
+    labeledSubsetModifyMode: EDIT
+    exclude:
+      - matchObjectToHsc
 parameters:
   bands_match_acs: ["i"]
   cdfs_acs_coord_ra: "ra_gaia"
@@ -59,9 +62,10 @@ parameters:
     "pz_kron_chisq_z_lt_5", "pz_kron_z_chisq_z_lt_5", "pz_kron_chisq_z_lt_4", "pz_kron_z_chisq_z_lt_4",
   ]
   prefix_acs: "hst_"
+  prefix_dp1: "dp1_"
   prefix_jades: "jades_"
 tasks:
-  match_object_to_cdfs_acs:
+  matchObjectToCdfsAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_hlf_v2p1
@@ -114,7 +118,7 @@ tasks:
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
-  match_object_to_cdfs_jades_v2p0:
+  matchObjectToCdfsJadesV2p0:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_jades_v2p0
@@ -152,7 +156,7 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
         columns_flux = {}
         fluxes_meas_other = []
-  match_cdfs_des_y6gold_to_cdfs_acs:
+  matchDesY6GoldToCdfsAcs:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_hlf_v2p1
@@ -207,7 +211,7 @@ tasks:
         ] + parameters.columns_des_y6gold_copy + fluxes_meas_other + [
           f"bdf_flux_err_{band}_corrected" for band in parameters.bands_match_des_y6gold
         ]
-  match_object_to_cdfs_acs_des_y6gold:
+  matchObjectToCdfsAcsDesY6Gold:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_cdfs_hlf_v2p1_des_y6gold
@@ -276,7 +280,7 @@ tasks:
             f"bdf_flux_err_{band}_corrected" for band in parameters.bands_match_des_y6gold
           ]
         ]
-  match_cdfs_acs_to_cdfs_jades_v5p0:
+  matchCdfsAcsToCdfsJadesV5p0:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: cdfs_jades_v5p0
@@ -327,7 +331,7 @@ tasks:
         ]
         # Not supported yet
         # config.match_tract_catalog.columns_ref_err = []
-  match_cdfs_mast_to_euclid:
+  matchCdfsMastToEuclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_cdfs_jades_v5p0_cdfs_hlf_v2p1
@@ -381,7 +385,7 @@ tasks:
         ]
         config.diff_matched_catalog.columns_target_copy = parameters.columns_euclid_copy
 
-  match_object_to_cdfs_mast_euclid:
+  matchObjectToCdfsMastEuclid:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask
     config:
       connections.name_input_cat_ref: matched_cdfs_mast_euclid_q1

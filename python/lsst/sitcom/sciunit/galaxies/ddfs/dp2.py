@@ -69,6 +69,18 @@ EcdfsInfo = DeepFieldInfoDp2(
     limits_ra=(50.7, 55.2),
     limits_dec=(-30., -26.3),
     metrics_plot_band={
+        "dp1": {
+            "compl_24_25_any": {"vmin": 0.84, "vmax": 0.91},
+            "mag_compl50_any": {"vmin": 25.5, "vmax": 26.4},
+            "mag_compl80_any": {"vmin": 24.8, "vmax": 25.8},
+            "mag_compl90_any": {"vmin": 22, "vmax": 25},
+        },
+        "dp2": {
+            "compl_24_25_any": {"vmin": 0.84, "vmax": 0.91},
+            "mag_compl50_any": {"vmin": 25.2, "vmax": 26.1},
+            "mag_compl80_any": {"vmin": 24.5, "vmax": 25.5},
+            "mag_compl90_any": {"vmin": 22, "vmax": 25},
+        },
         "vis": {
             "compl_24_25_any": {"vmin": 0.84, "vmax": 0.91},
             "mag_compl50_any": {"vmin": 25.5, "vmax": 26.4},
@@ -141,6 +153,18 @@ EdfsInfo = DeepFieldInfoDp2(
     limits_dec=(-51.5, -45.2),
     limits_ra=(55.2, 67),
     metrics_plot_band={
+        "dp1": {
+            "compl_24_25_any": {"vmin": 0.84, "vmax": 0.91},
+            "mag_compl50_any": {"vmin": 24.9, "vmax": 25.8},
+            "mag_compl80_any": {"vmin": 24.2, "vmax": 25.2},
+            "mag_compl90_any": {"vmin": 21.7, "vmax": 24.7},
+        },
+        "dp2": {
+            "compl_24_25_any": {"vmin": 0.84, "vmax": 0.91},
+            "mag_compl50_any": {"vmin": 24.9, "vmax": 25.8},
+            "mag_compl80_any": {"vmin": 24.2, "vmax": 25.2},
+            "mag_compl90_any": {"vmin": 21.7, "vmax": 24.7},
+        },
         "vis": {
             "compl_24_25_any": {"vmin": 0.80, "vmax": 0.95},
             "mag_compl50_any": {"vmin": 24.4, "vmax": 26.2},

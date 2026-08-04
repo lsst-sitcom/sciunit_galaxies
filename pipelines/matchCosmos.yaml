@@ -1,10 +1,11 @@
 description: Catalog matching and analysis for HSC with COSMOS
 imports:
-  - location: $SCIUNIT_GALAXIES_DIR/pipelines/diff_matched_wide.yaml
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/matchWide.yaml
     labeledSubsetModifyMode: EDIT
     exclude:
-      - match_object_to_des_y6gold
-      - match_object_to_euclid
+      - matchObjectToDesY6gold
+      - matchObjectToDp1
+      - matchObjectToEuclid
 parameters:
   bands_match: ["g", "r", "i", "z", "y"]
   bands_match_acs: ["i"]
@@ -58,9 +59,6 @@ parameters:
   prefix_hsc: "hsc_"
   # Prefix for NASA space telescopes, from the MAST archive
   prefix_mast: "mast_"
-
-  models_other: ["psf", "gaap1p0", "kron", "exponential", "cModel"]
-  models_other_shear: ["gauss",]
 tasks:
   matchObjectToCosmos2020:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask

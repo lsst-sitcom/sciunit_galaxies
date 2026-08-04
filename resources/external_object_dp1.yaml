@@ -11,6 +11,26 @@ data:
   run: u/dtaranu/DM-50135/lsst_dp1
   records:
   - dataset_id:
+    - !uuid '8f802dc8-9626-40d5-8649-5ee98ef237b5'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2234}
+    path: object_2234_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'bb30b983-595f-45e9-8c37-2c29019f1e48'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2235}
+    path: object_2235_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'ec701f35-0777-4e17-926f-bc1b39a900a0'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2393}
+    path: object_2393_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '0e7dfa86-cc6a-490e-8db6-6bef609e468d'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2394}
+    path: object_2394_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
     - !uuid 'f24ef3e7-a949-462a-8e89-51c4d277c8cf'
     data_id: {'skymap': 'lsst_cells_v2', 'tract': 4848}
     path: object_4848_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq

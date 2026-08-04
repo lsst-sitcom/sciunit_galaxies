@@ -1,7 +1,7 @@
 description: |
   Matched difference (measured vs reference) plots/metrics for ELAIS-S1
 imports:
-  - location: $SCIUNIT_GALAXIES_DIR/pipelines/coaddDiffMatchedWide.yaml
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/compareMatchedWide.yaml
     labeledSubsetModifyMode: EDIT
     include:
       - diff_matched_cdfs_des_y6gold
