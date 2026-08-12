@@ -15,4 +15,3 @@ data:
     data_id: {}
     path: hlsp_hlf_hst_60mas_goodss_v2.1_catalog.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
-

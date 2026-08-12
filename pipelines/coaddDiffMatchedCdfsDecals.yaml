@@ -114,14 +114,14 @@ tasks:
       python: |
         from lsst.analysis.tools.atools.diffMatched import *
         from lsst.analysis.tools.atools.genericBuild import FluxConfig
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z"}
-        
+
         reconfigure_diff_matched_defaults(
           context="custom", use_any=True, use_galaxies=True, key_flux_meas="cmodel",
           bands_color=bands_color,
         )
-        
+
         if parameters.use_extendedness_for_decals:
           from lsst.analysis.tools.actions.vector.selectors import (
             GalaxySelector,

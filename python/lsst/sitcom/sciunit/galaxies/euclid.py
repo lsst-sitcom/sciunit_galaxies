@@ -20,21 +20,23 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import glob
-from operator import itemgetter
+import logging
 import os
-from typing import Any, Iterable
+from collections.abc import Iterable
+from operator import itemgetter
+from typing import Any
 
+import astropy.table
+import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D, NoOverlapError
-import astropy.table
-import astropy.units as u
 from astropy.wcs import WCS
-import logging
-from lsst.geom import degrees, SpherePoint
+
 import lsst.skymap
+from lsst.geom import SpherePoint, degrees
 from lsst.sphgeom import ConvexPolygon
-import numpy as np
 
 """
 Original query for mosaic table:
@@ -44,16 +46,17 @@ SELECT (
     mp.second_type, mp.ra, mp.dec, mp.technique, mp.stc_s
 )
 FROM sedm.mosaic_product AS mp
-WHERE (release_name='Q1_R1') 
-AND ((instrument_name='NISP') OR (instrument_name='VIS')) 
-AND (category='SCIENCE') 
-AND ((mp.fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS',53.13,-28.1,1), mp.fov)=1)) 
+WHERE (release_name='Q1_R1')
+AND ((instrument_name='NISP') OR (instrument_name='VIS'))
+AND (category='SCIENCE')
+AND ((mp.fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS',53.13,-28.1,1), mp.fov)=1))
 ORDER BY mp.tile_index ASC
 """
 
 has_astroquery_euclid = False
 try:
     from astroquery.esa.euclid import Euclid
+
     has_astroquery_euclid = True
 except ImportError:
     Euclid = None
@@ -62,10 +65,7 @@ _log = logging.getLogger("lsst.sitcom.sciunit.galaxies.euclid")
 
 datasettype_default = "euclid_q1_coadd"
 filename_format_default = "{datasettype}_{tract}_{patch}_{band}_{skymap}"
-path_euclid = (
-    f'{os.getenv("SCIUNIT_GALAXIES_EUCLID_DIR", "/sdf/data/rubin/shared/euclid/q1")}'
-    f'/{{skymap}}'
-)
+path_euclid = f"{os.getenv('SCIUNIT_GALAXIES_EUCLID_DIR', '/sdf/data/rubin/shared/euclid/q1')}/{{skymap}}"
 
 
 def get_cutouts_euclid(
@@ -117,7 +117,11 @@ def get_cutouts_euclid(
     for band in bands:
         if (fits_band := fits_euclid.get(band)) is None:
             filename = filename_format_default.format(
-                datasettype=datasettype_default, tract=tract, patch=patch, band=band, skymap=skymap,
+                datasettype=datasettype_default,
+                tract=tract,
+                patch=patch,
+                band=band,
+                skymap=skymap,
             )
             filepath = f"{path_base}/{filename}.fits"
             if not os.path.isfile(filepath):
@@ -154,7 +158,9 @@ def get_cutouts_euclid(
         radec_euclid_begin = cutout.wcs.pixel_to_world(0, 0)
         radec_euclid_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
         extent = (
-            radec_euclid_begin.ra.value, radec_euclid_end.ra.value, radec_euclid_begin.dec.value,
+            radec_euclid_begin.ra.value,
+            radec_euclid_end.ra.value,
+            radec_euclid_begin.dec.value,
             radec_euclid_end.dec.value,
         )
     else:
@@ -184,11 +190,12 @@ def make_patch_cutouts(
             errors.append(f"{dimension} not in filename_format")
 
     kwargs_format = dict(
-        datasettype=datasettype, skymap=skymap_name,
+        datasettype=datasettype,
+        skymap=skymap_name,
     )
     if "{band}" in filename_format:
         if not band:
-            errors.append(f"must specify band")
+            errors.append("must specify band")
     if errors:
         raise ValueError(f"Found errors with {filename_format}: {'\n'.join(errors)}")
 
@@ -198,13 +205,13 @@ def make_patch_cutouts(
     mosaic_table = mosaic_table[mosaic_table["filter_name"] == band.upper()]
 
     polygons_euclid = [
-        ConvexPolygon([
-            SpherePoint(float(radec[2 * idx]), float(radec[2 * idx + 1]), degrees).getVector()
-            for idx in range(4)
-        ])
-        for radec in (
-            stc_s[14:-1].split(" ") for stc_s in mosaic_table["stc_s"]
+        ConvexPolygon(
+            [
+                SpherePoint(float(radec[2 * idx]), float(radec[2 * idx + 1]), degrees).getVector()
+                for idx in range(4)
+            ]
         )
+        for radec in (stc_s[14:-1].split(" ") for stc_s in mosaic_table["stc_s"])
     ]
 
     prefix_mosaic = "EUC_MER_MOSAIC-"
@@ -241,8 +248,12 @@ def make_patch_cutouts(
 
                     try:
                         cutout = Cutout2D(
-                            data=hdu.data, position=center, size=(height, width),
-                            wcs=wcs, copy=False, mode="trim",
+                            data=hdu.data,
+                            position=center,
+                            size=(height, width),
+                            wcs=wcs,
+                            copy=False,
+                            mode="trim",
                         )
                         header = hdu.header.copy()
                         header.update(cutout.wcs.to_header())
@@ -269,8 +280,12 @@ def make_patch_cutouts(
                         hdu = fits.open(filename_rms)[0]
 
                         cutout = Cutout2D(
-                            data=hdu.data, position=center, size=(height, width),
-                            wcs=wcs, copy=False, mode="trim",
+                            data=hdu.data,
+                            position=center,
+                            size=(height, width),
+                            wcs=wcs,
+                            copy=False,
+                            mode="trim",
                         )
                         header = hdu.header.copy()
                         header.update(cutout.wcs.to_header())
@@ -284,11 +299,17 @@ def make_patch_cutouts(
                         header["EXTVER"] = idx_mosaic
                         hdus_var.append((fits.ImageHDU(data=cutout.data, header=header), cutout.data.size))
 
-                        filename_flag = glob.glob(f"{filepath}/{prefix_mosaic}{band_file}-FLAG_{tile}*.fits.gz")[0]
+                        filename_flag = glob.glob(
+                            f"{filepath}/{prefix_mosaic}{band_file}-FLAG_{tile}*.fits.gz"
+                        )[0]
                         hdu = fits.open(filename_flag)[0]
                         cutout = Cutout2D(
-                            data=hdu.data, position=center, size=(height, width),
-                            wcs=wcs, copy=False, mode="trim",
+                            data=hdu.data,
+                            position=center,
+                            size=(height, width),
+                            wcs=wcs,
+                            copy=False,
+                            mode="trim",
                         )
                         header = hdu.header.copy()
                         header.update(cutout.wcs.to_header())
@@ -319,7 +340,8 @@ def make_patch_cutouts(
                         hdu[0] for hdulist in (hdus, hdus_var, hdus_mask) for hdu in hdulist
                     ]
                     fits.HDUList(hdus_all).writeto(
-                        f"{cutout_path}/{cutout_filename}.fits.gz", overwrite=True,
+                        f"{cutout_path}/{cutout_filename}.fits.gz",
+                        overwrite=True,
                     )
 
 
@@ -369,7 +391,11 @@ def query_tract_catalog(
     columns_flux = []
 
     bands_vis = ("vis",)
-    bands_nir = ("y", "j", "h",)
+    bands_nir = (
+        "y",
+        "j",
+        "h",
+    )
     bands_all = bands_vis + bands_nir
 
     for algos, bands in (
@@ -377,13 +403,11 @@ def query_tract_catalog(
         (("templfit",), bands_nir),
         (("sersic",), bands_all),
     ):
-        columns_flux.extend([
-            f"flux{suffix}_{band}_{algo}" for suffix in ("", "err") for band in bands for algo in algos
-        ])
+        columns_flux.extend(
+            [f"flux{suffix}_{band}_{algo}" for suffix in ("", "err") for band in bands for algo in algos]
+        )
 
-    columns_band_other = [
-        f"flag_{band}" for band in ("vis", "y", "j", "h")
-    ]
+    columns_band_other = [f"flag_{band}" for band in ("vis", "y", "j", "h")]
     columns_other = [
         "deblended_flag",
         "parent_id",
@@ -485,10 +509,16 @@ def query_tract_catalog(
     columns_pz = [
         f"flux{suffix}_{band}_{algo}" for suffix in ("", "err") for band in bands_all for algo in ("unif",)
     ]
-    columns_pc = ["phz_classification",]
+    columns_pc = [
+        "phz_classification",
+    ]
 
-    columns_all = [f"m.{c}" for c in columns_m] + [f"mor.{c}" for c in columns_morph] + [
-        f"pz.{c}" for c in columns_pz] + [f"pc.{c}" for c in columns_pc]
+    columns_all = (
+        [f"m.{c}" for c in columns_m]
+        + [f"mor.{c}" for c in columns_morph]
+        + [f"pz.{c}" for c in columns_pz]
+        + [f"pc.{c}" for c in columns_pc]
+    )
 
     query = (
         f"SELECT {', '.join(columns_all)}"
@@ -520,16 +550,22 @@ def query_tract_catalog(
         for ra_max in ra_ranges[1:]:
             query_patch = query.format(ra_min=ra_min, ra_max=ra_max, dec_min=dec_min, dec_max=dec_max)
             if has_astroquery_euclid:
-                filename = None if tmpFile is None else (
-                    tmpFile.format(idx_patch=idx_patch) if has_index else tmpFile)
+                filename = (
+                    None
+                    if tmpFile is None
+                    else (tmpFile.format(idx_patch=idx_patch) if has_index else tmpFile)
+                )
                 if skip_existing and (filename is not None) and os.path.isfile(filename):
                     _log.info(f"Loading {idx_patch=} from {filename=}")
                     objects = astropy.table.Table.read(filename)
                 else:
                     _log.info(f"Launching query for {idx_patch=} to {filename=}")
                     job = Euclid.launch_job(
-                        query_patch, verbose=verbose, output_format="votable",
-                        dump_to_file=tmpFile is not None, output_file=filename,
+                        query_patch,
+                        verbose=verbose,
+                        output_format="votable",
+                        dump_to_file=tmpFile is not None,
+                        output_file=filename,
                     )
                     jobs.append(job)
                     objects = job.get_results() if (job is not None) else None

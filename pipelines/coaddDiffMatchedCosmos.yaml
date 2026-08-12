@@ -94,7 +94,7 @@ tasks:
       atools.matchedRefPositionYChi.scale_factor: 3600000
       atools.matchedRefPositionYChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddDiffColorTool,
           MatchedRefCoaddDiffMagTool,
@@ -203,7 +203,7 @@ tasks:
       atools.matchedRefPositionYChi.scale_factor: 3600000
       atools.matchedRefPositionYChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddDiffColorTool,
           MatchedRefCoaddDiffMagTool,

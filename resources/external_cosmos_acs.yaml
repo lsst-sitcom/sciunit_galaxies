@@ -15,4 +15,3 @@ data:
     data_id: {}
     path: cosmos_acs_iphot_200709.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
-

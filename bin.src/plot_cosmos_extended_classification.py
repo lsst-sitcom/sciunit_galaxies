@@ -195,26 +195,26 @@ for name_mag, key_mag, mag, flux, fluxerr, size in (
         star_thresh = 0.6
         gal_thresh = (0.01 + min(((mag_min < 25)*(25 - mag_min))**1.5/100, 0.29)) if galaxy_selective else (
             star_thresh)
-    
+
         star = ((plike_jwst > star_thresh) & (plike_hst > star_thresh) & (plike_jwst <= 1) & (plike_hst <= 1))
         gal = (plike_jwst < gal_thresh) & (plike_jwst >= 0)
         if galaxy_selective:
             gal &= (plike_hst < gal_thresh) & (plike_hst >= 0)
         else:
             gal |= (plike_hst < gal_thresh) & (plike_hst >= 0)
-    
+
         z = np.nanmean([plike_hst, plike_jwst], axis=0)
 
         nrows, ncols = 2 + ivert, 2 + ihoriz
         fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(ncols*figsize, nrows*figsize))
         fig.subplots_adjust(bottom=0.05, left=0.07, top=0.96, right=0.98)
         kwargs = {"z": z, "gal": gal, "star": star, "cmap": cmap}
-    
+
         mpw = mag_psf[within]
         mags_bw = {model: {b: v[within] for b, v in mags_bm.items()} for model, mags_bm in mags_b.items()}
         mpsf_wb = mags_bw["psf"]
         mag_wb = mags_bw[key_mag]
-    
+
         scatter(
             ax[0][0], mpw, size[within], "mag_psf", "log10(reff)", mag_min, mag_max, -2, 2,
             **kwargs
@@ -250,10 +250,10 @@ for name_mag, key_mag, mag, flux, fluxerr, size in (
             f"i - z ({name_mag})", f"r - i ({name_mag})", -0.5, 1.1, -0.5, 2.5, **kwargs
         )
         fig.suptitle("COSMOS LSST classification")
-    
+
         if save:
             fig.savefig(f"{path}mag_{mag_min}_cosmos_lsst.pdf")
-    
+
         mjwst_wb = {b: v[within] for b, v in mags_b_jwst.items()}
         mag_hst_w = mag_hst[within]
         mag_jwst_w = mag_jwst[within]

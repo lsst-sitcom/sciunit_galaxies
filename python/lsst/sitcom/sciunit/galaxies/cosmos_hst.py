@@ -19,16 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import astropy.io.fits as fits
-from astropy.table import Table
-from astropy.wcs import WCS
 import glob
-import lsst.gauss2d as g2d
-import lsst.gauss2d.fit as g2f
+from collections.abc import Iterable
 from itertools import chain
+from typing import ClassVar
+
+import astropy.io.fits as fits
 import numpy as np
 import pydantic
-from typing import ClassVar, Iterable
+from astropy.table import Table
+from astropy.wcs import WCS
+
+import lsst.gauss2d as g2d
+import lsst.gauss2d.fit as g2f
 
 
 class CosmosTile(pydantic.BaseModel):
@@ -78,19 +81,29 @@ class CosmosTile(pydantic.BaseModel):
         observation
             An Observation of the desired precision.
         """
-
         radec_0 = self.wcs.pixel_to_world(-0.5, -0.5)
-        coordsys = g2d.CoordinateSystem(
-            dx1=self.wcs.wcs.cd[0, 0], dy2=self.wcs.wcs.cd[1, 1],
-            x_min=radec_0.ra.value, y_min=radec_0.dec.value,
-        ) if make_coordsys_radec else None
+        coordsys = (
+            g2d.CoordinateSystem(
+                dx1=self.wcs.wcs.cd[0, 0],
+                dy2=self.wcs.wcs.cd[1, 1],
+                x_min=radec_0.ra.value,
+                y_min=radec_0.dec.value,
+            )
+            if make_coordsys_radec
+            else None
+        )
         ImageClass = g2d.ImageD if return_double else g2d.ImageF
-        return g2f.ObservationD if return_double else g2f.ObservationF(
-            image=ImageClass(self.image.data, coordsys=coordsys),
-            sigma_inv=ImageClass(np.sqrt(self.weight.data) if convert_to_sigma_inv else self.weight.data,
-                                 coordsys=coordsys),
-            mask_inv=g2d.ImageB(self.weight.data > 0, coordsys=coordsys),
-            channel=self.channel,
+        return (
+            g2f.ObservationD
+            if return_double
+            else g2f.ObservationF(
+                image=ImageClass(self.image.data, coordsys=coordsys),
+                sigma_inv=ImageClass(
+                    np.sqrt(self.weight.data) if convert_to_sigma_inv else self.weight.data, coordsys=coordsys
+                ),
+                mask_inv=g2d.ImageB(self.weight.data > 0, coordsys=coordsys),
+                channel=self.channel,
+            )
         )
 
 
@@ -102,8 +115,12 @@ class CosmosTileTable(pydantic.BaseModel):
     tile_table: Table = pydantic.Field(doc="A tile table as returned by make_tile_table")
 
     def find_tile_names(self, ra: float, dec: float):
-        found = (ra >= self.tile_table["ra_min"]) & (ra <= self.tile_table["ra_max"]) & (
-            dec >= self.tile_table["dec_min"]) & (dec <= self.tile_table["dec_max"])
+        found = (
+            (ra >= self.tile_table["ra_min"])
+            & (ra <= self.tile_table["ra_max"])
+            & (dec >= self.tile_table["dec_min"])
+            & (dec <= self.tile_table["dec_max"])
+        )
         return self.tile_table["tilename"][found]
 
     def make_tile(self, tile_name: str):
@@ -133,22 +150,21 @@ class CosmosTileTable(pydantic.BaseModel):
         The acs_mosaic_2.0 files are warped to align N-S W-E, whereas the
         unrotated files in acs_2.0 are approximately 11 degrees off clockwise.
         """
-
         if paths is None:
             paths = ["/sdf/data/rubin/shared/hst/cosmos/images/tiles"]
 
-        filenames = tuple(sorted(chain.from_iterable(
-            glob.glob(f"{path}/acs_I_030mas_*_wht.fits*") for path in paths
-        )))
+        filenames = tuple(
+            sorted(chain.from_iterable(glob.glob(f"{path}/acs_I_030mas_*_wht.fits*") for path in paths))
+        )
         n_files = len(filenames)
         len_max = max(len(filename) for filename in filenames)
-        str_max = " "*(5 + len_max)
+        str_max = " " * (5 + len_max)
 
         data = {
             "index": np.arange(n_files, dtype=int),
-            "tilename": [" "*4]*n_files,
-            "path_science": [str_max]*n_files,
-            "path_weight": [str_max]*n_files,
+            "tilename": [" " * 4] * n_files,
+            "path_science": [str_max] * n_files,
+            "path_weight": [str_max] * n_files,
         }
         name_coords = ("ra_min", "ra_max", "dec_min", "dec_max")
         for name in name_coords:

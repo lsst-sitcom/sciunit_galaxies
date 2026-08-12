@@ -126,7 +126,7 @@ tasks:
       atools.matchedRefPositionDecChi.scale_factor: 3600000
       atools.matchedRefPositionDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -137,9 +137,9 @@ tasks:
         )
         from lsst.analysis.tools.atools.genericBuild import FluxConfig
         from lsst.analysis.tools.actions.vector import RangeSelector, SetSelector
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
-        
+
         selector_all = SetSelector(vectorKeys=["match_candidate", "refcat_match_candidate"], values=[1])
         if parameters.use_extendedness_for_des_y6gold:
           from lsst.analysis.tools.actions.vector.selectors import (
@@ -280,7 +280,7 @@ tasks:
       atools.matchedRefPositionDecChi.scale_factor: 3600000
       atools.matchedRefPositionDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddDiffColorTool,
           MatchedRefCoaddDiffMagTool,
@@ -418,7 +418,7 @@ tasks:
       atools.matchedRefPositionDecChi.scale_factor: 3600000
       atools.matchedRefPositionDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddTool,
           MatchedRefCoaddDiffColorTool,
@@ -435,10 +435,10 @@ tasks:
         from lsst.analysis.tools.atools.genericBuild import FluxConfig, ObjectClassTool
         from lsst.analysis.tools.actions.plot import CompletenessHist
         from lsst.analysis.tools.actions.vector import RangeSelector, SetSelector
-        
+
         CompletenessHist.mag_ref_label.default = "Sersic VIS (mag)"
         CompletenessHist.mag_target_label.default = "{name_flux} {band} (mag)"
-        
+
         selector_all = SetSelector(vectorKeys=["match_candidate", "refcat_match_candidate"], values=[1])
         selector_galaxy = ReferenceGalaxySelector(
           vectorKey="refcat_mumax_minus_mag", threshold=-2.6, op="ge",

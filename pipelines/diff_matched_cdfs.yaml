@@ -66,7 +66,7 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = [f"bdf_flux_{band}_corrected" for band in parameters.bands_match_des_y6gold]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -120,9 +120,9 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         fluxes_ref = ["f_f775w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -176,9 +176,9 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         fluxes_ref = ["flux_vis_sersic"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -236,7 +236,7 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = ["f_f775w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -294,9 +294,9 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         fluxes_ref = [f"{parameters.prefix_acs}f_f775w", f"{parameters.prefix_des_y6g}bdf_flux_i_corrected"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -345,7 +345,7 @@ tasks:
         ] + (parameters.columns_sersic_copy if "sersic" in parameters.models_other else [])
         + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         prefix_matched = "matched_"
-        config.column_matched_prefix_ref = prefix_matched 
+        config.column_matched_prefix_ref = prefix_matched
         config.columns_ref_copy = [
           f"{parameters.prefix_acs}{col_ref}" for col_ref in parameters.columns_hlf_copy
         ] + [
@@ -371,7 +371,7 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = ["flux_vis_sersic"]
         config.match_tract_catalog.columns_ref_meas = [
@@ -432,12 +432,12 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         prefix_hst = parameters.prefix_acs
         prefix_euclid = parameters.prefix_euclid
-        
+
         fluxes_ref = [f"{prefix_hst}f_f775w", f"{prefix_euclid}flux_vis_sersic"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -473,8 +473,8 @@ tasks:
         prefix_euclid = parameters.prefix_euclid
 
         columns_flux = {}
-        fluxes_meas_other = []      
-        
+        fluxes_meas_other = []
+
         for band in parameters.bands_match_acs:
             columns_flux[band] = MatchedCatalogFluxesConfig(
                 column_ref_flux=f"{prefix_hst}f_f775w",
@@ -487,7 +487,7 @@ tasks:
           if band not in parameters.bands_match_acs:
             fluxes_meas_other.append(f"{band}_cModelFlux")
             for model in parameters.models_other:
-              fluxes_meas_other.append(f"{band}_{model}Flux")          
+              fluxes_meas_other.append(f"{band}_{model}Flux")
         config.columns_flux = columns_flux
         config.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other

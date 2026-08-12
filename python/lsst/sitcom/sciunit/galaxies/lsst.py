@@ -24,4 +24,4 @@ from lsst.multiprofit.plotting.reference_data import abs_mag_sol_lsst, bands_wei
 __all__ = ["abs_mag_sol_lsst", "bands_weights_lsst", "scale_lsst_asec", "scale_lsst_deg"]
 
 scale_lsst_asec = 0.2
-scale_lsst_deg = 0.2/3600
+scale_lsst_deg = 0.2 / 3600

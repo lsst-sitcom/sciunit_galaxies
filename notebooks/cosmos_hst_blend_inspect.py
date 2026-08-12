@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 # Inspect HSC COSMOS blends with undetected/unmatched HST objects.
 #
@@ -16,22 +15,23 @@
 
 
 # imports
-from astropy.coordinates import SkyCoord
+import math
+from collections import defaultdict
+
 import astropy.table as apTab
 import astropy.units as u
-from astropy.visualization import ImageNormalize, AsinhStretch
-from collections import defaultdict
-import lsst.daf.butler as dafButler
-from lsst.meas.extensions.multiprofit.rebuild_coadd_multiband import PatchCoaddRebuilder
-from lsst.meas.extensions.multiprofit.plots import ObjectTableBase, plot_blend
-from lsst.multiprofit.plots import bands_weights_lsst
-from lsst.sitcom.sciunit.galaxies.cosmos_hst import CosmosTileTable
-import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.coordinates import SkyCoord
+from astropy.visualization import AsinhStretch, ImageNormalize
 from smatch.matcher import sphdist
 
+import lsst.daf.butler as dafButler
+from lsst.meas.extensions.multiprofit.plots import ObjectTableBase, plot_blend
+from lsst.meas.extensions.multiprofit.rebuild_coadd_multiband import PatchCoaddRebuilder
+from lsst.multiprofit.plots import bands_weights_lsst
+from lsst.sitcom.sciunit.galaxies.cosmos_hst import CosmosTileTable
 
 # In[ ]:
 
@@ -133,8 +133,12 @@ wcs_ref = rebuilder_ref.catexps[idx_band_ref].exposure.wcs
 kwargs_parent = dict(Q=5, minimum=-0.5, rgb_stretch_auto=False, stretch=8)
 kwargs_children = dict(Q=8, minimum=-0.02, rgb_stretch_auto=True)
 fig_rgb, ax_rgb, fig_gs, ax_gs = plot_blend(
-    rebuilder, 201, kwargs_plot_parent=kwargs_parent, kwargs_plot_children=kwargs_children,
-    table_ref_type=CosmosAcsTable, weights=weights,
+    rebuilder,
+    201,
+    kwargs_plot_parent=kwargs_parent,
+    kwargs_plot_children=kwargs_children,
+    table_ref_type=CosmosAcsTable,
+    weights=weights,
 )
 
 
@@ -172,22 +176,22 @@ idx_parents = defaultdict(list)
 
 def get_info_formatted(info: dict):
     formats = {
-        "x": ".3f", "y": ".3f",
-        "ra": ".6f", "dec": ".6f",
+        "x": ".3f",
+        "y": ".3f",
+        "ra": ".6f",
+        "dec": ".6f",
         "mag_hsc_cmodel": ".2f",
         "primary": "1",
         "dist (asec)": ".3f",
     }
-    info_formatted = {
-        k: f"{v:{formats[k]}}" for k, v in info.items()
-    }
+    info_formatted = {k: f"{v:{formats[k]}}" for k, v in info.items()}
     return info_formatted
 
 
 for idx in idx_bright:
     ra, dec = (matched[idx][f"refcat_{c}"] for c in ("ra", "dec"))
     # Find the closest object's parent (matched or otherwise)
-    ra_meas, dec_meas = (catalog_ref[f"coord_{c}"]*180/math.pi for c in ("ra", "dec"))
+    ra_meas, dec_meas = (catalog_ref[f"coord_{c}"] * 180 / math.pi for c in ("ra", "dec"))
     dist = sphdist(ra_meas, dec_meas, ra, dec)
     idx_closest = np.nanargmin(dist)
     closest = catalog_ref[idx_closest]
@@ -200,7 +204,7 @@ for idx in idx_bright:
         "primary": closest["detect_isPrimary"],
         "ra": closest["coord_ra"].asDegrees(),
         "dec": closest["coord_dec"].asDegrees(),
-        "dist (asec)": dist[idx_closest]*3600,
+        "dist (asec)": dist[idx_closest] * 3600,
     }
     idx_parents[idx_parent].append(info)
 
@@ -208,8 +212,12 @@ for idx_parent, infos in idx_parents.items():
     for info in infos:
         print(get_info_formatted(info))
     fig_rgb, ax_rgb, fig_gs, ax_gs = plot_blend(
-        rebuilder, idx_parent, kwargs_plot_parent=kwargs_parent, kwargs_plot_children=kwargs_children,
-        table_ref_type=CosmosAcsTable, weights=weights,
+        rebuilder,
+        idx_parent,
+        kwargs_plot_parent=kwargs_parent,
+        kwargs_plot_children=kwargs_children,
+        table_ref_type=CosmosAcsTable,
+        weights=weights,
     )
 
 
@@ -231,17 +239,17 @@ tile = tile_table.make_tile(tiles[0])
 x_cen_hst, y_cen_hst = tile.wcs.world_to_pixel(SkyCoord(ra_last, dec_last, unit=u.deg))
 x_hst, y_hst = int(math.floor(x_cen_hst)), int(math.floor(y_cen_hst))
 half_width = 150
-cutout = tile.image.data[y_hst - half_width:y_hst + half_width, x_hst - half_width:x_hst + half_width]
-plt.imshow(cutout, cmap='gray', norm=ImageNormalize(cutout, stretch=AsinhStretch(0.005)))
+cutout = tile.image.data[y_hst - half_width : y_hst + half_width, x_hst - half_width : x_hst + half_width]
+plt.imshow(cutout, cmap="gray", norm=ImageNormalize(cutout, stretch=AsinhStretch(0.005)))
 plt.show()
 
-half_width_hsc = int(math.ceil(half_width*0.03/0.168))
+half_width_hsc = int(math.ceil(half_width * 0.03 / 0.168))
 x_last, y_last = (int(math.floor(info[coord])) for coord in ("x", "y"))
 catexp = next(iter(catexp for catexp in rebuilder_ref.catexps if catexp.band == "i"))
 cutout_hsc = catexp.exposure[
-    x_last - half_width_hsc:x_last + half_width_hsc,
-    y_last - half_width_hsc:y_last + half_width_hsc,
+    x_last - half_width_hsc : x_last + half_width_hsc,
+    y_last - half_width_hsc : y_last + half_width_hsc,
 ]
 norm_hsc = ImageNormalize(cutout, stretch=AsinhStretch(0.01), vmin=-0.2, vmax=25)
-plt.imshow(cutout_hsc.image.array, cmap='gray', norm=norm_hsc)
+plt.imshow(cutout_hsc.image.array, cmap="gray", norm=norm_hsc)
 plt.show()

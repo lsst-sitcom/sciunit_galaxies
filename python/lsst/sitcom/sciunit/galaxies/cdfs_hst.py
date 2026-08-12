@@ -21,15 +21,15 @@
 
 import os.path
 
+import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D, NoOverlapError
 from astropy.wcs import WCS
 
-import astropy.units as u
 import lsst.geom as geom
 import lsst.skymap
-import numpy as np
 
 __all__ = ("get_cutouts_cdfs_hst", "path_cdfs_hst", "scale_cdf_hst_asec")
 
@@ -38,7 +38,14 @@ scale_cdf_hst_asec = 0.03
 
 
 def get_cutouts_cdfs_hst(
-    tract, patch, bands, skymap, position: SkyCoord, cutout_size, fits_cdfs=None, keep_fits=False,
+    tract,
+    patch,
+    bands,
+    skymap,
+    position: SkyCoord,
+    cutout_size,
+    fits_cdfs=None,
+    keep_fits=False,
 ):
     path_base = f"{path_cdfs_hst.format(skymap=skymap)}/{tract}/{patch}"
     if fits_cdfs is None:
@@ -67,7 +74,9 @@ def get_cutouts_cdfs_hst(
         radec_hst_begin = cutout.wcs.pixel_to_world(0, 0)
         radec_hst_end = cutout.wcs.pixel_to_world(cutout.shape[1], cutout.shape[0])
         extent_hst = (
-            radec_hst_begin.ra.value, radec_hst_end.ra.value, radec_hst_begin.dec.value,
+            radec_hst_begin.ra.value,
+            radec_hst_end.ra.value,
+            radec_hst_begin.dec.value,
             radec_hst_end.dec.value,
         )
     else:
@@ -97,7 +106,7 @@ def get_hdu_corners(
 
     # last argument is for zero-based indices instead of the default 1 for FITS
     bottom_left = wcs.all_pix2world(0, 0, 0)
-    bottom_right = wcs.all_pix2world(x_dim -1, 0, 0)
+    bottom_right = wcs.all_pix2world(x_dim - 1, 0, 0)
     top_right = wcs.all_pix2world(x_dim - 1, y_dim - 1, 0)
     top_left = wcs.all_pix2world(0, y_dim - 1, 0)
 
@@ -156,11 +165,12 @@ def make_patch_cutouts(
             errors.append(f"{dimension} not in filename_format")
 
     kwargs_format = dict(
-        datasettype=datasettype, skymap=skymap_name,
+        datasettype=datasettype,
+        skymap=skymap_name,
     )
     if "{band}" in filename_format:
         if band is None:
-            errors.append(f"must specify band")
+            errors.append("must specify band")
         else:
             kwargs_format["band"] = band
     if errors:
@@ -186,7 +196,7 @@ def make_patch_cutouts(
             variance_header["EXTNAME"] = "variance"
             variance = hdu[0].data
             if not is_weight_variance:
-                variance = 1/variance
+                variance = 1 / variance
             if bunit is not None:
                 variance_header["BUNIT"] = "nJy**2"
         headers.append(variance_header)
@@ -220,13 +230,18 @@ def make_patch_cutouts(
             # HST mosaic pixel scale (0.03) to Rubin (0.2) = 20/3
             # This would need to change if we wanted to use 0.06" mosaics
             # ... but I don't see any reason to do so
-            height, width = (int(np.ceil((x*20)/3)) for x in (bbox.height, bbox.width))
+            height, width = (int(np.ceil((x * 20) / 3)) for x in (bbox.height, bbox.width))
             center = wcs_tract.pixelToSky(*bbox.getCenter())
             center = SkyCoord(center.getRa().asDegrees(), center.getDec().asDegrees(), unit=u.degree)
             try:
                 image_cutout = Cutout2D(
-                    data=data, position=center, size=(height, width),
-                    wcs=wcs, copy=True, mode="partial", fill_value=np.nan,
+                    data=data,
+                    position=center,
+                    size=(height, width),
+                    wcs=wcs,
+                    copy=True,
+                    mode="partial",
+                    fill_value=np.nan,
                 )
                 if bunit is not None:
                     image_cutout.data *= bunit
@@ -238,11 +253,16 @@ def make_patch_cutouts(
 
             if variance is not None:
                 variance_cutout = Cutout2D(
-                    data=variance, position=center, size=(height, width),
-                    wcs=wcs, copy=True, mode="partial", fill_value=np.nan,
+                    data=variance,
+                    position=center,
+                    size=(height, width),
+                    wcs=wcs,
+                    copy=True,
+                    mode="partial",
+                    fill_value=np.nan,
                 )
                 if bunit is not None:
-                    variance_cutout.data *= bunit ** 2
+                    variance_cutout.data *= bunit**2
 
             # create new HDU and update header values
             header = fits.Header()

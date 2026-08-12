@@ -15,4 +15,3 @@ data:
     data_id: {}
     path: COSMOS2020_CLASSIC_R1_v2.2_p3.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
-
