@@ -38,18 +38,20 @@ import lsst.skymap
 from lsst.geom import SpherePoint, degrees
 from lsst.sphgeom import ConvexPolygon
 
-"""
-Original query for mosaic table:
-
+mosaic_query = """
 SELECT (
-    mp.file_name, mp.mosaic_product_oid, mp.tile_index, mp.instrument_name, mp.filter_name, mp.category,
+    mp.file_name, mp.mosaic_product_oid, mp.tile_index,
+    mp.instrument_name, mp.filter_name, mp.category,
     mp.second_type, mp.ra, mp.dec, mp.technique, mp.stc_s
 )
 FROM sedm.mosaic_product AS mp
 WHERE (release_name='Q1_R1')
 AND ((instrument_name='NISP') OR (instrument_name='VIS'))
 AND (category='SCIENCE')
-AND ((mp.fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS',53.13,-28.1,1), mp.fov)=1))
+AND ((
+    mp.fov IS NOT NULL
+    AND INTERSECTS(CIRCLE('ICRS',53.13,-28.1,1), mp.fov)=1)
+)
 ORDER BY mp.tile_index ASC
 """
 
@@ -179,6 +181,30 @@ def make_patch_cutouts(
     datasettype: str | None = None,
     filename_format: str | None = None,
 ):
+    """Make per-patch Euclid Q1 cutouts.
+
+    Parameters
+    ----------
+    mosaic_table
+        A table with mosaic properties, as returned by mosaic_query.
+    filepath
+        Input path to Euclid mosaic files.
+    band
+        The band to make patch cutouts for.
+    skymap
+        A skymap defining tracts and patches.
+    skymap_name
+        The name of the skymap.
+    tracts
+        List of tracts to make cutouts for.
+    save_directory
+        Output path.
+    datasettype
+        The dataset type name to include in output filenames.
+    filename_format
+        The filename format. Can and should include datasettype, tract, patch,
+        band and skymap.
+    """
     if datasettype is None:
         datasettype = datasettype_default
     if filename_format is None:
@@ -353,7 +379,7 @@ def query_tract_catalog(
     skip_existing: bool = True,
     verbose: bool = True,
 ) -> tuple[astropy.table.Table | None, list[str], list[Any]]:
-    """Query Euclid for a tract-level catalogs.
+    """Query Euclid for tract-level catalogs.
 
     Parameters
     ----------
@@ -373,11 +399,16 @@ def query_tract_catalog(
     skip_existing
         Look for existing tmp files and try to load them.
     verbose
-
+        Passed to astroquery launch_job.
 
     Returns
     -------
-
+    table
+        The merged table with query results.
+    queries
+        List of query objects per patch.
+    jobs
+        List of job info per patch query.
     """
     columns_m = [
         "object_id",

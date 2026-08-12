@@ -47,6 +47,34 @@ def get_cutouts_cdfs_hst(
     fits_cdfs=None,
     keep_fits=False,
 ):
+    """Get cutouts from (E)CDFS HST imaging.
+
+    Parameters
+    ----------
+    tract
+        Tract number.
+    patch
+        Patch number.
+    bands
+        List of bands to get.
+    skymap
+        Name of the skymap.
+    position
+        Coordinates of cutout center.
+    cutout_size
+        Size of the cutout in pixels or astropy unit.
+    fits_cdfs
+        Dictionary of already-loaded images.
+    keep_fits
+        Whether to add any loaded images to fits_cdfs.
+
+    Returns
+    -------
+    cutouts
+        The requested cutouts.
+    extent_hst
+        A matplotlib-style extent with begin/end RA and begin/end Dec.
+    """
     path_base = f"{path_cdfs_hst.format(skymap=skymap)}/{tract}/{patch}"
     if fits_cdfs is None:
         fits_cdfs = {}
