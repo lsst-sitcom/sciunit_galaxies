@@ -89,14 +89,18 @@ def footprintsToNumpy(
 
     Parameters
     ----------
-    catalog:
+    catalog
         The source catalog containing the footprints.
         This is typically a mergeDet catalog, or a full source catalog
         with the parents removed.
-    shape:
+    shape
         The final shape of the output array.
-    xy0:
+    xy0
         The lower-left corner of the array that will contain the spans.
+    idx_offset
+        Offset to add to object ID.
+    negative_skipped
+        True if skipped objects have negative IDs.
 
     Returns
     -------

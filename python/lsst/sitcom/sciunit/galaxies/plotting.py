@@ -32,7 +32,7 @@ def plot_external_matches(
     kwargs_scatter_ext: dict[str, Any] = None,
     kwargs_subplots: dict[str, Any] = None,
 ):
-    """
+    """Plot matches to an external catalog.
 
     Parameters
     ----------
@@ -43,12 +43,13 @@ def plot_external_matches(
     matched_in
         The matched catalog subset within the image extent.
     good_ext
-        A boolean array selecting matched_in rows with good external measurements.
+        A boolean array selecting matched_in rows with good
+        external measurements.
     good_lsst
         A boolean array selecting matched_in rows with good LSST measurements.
     detectable_ext
         A boolean array selecting matched_in rows with external fluxes bright
-        enough to be detectable in LSST. Missing
+        enough to be detectable in LSST.
     detectable_lsst
         A boolean array selecting matched_in rows with LSST fluxes bright
         enough to be detectable in the external dataset.
@@ -65,11 +66,13 @@ def plot_external_matches(
     kwargs_scatter_matched
         Keyword arguments to pass to plt.scatter for the matched objects.
     kwargs_scatter_lsst
-        Keyword arguments to pass to plt.scatter for the unmatched LSST objects.
+        Keyword arguments to pass to plt.scatter for the unmatched
+        LSST objects.
     kwargs_scatter_ext
-        Keyword arguments to pass to plt.scatter for the unmatched external objects.
+        Keyword arguments to pass to plt.scatter for the unmatched
+        external objects.
     kwargs_subplots
-        Keyword arguments to pass to plt.subplots
+        Keyword arguments to pass to plt.subplots.
 
     Returns
     -------

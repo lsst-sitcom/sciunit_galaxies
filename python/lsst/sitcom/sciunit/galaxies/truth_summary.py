@@ -35,7 +35,8 @@ def convert_truth_summary_v2_to_injection(
     butler_in
         The butler containing the skymap definition for the truth_summary_v2.
     butler_out
-        The butler containing the skymap definition for the injection catalogs.
+        The butler containing the skymap definition for the
+        injection catalogs.
     skymap_name_in
         The name of the skymap for the input truth_summary_v2.
     skymap_name_out
@@ -45,13 +46,17 @@ def convert_truth_summary_v2_to_injection(
     tract_out
         The output tract number.
     mag_total_min_star
-        The minimum total magnitude for stars to be included (i.e. bright cutoff).
+        The minimum total magnitude for stars to be included
+        (i.e. the bright cutoff).
     mag_total_min_galaxy
-        The minimum total magnitude for galaxies to be included (i.e. bright cutoff).
+        The minimum total magnitude for galaxies to be included
+        (i.e. the bright cutoff).
     mag_total_max
-        The maximum total magnitude for any object to be included (i.e. faint cutoff).
+        The maximum total magnitude for any object to be included
+        (i.e. faint cutoff).
     mag_total_max_component
-        The maximum magnitude for any single component to be included (i.e. faint cutoff).
+        The maximum magnitude for any single component to be included
+        (i.e. faint cutoff).
     truth_summary_path
         The path to parquet summary files (if not butler ingested).
     plot
@@ -290,6 +295,33 @@ def validate_injection_catalog(
     ids_ref: Iterable[int] | None = None,
     truth_summary_path: str = "/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_cell",
 ):
+    """Validate a DC2-based injection by comparing with the DC2 images.
+
+    Parameters
+    ----------
+    band
+        Band to load.
+    butler_in
+        The DC2/input butler.
+    butler_out
+        The injected output butler.
+    skymap_name_in
+        The input skymap name.
+    skymap_name_out
+        The output/injected skymap name.
+    tract_in
+        The input tract number.
+    tract_out
+        The output tract number.
+    patch
+        The output patch number.
+    cutout_asec
+        The cutout box size in arcsec.
+    ids_ref
+        Injected object ids to iterate over.
+    truth_summary_path
+        Path to the extended DC2 truth summary catalogs.
+    """
     if butler_in is None:
         butler_in = dafButler.Butler(
             "/repo/dc2",
