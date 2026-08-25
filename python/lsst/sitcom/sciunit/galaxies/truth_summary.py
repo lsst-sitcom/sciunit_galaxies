@@ -1,11 +1,13 @@
+from collections.abc import Iterable
+
 import astropy.table
 import astropy.units as u
-import lsst.daf.butler as dafButler
-from lsst.daf.butler.formatters.parquet import arrow_to_astropy, pq
-import lsst.geom
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import Iterable
+
+import lsst.daf.butler as dafButler
+import lsst.geom
+from lsst.daf.butler.formatters.parquet import arrow_to_astropy, pq
 
 
 def convert_truth_summary_v2_to_injection(
@@ -19,12 +21,12 @@ def convert_truth_summary_v2_to_injection(
     mag_total_min_star: float = 17.5,
     mag_total_min_galaxy: float = 15,
     mag_total_max: float = 26.5,
-    mag_total_max_component: float = 29.,
+    mag_total_max_component: float = 29.0,
     truth_summary_path: str = "/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_cell",
     plot: bool = False,
-    n_skip: float = 0.,
+    n_skip: float = 0.0,
 ) -> dict[str, astropy.table.Table]:
-    """ Convert a truth_summary_v2 to an injection catalog.
+    """Convert a truth_summary_v2 to an injection catalog.
 
     Parameters
     ----------
@@ -33,7 +35,8 @@ def convert_truth_summary_v2_to_injection(
     butler_in
         The butler containing the skymap definition for the truth_summary_v2.
     butler_out
-        The butler containing the skymap definition for the injection catalogs.
+        The butler containing the skymap definition for the
+        injection catalogs.
     skymap_name_in
         The name of the skymap for the input truth_summary_v2.
     skymap_name_out
@@ -43,13 +46,17 @@ def convert_truth_summary_v2_to_injection(
     tract_out
         The output tract number.
     mag_total_min_star
-        The minimum total magnitude for stars to be included (i.e. bright cutoff).
+        The minimum total magnitude for stars to be included
+        (i.e. the bright cutoff).
     mag_total_min_galaxy
-        The minimum total magnitude for galaxies to be included (i.e. bright cutoff).
+        The minimum total magnitude for galaxies to be included
+        (i.e. the bright cutoff).
     mag_total_max
-        The maximum total magnitude for any object to be included (i.e. faint cutoff).
+        The maximum total magnitude for any object to be included
+        (i.e. faint cutoff).
     mag_total_max_component
-        The maximum magnitude for any single component to be included (i.e. faint cutoff).
+        The maximum magnitude for any single component to be included
+        (i.e. faint cutoff).
     truth_summary_path
         The path to parquet summary files (if not butler ingested).
     plot
@@ -88,16 +95,27 @@ def convert_truth_summary_v2_to_injection(
         (x.asDegrees() for x in tractinfo.ctr_coord) for tractinfo in (tractinfo_in, tractinfo_out)
     )
 
-    truth_summary = arrow_to_astropy(pq.read_table(
-        f"{truth_summary_path}/truth_summary_v2_{tract_in}_{skymap_name_in}_2_2i_truth_summary.parq"
-    ))
+    truth_summary = arrow_to_astropy(
+        pq.read_table(
+            f"{truth_summary_path}/truth_summary_v2_{tract_in}_{skymap_name_in}_2_2i_truth_summary.parq"
+        )
+    )
 
     # Dump some unneeded columns
-    for column in ((
-        "id_string", "host_galaxy", "redshift", "A_V", "R_V",
-        "tract", "patch", "cosmodc2_hp", "cosmodc2_id",
-        "ra_unlensed", "dec_unlensed", "redshift_Hubble",
-    )):
+    for column in (
+        "id_string",
+        "host_galaxy",
+        "redshift",
+        "A_V",
+        "R_V",
+        "tract",
+        "patch",
+        "cosmodc2_hp",
+        "cosmodc2_id",
+        "ra_unlensed",
+        "dec_unlensed",
+        "redshift_Hubble",
+    ):
         if column in truth_summary.colnames:
             del truth_summary[column]
 
@@ -111,8 +129,10 @@ def convert_truth_summary_v2_to_injection(
     flux_total = np.sum([truth_summary[f"flux_{band}"] for band in "ugrizy"], axis=0)
     mag_total = u.nJy.to(u.ABmag, flux_total)
     truth_out = truth_summary[
-        (mag_total > (mag_total_min_star*truth_star[truth_good] +
-                      mag_total_min_galaxy*truth_galaxy[truth_good]))
+        (
+            mag_total
+            > (mag_total_min_star * truth_star[truth_good] + mag_total_min_galaxy * truth_galaxy[truth_good])
+        )
         & (mag_total < mag_total_max)
     ]
 
@@ -122,13 +142,17 @@ def convert_truth_summary_v2_to_injection(
 
     ra_in, dec_in = (truth_out[col] for col in ("ra", "dec"))
     dec_out = dec_in + cen_dec_out - cen_dec_in
-    ra_out = cen_ra_out + (ra_in - cen_ra_in)*np.cos(dec_in*np.pi/180)/np.cos(dec_out*np.pi/180)
+    ra_out = cen_ra_out + (ra_in - cen_ra_in) * np.cos(dec_in * np.pi / 180) / np.cos(dec_out * np.pi / 180)
 
     if plot:
         import matplotlib.pyplot as plt
+
         objects = butler_out.get(
-            "objectTable_tract", skymap=skymap_name_out, tract=tract_out,
-            parameters={"columns": ["coord_ra", "coord_dec"]}, storageClass="ArrowAstropy",
+            "objectTable_tract",
+            skymap=skymap_name_out,
+            tract=tract_out,
+            parameters={"columns": ["coord_ra", "coord_dec"]},
+            storageClass="ArrowAstropy",
         )
         plt.scatter(ra_out[::20], dec_out[::20], s=1.5)
         plt.scatter(objects["coord_ra"][::20], objects["coord_dec"][::20], s=1.5)
@@ -144,15 +168,15 @@ def convert_truth_summary_v2_to_injection(
         values_galaxy = values[is_galaxy]
         return np.concatenate((values[is_star], values_galaxy, values_galaxy))
 
-    source_types = ["DeltaFunction"]*n_star
-    source_types.extend(["Sersic"]*(2*n_galaxy))
+    source_types = ["DeltaFunction"] * n_star
+    source_types.extend(["Sersic"] * (2 * n_galaxy))
 
-    mask_star = np.concatenate((np.ones(n_star, dtype=bool), np.zeros(2*n_galaxy, dtype=bool)))
+    mask_star = np.concatenate((np.ones(n_star, dtype=bool), np.zeros(2 * n_galaxy, dtype=bool)))
 
     # GalSim convention is x-axis rather than y-axis
     positionAngles = 90 + truth_out["positionAngle"][is_galaxy]
     positionAngles[positionAngles < 0] += 180
-    n_rows = 2*n_galaxy + n_star
+    n_rows = 2 * n_galaxy + n_star
 
     data_out = {
         "injection_id": np.arange(n_rows),
@@ -162,42 +186,50 @@ def convert_truth_summary_v2_to_injection(
         "mag": np.zeros(n_rows, dtype=float),
         "source_type": source_types,
         "n": np.ma.masked_array(
-            np.concatenate((
-                np.zeros(n_star, dtype=float),
-                np.ones(n_galaxy, dtype=float),
-                np.full(n_galaxy, 4.0, dtype=float),
-            )),
+            np.concatenate(
+                (
+                    np.zeros(n_star, dtype=float),
+                    np.ones(n_galaxy, dtype=float),
+                    np.full(n_galaxy, 4.0, dtype=float),
+                )
+            ),
             mask=mask_star,
             fill_value=np.nan,
         ),
         "half_light_radius": np.ma.masked_array(
-            np.concatenate((
-                np.zeros(n_star, dtype=float),
-                truth_out["diskMajorAxisArcsec"][is_galaxy]*np.sqrt(truth_out["diskAxisRatio"][is_galaxy]),
-                truth_out["spheroidMajorAxisArcsec"][is_galaxy]*np.sqrt(
-                    truth_out["spheroidAxisRatio"][is_galaxy]
-                ),
-            )),
+            np.concatenate(
+                (
+                    np.zeros(n_star, dtype=float),
+                    truth_out["diskMajorAxisArcsec"][is_galaxy]
+                    * np.sqrt(truth_out["diskAxisRatio"][is_galaxy]),
+                    truth_out["spheroidMajorAxisArcsec"][is_galaxy]
+                    * np.sqrt(truth_out["spheroidAxisRatio"][is_galaxy]),
+                )
+            ),
             mask=mask_star,
-            fill_value=0.,
+            fill_value=0.0,
         ),
         "q": np.ma.masked_array(
-            np.concatenate((
-                np.ones(n_star, dtype=float),
-                truth_out["diskAxisRatio"][is_galaxy],
-                truth_out["spheroidAxisRatio"][is_galaxy],
-            )),
+            np.concatenate(
+                (
+                    np.ones(n_star, dtype=float),
+                    truth_out["diskAxisRatio"][is_galaxy],
+                    truth_out["spheroidAxisRatio"][is_galaxy],
+                )
+            ),
             mask=mask_star,
-            fill_value=1.,
+            fill_value=1.0,
         ),
         "beta": np.ma.masked_array(
-            np.concatenate((
-                np.ones(n_star, dtype=float),
-                positionAngles,
-                positionAngles,
-            )),
+            np.concatenate(
+                (
+                    np.ones(n_star, dtype=float),
+                    positionAngles,
+                    positionAngles,
+                )
+            ),
             mask=mask_star,
-            fill_value=0.,
+            fill_value=0.0,
         ),
     }
 
@@ -226,18 +258,20 @@ def convert_truth_summary_v2_to_injection(
     for band in bands:
         bulgefrac = truth_out[f"bulge_to_total_{band}"].data.data[is_galaxy]
         fluxes = truth_out[f"flux_{band}"]
-        mags[band] = np.concatenate((
-            fluxes[is_star].to(u.ABmag),
-            (fluxes[is_galaxy]*(1-bulgefrac)).to(u.ABmag),
-            (fluxes[is_galaxy]*bulgefrac).to(u.ABmag),
-        ))
+        mags[band] = np.concatenate(
+            (
+                fluxes[is_star].to(u.ABmag),
+                (fluxes[is_galaxy] * (1 - bulgefrac)).to(u.ABmag),
+                (fluxes[is_galaxy] * bulgefrac).to(u.ABmag),
+            )
+        )
         filename = f"{prefix}{skymap_name_out}_{tract_out}_from_{skymap_name_in}_{band}_{tract_in}.parq"
         tables_out[filename] = table_out
 
     if mag_total_max_component < np.inf:
         mag_total = u.nJy.to(
             u.ABmag,
-            np.sum([mags_band.unit.to(u.nJy, mags_band.value) for mags_band in mags.values()], axis=0)
+            np.sum([mags_band.unit.to(u.nJy, mags_band.value) for mags_band in mags.values()], axis=0),
         )
         good = mag_total < mag_total_max_component
         table_out = table_out[good]
@@ -261,17 +295,55 @@ def validate_injection_catalog(
     ids_ref: Iterable[int] | None = None,
     truth_summary_path: str = "/sdf/data/rubin/shared/dc2_run2.2i_truth/truth_summary_cell",
 ):
+    """Validate a DC2-based injection by comparing with the DC2 images.
+
+    Parameters
+    ----------
+    band
+        Band to load.
+    butler_in
+        The DC2/input butler.
+    butler_out
+        The injected output butler.
+    skymap_name_in
+        The input skymap name.
+    skymap_name_out
+        The output/injected skymap name.
+    tract_in
+        The input tract number.
+    tract_out
+        The output tract number.
+    patch
+        The output patch number.
+    cutout_asec
+        The cutout box size in arcsec.
+    ids_ref
+        Injected object ids to iterate over.
+    truth_summary_path
+        Path to the extended DC2 truth summary catalogs.
+    """
     if butler_in is None:
         butler_in = dafButler.Butler(
-            "/repo/dc2", skymap=skymap_name_in, collections=["2.2i/runs/test-med-1/w_2024_40/DM-46604"],
+            "/repo/dc2",
+            skymap=skymap_name_in,
+            collections=["2.2i/runs/test-med-1/w_2024_40/DM-46604"],
         )
     if butler_out is None:
-        butler_out = dafButler.Butler("/repo/main", skymap=skymap_name_out,
-                                      collections=["u/dtaranu/DM-44943/injected"])
+        butler_out = dafButler.Butler(
+            "/repo/main", skymap=skymap_name_out, collections=["u/dtaranu/DM-44943/injected"]
+        )
     if ids_ref is None:
         ids_ref = [
-            7813120317, 7812500182, 7812541653, 7812608827, 7812509574,
-            7812509636, 7812612080, 7812647026, 7812647658, 7813026314,
+            7813120317,
+            7812500182,
+            7812541653,
+            7812608827,
+            7812509574,
+            7812509636,
+            7812612080,
+            7812647026,
+            7812647658,
+            7813026314,
         ]
     injection = arrow_to_astropy(
         pq.read_table(
@@ -280,13 +352,23 @@ def validate_injection_catalog(
     )
     calexp_out = butler_out.get("deepCoadd_calexp", patch=patch, tract=tract_out, band=band)
     calexp_inj = butler_out.get("injected_deepCoadd", patch=patch, tract=tract_out, band=band)
-    truth_summary_v2 = arrow_to_astropy(pq.read_table(
-        f"{truth_summary_path}/truth_summary_v2_{tract_in}_{skymap_name_in}_2_2i_truth_summary.parq"
-    ))
+    truth_summary_v2 = arrow_to_astropy(
+        pq.read_table(
+            f"{truth_summary_path}/truth_summary_v2_{tract_in}_{skymap_name_in}_2_2i_truth_summary.parq"
+        )
+    )
 
     objects = butler_out.get(
-        "objectTable_tract", tract=tract_out, storageClass="ArrowAstropy",
-        parameters={"columns": ("coord_ra", "coord_dec", "detect_isPrimary",)},
+        "objectTable_tract",
+        tract=tract_out,
+        storageClass="ArrowAstropy",
+        parameters={
+            "columns": (
+                "coord_ra",
+                "coord_dec",
+                "detect_isPrimary",
+            )
+        },
     )
 
     plt.scatter(objects["coord_ra"][::20], objects["coord_dec"][::20], s=0.8)
@@ -296,7 +378,7 @@ def validate_injection_catalog(
 
     pa_offset = 90
     scale_out = calexp_out.getWcs().getPixelScale().asArcseconds()
-    extent_out = lsst.geom.Extent2I(int(cutout_asec/scale_out), int(cutout_asec/scale_out))
+    extent_out = lsst.geom.Extent2I(int(cutout_asec / scale_out), int(cutout_asec / scale_out))
 
     for id_ref in ids_ref:
         obj_ref = injection[injection["group_id"] == id_ref][0]
@@ -304,14 +386,18 @@ def validate_injection_catalog(
 
         obj_dc2 = truth_summary_v2[truth_summary_v2["id"] == id_ref][0]
         calexp_dc2 = butler_in.get(
-            "deepCoadd_calexp", patch=obj_dc2["patch"], tract=obj_dc2["tract"], band=band,
+            "deepCoadd_calexp",
+            patch=obj_dc2["patch"],
+            tract=obj_dc2["tract"],
+            band=band,
         )
         scale_in = calexp_dc2.getWcs().getPixelScale().asArcseconds()
         extent_in = lsst.geom.Extent2I(int(cutout_asec / scale_in), int(cutout_asec / scale_in))
 
         cutout_out, cutout_out_inj = (
             calexp.getCutout(
-                center=lsst.geom.SpherePoint(ra_out, dec_out, lsst.geom.degrees), size=extent_out,
+                center=lsst.geom.SpherePoint(ra_out, dec_out, lsst.geom.degrees),
+                size=extent_out,
             )
             for calexp in (calexp_out, calexp_inj)
         )
@@ -325,7 +411,7 @@ def validate_injection_catalog(
         min_in = np.nanmin(cutout_out.image.array)
         max_in = np.nanmax(cutout_out.image.array)
 
-        pa = obj_dc2['positionAngle']
+        pa = obj_dc2["positionAngle"]
 
         ax[0][0].imshow(np.arcsinh(cutout_out.image.array * 10), cmap="gray")
         ax[0][0].set_title(f"{skymap_name_out} {tract_out=} {patch=} {band=}")
@@ -335,16 +421,21 @@ def validate_injection_catalog(
             np.arcsinh(10 * np.clip(cutout_out_inj.image.array - cutout_out.image.array, min_in, max_in)),
             cmap="gray",
         )
-        ax[1][0].set_title(f"injected difference")
+        ax[1][0].set_title("injected difference")
         ax[1][1].imshow(np.arcsinh(np.clip(cutout_dc2.image.array, min_in, max_in) * 10), cmap="gray")
-        ax[1][1].set_title(f"DC2 id={id_ref} tract={obj_dc2['tract']} patch={obj_dc2['patch']}"
-                           f" {pa_offset}-PA={pa_offset - pa:.1f}")
+        ax[1][1].set_title(
+            f"DC2 id={id_ref} tract={obj_dc2['tract']} patch={obj_dc2['patch']}"
+            f" {pa_offset}-PA={pa_offset - pa:.1f}"
+        )
         coord = [x / 2 for x in cutout_dc2.image.array.shape[::-1]]
         linelen = coord[0] / 8
         dx = np.cos((-pa + pa_offset) * np.pi / 180)
         dy = np.sin((-pa + pa_offset) * np.pi / 180)
-        ax[1][1].plot([coord[0] - linelen * dx, coord[0] + linelen * dx],
-                      [coord[1] - linelen * dy, coord[1] + linelen * dy], 'r-')
+        ax[1][1].plot(
+            [coord[0] - linelen * dx, coord[0] + linelen * dx],
+            [coord[1] - linelen * dy, coord[1] + linelen * dy],
+            "r-",
+        )
 
         plt.tight_layout()
 

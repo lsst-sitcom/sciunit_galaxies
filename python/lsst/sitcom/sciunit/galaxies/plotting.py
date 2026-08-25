@@ -1,9 +1,10 @@
 from typing import Any
 
-import lsst.gauss2d as g2d
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
+
+import lsst.gauss2d as g2d
 
 from .lsst import scale_lsst_deg
 
@@ -31,7 +32,7 @@ def plot_external_matches(
     kwargs_scatter_ext: dict[str, Any] = None,
     kwargs_subplots: dict[str, Any] = None,
 ):
-    """
+    """Plot matches to an external catalog.
 
     Parameters
     ----------
@@ -42,12 +43,13 @@ def plot_external_matches(
     matched_in
         The matched catalog subset within the image extent.
     good_ext
-        A boolean array selecting matched_in rows with good external measurements.
+        A boolean array selecting matched_in rows with good
+        external measurements.
     good_lsst
         A boolean array selecting matched_in rows with good LSST measurements.
     detectable_ext
         A boolean array selecting matched_in rows with external fluxes bright
-        enough to be detectable in LSST. Missing
+        enough to be detectable in LSST.
     detectable_lsst
         A boolean array selecting matched_in rows with LSST fluxes bright
         enough to be detectable in the external dataset.
@@ -64,11 +66,13 @@ def plot_external_matches(
     kwargs_scatter_matched
         Keyword arguments to pass to plt.scatter for the matched objects.
     kwargs_scatter_lsst
-        Keyword arguments to pass to plt.scatter for the unmatched LSST objects.
+        Keyword arguments to pass to plt.scatter for the unmatched
+        LSST objects.
     kwargs_scatter_ext
-        Keyword arguments to pass to plt.scatter for the unmatched external objects.
+        Keyword arguments to pass to plt.scatter for the unmatched
+        external objects.
     kwargs_subplots
-        Keyword arguments to pass to plt.subplots
+        Keyword arguments to pass to plt.subplots.
 
     Returns
     -------
@@ -81,7 +85,13 @@ def plot_external_matches(
         kwargs_imshow_lsst = {}
     if kwargs_scatter_matched is None:
         kwargs_scatter_matched = (
-            dict(s=100, edgecolor="darkred", marker="o", facecolor="none", label="Matched", ),
+            dict(
+                s=100,
+                edgecolor="darkred",
+                marker="o",
+                facecolor="none",
+                label="Matched",
+            ),
         )
     if kwargs_scatter_lsst is None:
         kwargs_scatter_lsst = (
@@ -127,17 +137,19 @@ def plot_external_matches(
                 kwargs_scatter_list=kwargs_bright,
             )
 
-    for idx_ell, (r_x, r_y, rho) in enumerate(zip(
-        *(matched_in[f"sersic_{col}"][good_lsst] for col in ("reff_x", "reff_y", "rho"))
-    )):
+    for idx_ell, (r_x, r_y, rho) in enumerate(
+        zip(*(matched_in[f"sersic_{col}"][good_lsst] for col in ("reff_x", "reff_y", "rho")))
+    ):
         ell_maj = g2d.EllipseMajor(g2d.Ellipse(r_x, r_y, rho), degrees=True)
         if ell_maj.r_major > 5:
             ell_patch = mpl.patches.Ellipse(
                 xy=(ra_lsst[idx_ell], dec_lsst[idx_ell]),
-                width=2*ell_maj.r_major*scale_lsst_deg,
-                height=2*ell_maj.r_major*ell_maj.axrat*scale_lsst_deg,
+                width=2 * ell_maj.r_major * scale_lsst_deg,
+                height=2 * ell_maj.r_major * ell_maj.axrat * scale_lsst_deg,
                 angle=-ell_maj.angle,
-                edgecolor='gray', fc='None', lw=2,
+                edgecolor="gray",
+                fc="None",
+                lw=2,
             )
             ax_ext[1].add_artist(ell_patch)
 

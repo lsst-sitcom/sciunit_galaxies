@@ -45,4 +45,3 @@ for obj, rebin in (("M49", True), ("NGC4261", False)):
     fig.tight_layout()
 
 plt.show()
-
