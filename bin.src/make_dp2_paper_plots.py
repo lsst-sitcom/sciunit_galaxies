@@ -1,3 +1,5 @@
+from lsst.ts.xml import field_info
+
 from lsst.analysis.tools.interfaces import AnalysisTool
 from lsst.analysis.tools.atools.diffMatched import *
 from lsst.analysis.tools.atools.genericBuild import FluxConfig
@@ -19,6 +21,7 @@ from lsst.analysis.tools.atools import SizeMagnitudePlot
 from lsst.analysis.tools.actions.plot.patchActionSkyPlot import PerPatchMetricConfig, PerPatchPropertyMapPlot
 import lsst.daf.butler as dafButler
 from lsst.geom import degrees, SpherePoint
+from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import CosmosInfo, EcdfsInfo, EdfsInfo
 #from lsst.sitcom.sciunit.galaxies.plotting import PerPatchMetricConfig, PerPatchPropertyMapPlot
 
 from astropy.table import vstack
@@ -29,20 +32,27 @@ import argparse
 import logging
 import os
 
+field_infos = {
+    "cosmos": CosmosInfo,
+    "ecdfs": EcdfsInfo,
+    "edfs": EdfsInfo,
+}
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("make_dp2_paper_plots")
-    parser.add_argument("-completeness_only", help="Only make completeness plots", action="store_true")
+    parser.add_argument("--completeness_only", help="Only make completeness plots", action="store_true")
+    parser.add_argument("--dataset", help="Matched dataset type name", type=str, default=None)
     parser.add_argument("--dec_min", help="Minimum dec for plots", type=float, default=None)
     parser.add_argument("--dec_max", help="Maximum dec for plots", type=float, default=None)
     parser.add_argument("--log_level", help="Logging level", type=str, default="INFO")
-    parser.add_argument("--field", help="Name of the field", type=str, default="cdfs")
+    parser.add_argument("--field", help="Name of the field", type=str, default="ecdfs")
     parser.add_argument("--interactive", help="Make and show plots interactively", action="store_true")
     parser.add_argument("--name_release", help="Name of the release", type=str, default="DP2")
     parser.add_argument("--ra_min", help="Minimum RA for plots", type=float, default=None)
     parser.add_argument("--ra_max", help="Maximum RA for plots", type=float, default=None)
     parser.add_argument("--repo", help="Butler repo to load skymap from", type=str, default="dp2_prep")
     parser.add_argument("--skymap_name", help="Name of the skymap", type=str, default="lsst_cells_v2")
-    parser.add_argument("--weekly", help="Pipelines version", type=str, default="v30_0_6_rc1")
+    parser.add_argument("--weekly", help="Pipelines version", type=str, default="v30_0_8")
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level)
@@ -51,6 +61,7 @@ if __name__ == '__main__':
 
     skymap = args.skymap_name
     field = args.field
+    field_info = field_infos[field]
     name_release = args.name_release
     prefix_release = f"{name_release}_" if name_release else ""
     weekly = args.weekly
@@ -59,25 +70,25 @@ if __name__ == '__main__':
     metrics_plot = {
         "mag_compl50": PerPatchMetricConfig(
             description="{band} mag @50% completeness",
-            key="atool_{band}_detect_sersic_vs_{name_flux_short}_{suffix_metric}_mag_completeness_50p00_pct",
+            key="{band}_detect_{name_flux_target}_vs_{name_flux_ref}_{suffix_metric}_mag_completeness_50p00_pct",
             vmin=25.5,
             vmax=26.5,
         ),
         "mag_compl80": PerPatchMetricConfig(
             description="{band} mag @80% completeness",
-            key="atool_{band}_detect_sersic_vs_{name_flux_short}_{suffix_metric}_mag_completeness_80p00_pct",
+            key="{band}_detect_{name_flux_target}_vs_{name_flux_ref}_{suffix_metric}_mag_completeness_80p00_pct",
             vmin=25,
             vmax=26,
         ),
         "mag_compl90": PerPatchMetricConfig(
             description="{band} mag @90% completeness",
-            key="atool_{band}_detect_sersic_vs_{name_flux_short}_{suffix_metric}_mag_completeness_90p00_pct",
+            key="{band}_detect_{name_flux_target}_vs_{name_flux_ref}_{suffix_metric}_mag_completeness_90p00_pct",
             vmin=24,
             vmax=25,
         ),
         "compl_24_25": PerPatchMetricConfig(
             description="24<{band}<25 completeness",
-            key="atool_{band}_detect_sersic_vs_{name_flux_short}_{suffix_metric}_completeness_mag24p0",
+            key="{band}_detect_{name_flux_target}_vs_{name_flux_ref}_{suffix_metric}_completeness_mag24p0",
             vmin=0.80,
             vmax=0.95,
         ),
@@ -90,7 +101,8 @@ if __name__ == '__main__':
 
     metrics_plot_band = {}
 
-
+    ref_name = args.dataset or field_info.refcat_names[0]
+    tract_patches = field_info.tract_patches
     dataset_type = f"matched_{ref_name}_object"
     tracts = tuple(tract_patches.keys())
 
@@ -199,18 +211,6 @@ if __name__ == '__main__':
     else:
         raise ValueError(f"Unknown {ref_name=}")
 
-    action_completeness_plot = PerPatchPropertyMapPlot(
-        atool=AnalysisTool(),
-        keys_coord_ra=[refcat_ra, "coord_ra"],
-        keys_coord_dec=[refcat_dec, "coord_dec"],
-        interactive=args.interactive,
-        metrics=metrics_plot,
-        # selector_star=RangeSelector(vectorKey="griz_model_extendedness", maximum=0.2),
-        ra_min=ra_min,
-        ra_max=ra_max,
-        dec_min=dec_min,
-        dec_max=dec_max,
-    )
     if args.interactive:
         import matplotlib.pyplot as plt
 
@@ -277,11 +277,16 @@ if __name__ == '__main__':
             "completeness": (
                 MatchedRefCoaddCompurityTool,
                 {
+                    "config_metrics": {"completeness_mag_max": 20},
                     "mag_bins_plot": {"mag_low_min": mmag_min, "mag_low_max": mmag_max},
+                    "make_patch_sky_plots": True,
                     "produce": {
-                        "label_shift": -0.15,
-                        "legendLocation": "outside upper center",
-                        "show_purity": False,
+                        "default": {
+                            "label_shift": -0.25,
+                            "legendLocation": "outside upper center",
+                            "show_purity": False,
+                        },
+                        "patch_sky_plots": {},
                     },
                 }
             ),
@@ -337,6 +342,7 @@ if __name__ == '__main__':
         dataset_tools[dataset_type] = {
             "completeness": dataset_tools[dataset_type]["completeness"]
         }
+        del dataset_tools["object"]
 
     def apply_override(atool, attr, value):
         if isinstance(value, dict):
@@ -355,6 +361,8 @@ if __name__ == '__main__':
         for do_galaxies_only in (True, False, None):
             do_galaxies = do_galaxies_only == True
             suffix_folder = "all" if (do_galaxies_only is None) else ("galaxies" if do_galaxies else "stars")
+            suffix_metric = "all" if (do_galaxies_only is None) else (
+                "resolved" if do_galaxies else "unresolved")
             output_dir = f"dp2_{field}_plots_{prefix_release}{weekly}_{suffix_folder}"
             tools_named = {}
 
@@ -392,6 +400,15 @@ if __name__ == '__main__':
                     atool.reconfigure(**overrides_reconfigure)
                 for attr, value in overrides.items():
                     apply_override(atool, attr, value)
+                if "make_patch_sky_plots" in overrides:
+                    patch_plots = atool.produce.plot.actions.patch_sky_plots
+                    patch_plots.metrics = metrics_plot.copy()
+                    for metric_config in patch_plots.metrics.values():
+                        metric_config.key = metric_config.key.format(
+                            suffix_metric=suffix_metric, band="{band}",
+                            name_flux_target="{name_flux_target}",
+                            name_flux_ref="{name_flux_ref}",
+                        )
 
                 tools_name = {}
 
@@ -419,10 +436,14 @@ if __name__ == '__main__':
 
                     atool.finalize()
                     produce_plot = atool.produce.plot
-                    plots = produce_plot.actions if hasattr(produce_plot, "actions") else [produce_plot]
-                    for plot in plots:
-                        plot.publicationStyle = True
-                        for attr, value in overrides_produce.items():
+                    plots = produce_plot.actions if hasattr(produce_plot, "actions") else {"": produce_plot}
+                    for key_plot, plot in plots.items():
+                        if hasattr(plot, "publicationStyle"):
+                            plot.publicationStyle = True
+                        overrides_plot = overrides_produce
+                        if key_plot:
+                            overrides_plot = overrides_plot.get(key_plot, overrides_plot.get("default", {}))
+                        for attr, value in overrides_plot.items():
                             apply_override(plot, attr, value)
 
                     for column, _ in atool.getInputSchema():
@@ -454,10 +475,15 @@ if __name__ == '__main__':
             columns.update(["objectId", "patch"] + tract_keys + patch_keys)
             action_size = LoadVector(vectorKey="sersic_reff_major")
             columns.update({item[0] for item in action_size.getInputSchema()})
-            columns.update({item[0] for item in action_completeness_plot.getInputSchema()})
+            # columns.update({item[0] for item in action_completeness_plot.getInputSchema()})
         for ra, dec in radecs.values():
             columns.update((ra, dec))
 
+        # Some single-tract refcats don't bother with a tract column
+        add_tract = "tract" in columns and "tract" not in tract_keys
+        if add_tract:
+            columns.remove("tract")
+        # At some point it must have looped over vis as a band?
         columns_read = tuple(column for column in columns if not column.startswith("vis_"))
 
         tables = []
@@ -466,6 +492,8 @@ if __name__ == '__main__':
                 dataset, skymap=skymap, tract=tract, storageClass="ArrowAstropy",
                 parameters={"columns": columns_read}
             )
+            if add_tract:
+                data["tract"] = tract
             if is_matched:
                 no_meas = np.array(np.isfinite(data["objectId"]) != True)
                 ra_ref, dec_ref = (data[col][no_meas] for col in radecs["ref"])
@@ -521,7 +549,6 @@ if __name__ == '__main__':
 
         for output_dir, (do_galaxies_only, tools_named) in tools_object_type.items():
             do_galaxies = (do_galaxies_only is None) or do_galaxies_only
-            suffix_metric = "all" if (do_galaxies_only is None) else ("resolved" if do_galaxies else "unresolved")
 
             for name, atool_dict in tools_named.items():
                 for band in bands:
@@ -529,48 +556,10 @@ if __name__ == '__main__':
                         atool = atool_dict["default"]
                     overrides_complete = metrics_plot_band.get(band, {})
 
+                    plotInfo["bands"] = [band]
                     schema = atool.getInputSchema()
-                    results = atool(data, band=band, plotInfo=plotInfo, skymap=skymap)
+                    results = atool(data, band=band, plotInfo=plotInfo, skymap=skymapInfo)
                     for name_plot, result in results.items():
                         if isinstance(result, mpl.figure.Figure):
                             suffix = "" if (not "_" in name_plot) else f'_{name_plot.rsplit("_", 1)[0]}'
                             result.savefig(f"{output_dir}/{ref_name}_{skymap}_{field}_{band}_{name}{suffix}.pdf")
-                    if (name == "completeness") and (band in bands_completeness):
-                        action_completeness_plot.band = band
-                        for key_metric, config_metric in metrics_plot.items():
-                            action = action_completeness_plot.metrics[key_metric]
-                            action.description = config_metric.description.format(band=band)
-                            action.key = config_metric.key.format(
-                                band=band,
-                                name_flux_short=ref_matched.name_flux_short,
-                                suffix_metric=suffix_metric,
-                            )
-                            action.vmin = config_metric.vmin
-                            action.vmax = config_metric.vmax
-                            for name_attr, override in overrides_complete.get(key_metric, {}).items():
-                                setattr(action, name_attr, override)
-
-                        selector_sub = atool.prep.selectors.match_candidate.selectors.tract_patches
-                        if selector_tracts is not None:
-                            atool.prep.selectors.match_candidate.selectors.tract_patches = selector_tracts
-                        else:
-                            del atool.prep.selectors.match_candidate.selectors.tract_patches
-                        action_completeness_plot.actions = atool
-                        plots, metrics = action_completeness_plot.makePlots(
-                            data,
-                            plotInfo={"skymap": skymapInfo},
-                            return_tabular_metrics=True,
-                        )
-                        atool.prep.selectors.match_candidate.selectors.tract_patches = selector_sub
-                        for name_fig, (figure, *_) in plots.items():
-                            if args.interactive:
-                                plt.show()
-                            else:
-                                figure.savefig(
-                                    f"{output_dir}/{ref_name}_{skymap}_{field}_{band}_{name_fig}.pdf"
-                                )
-                        if not args.interactive:
-                            metrics.write(
-                                f"{output_dir}/{ref_name}_{skymap}_{field}_{band}_metrics.ecsv",
-                                overwrite=True,
-                            )

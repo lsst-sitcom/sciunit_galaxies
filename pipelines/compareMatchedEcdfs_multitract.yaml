@@ -1,5 +1,5 @@
 description:
-  Multitract version of CDFS matched difference
+  Matched difference (measured vs reference) multitract plots/metrics for ECDFS
 imports:
   - location: $SCIUNIT_GALAXIES_DIR/pipelines/compareMatchedWide_multitract.yaml
     labeledSubsetModifyMode: EDIT
@@ -16,7 +16,7 @@ tasks:
 
       python:
         from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EcdfsInfo
-      
+
         EcdfsInfo.apply(
           config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
           "vis",
@@ -28,7 +28,7 @@ tasks:
 
       python:
         from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EcdfsInfo
-      
+
         EcdfsInfo.apply(
           config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
           "dp1",
@@ -40,7 +40,7 @@ tasks:
 
       python:
         from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EcdfsInfo
-      
+
         EcdfsInfo.apply(
           config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
           "dp2",
