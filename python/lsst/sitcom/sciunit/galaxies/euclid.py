@@ -401,6 +401,8 @@ def query_tract_catalog(
         Look for existing tmp files and try to load them.
     verbose
         Passed to astroquery launch_job.
+    max_retry
+        Max number of retries on query failure.
 
     Returns
     -------

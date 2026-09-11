@@ -15,7 +15,7 @@ tasks:
 
       python:
         from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EdfsInfo
-      
+
         EdfsInfo.apply(
           config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
           "vis",
@@ -27,7 +27,7 @@ tasks:
 
       python:
         from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EdfsInfo
-      
+
         EdfsInfo.apply(
           config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
           "dp1",
@@ -39,7 +39,7 @@ tasks:
 
       python:
         from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EdfsInfo
-      
+
         EdfsInfo.apply(
           config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
           "dp2",

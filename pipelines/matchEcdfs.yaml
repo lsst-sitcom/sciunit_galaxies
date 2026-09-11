@@ -184,7 +184,7 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = ["f_f775w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -231,7 +231,7 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
         fluxes_ref = [f"{parameters.prefix_acs}f_f775w", f"{parameters.prefix_des_y6g}bdf_flux_i_corrected"]
@@ -270,7 +270,7 @@ tasks:
           f"{col}Err" for col in fluxes_meas_other
         ] + (parameters.columns_exponential_copy if "exponential" in parameters.models_other else [])
         prefix_matched = "matched_"
-        config.diff_matched_catalog.column_matched_prefix_ref = prefix_matched 
+        config.diff_matched_catalog.column_matched_prefix_ref = prefix_matched
         config.diff_matched_catalog.columns_ref_copy = [
           f"{parameters.prefix_acs}{col_ref}" for col_ref in parameters.columns_hlf_copy
         ] + [
@@ -361,7 +361,7 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = [f"{parameters.prefix_acs}f_f775w", f"{parameters.prefix_jades}F090W_KRON"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -410,13 +410,13 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         prefix_jades = parameters.prefix_jades
         prefix_hst = parameters.prefix_acs
         prefix_euclid = parameters.prefix_euclid
-                
+
         fluxes_ref = [f"{prefix_hst}f_f775w", f"{prefix_euclid}flux_vis_sersic"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [

@@ -86,7 +86,7 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
         fluxes_ref = [f"HSC_{band}_FLUX_AUTO" for band in parameters.bands_match]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -138,7 +138,7 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
         fluxes_ref = [f"flux_model_hsc-{band}" for band in parameters.bands_match]
@@ -197,7 +197,7 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
 
         fluxes_ref = ["flux_auto"]
@@ -268,7 +268,7 @@ tasks:
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
 
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         prefix_match = parameters.prefix_cosmos2025 + parameters.prefix_acs
         fluxes_ref = ["flux_auto_hst-f814w"]
         config.match_tract_catalog.columns_ref_meas = [
@@ -329,15 +329,15 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-         
+
         prefix_hst = parameters.prefix_acs
         prefix_cosmos2025 = parameters.prefix_cosmos2025
         prefix_match = f"{parameters.prefix_mast}{parameters.prefix_desi}"
-                        
+
         fluxes_ref = [f"{prefix_hst}flux_auto", f"{prefix_cosmos2025}flux_auto_hst-f814w"]
-        columns_meas = [parameters.cosmos_desi_coord_ra, parameters.cosmos_desi_coord_dec] 
+        columns_meas = [parameters.cosmos_desi_coord_ra, parameters.cosmos_desi_coord_dec]
         config.match_tract_catalog.columns_target_meas = columns_meas
         config.match_tract_catalog.columns_target_err = [
           f"{parameters.cosmos_desi_coord_ra}_est_error", f"{parameters.cosmos_desi_coord_dec}_est_error",
@@ -386,13 +386,13 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         prefix_hst = parameters.prefix_acs
         prefix_cosmos2025 = parameters.prefix_cosmos2025
         prefix_desi = parameters.prefix_desi
-                
+
         fluxes_ref = [f"{prefix_hst}flux_auto", f"{prefix_cosmos2025}flux_auto_hst-f814w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -462,9 +462,9 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         fluxes_ref = ["flux_auto"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -477,7 +477,7 @@ tasks:
         config.match_tract_catalog.columns_target_err = [f"{col}Err" for col in columns_meas]
         # Might need adjusting for different survey depths
         config.match_tract_catalog.mag_faintest_ref = 29.0
-  
+
         columns_flux = {}
         fluxes_meas_other = []
         for band in parameters.bands_lsst:
@@ -531,15 +531,15 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         prefix_hst = parameters.prefix_acs
         prefix_cosmos2025 = parameters.prefix_cosmos2025
         prefix_desi = parameters.prefix_desi
         prefix_match_ref_added = f"{parameters.prefix_mast}{prefix_desi}"
         prefix_match = f"{prefix_match_ref_added}{parameters.prefix_hsc}"
-                
+
         fluxes_ref = [f"{prefix_hst}flux_auto", f"{prefix_cosmos2025}flux_auto_hst-f814w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -580,7 +580,7 @@ tasks:
         config.diff_matched_catalog.columns_ref_copy = [
           "coord_mast_ra", "coord_mast_dec", "coord_mast_desi_ra", "coord_mast_desi_dec",
           f"{parameters.prefix_mast}{prefix_desi}match_distance",
-          f"{parameters.prefix_mast}{prefix_desi}match_distanceErr", 
+          f"{parameters.prefix_mast}{prefix_desi}match_distanceErr",
         ] + [
           f"{prefix_hst}{col_ref}" for col_ref in parameters.columns_cosmos_acs_copy
         ] + [
@@ -615,14 +615,14 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         prefix_hst = parameters.prefix_acs
         prefix_cosmos2025 = parameters.prefix_cosmos2025
         prefix_desi = parameters.prefix_desi
         prefix_hsc = parameters.prefix_hsc
-                
+
         fluxes_ref = [f"{prefix_hst}flux_auto", f"{prefix_cosmos2025}flux_auto_hst-f814w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -662,8 +662,8 @@ tasks:
               fluxes_ref_other.append(column)
           if band_in_hsc:
             columns_ref_other.append(f"{band}_sersicFluxErr")
-        
-        config.diff_matched_catalog.columns_flux = columns_flux  
+
+        config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other]
         columns_hsc_copy = [
@@ -671,7 +671,7 @@ tasks:
         ] + columns_ref_other + fluxes_ref_other + [f"{col}Err" for col in fluxes_ref_other] + (
           parameters.columns_exponential_copy if "exponential" in parameters.models_other else []
         )
-        
+
         config.diff_matched_catalog.columns_ref_copy = [
           "coord_mast_ra", "coord_mast_dec", "coord_mast_desi_ra", "coord_mast_desi_dec",
           "coord_mast_desi_hsc_ra", "coord_mast_desi_hsc_dec",
@@ -713,16 +713,16 @@ tasks:
       python: |
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         prefix_hst = parameters.prefix_acs
         prefix_cosmos2025 = parameters.prefix_cosmos2025
         prefix_desi = parameters.prefix_desi
         prefix_hsc = parameters.prefix_hsc
         prefix_match_ref_added = f"{parameters.prefix_mast}{prefix_desi}{prefix_hsc}"
         prefix_match = f"{prefix_match_ref_added}shear_"
-                
+
         fluxes_ref = [f"{prefix_hst}flux_auto", f"{prefix_cosmos2025}flux_auto_hst-f814w"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
         config.match_tract_catalog.columns_ref_meas = [
@@ -760,13 +760,13 @@ tasks:
             fluxes_meas_other.append(f"{band}_{model}Flux")
           for model in parameters.models_other:
             fluxes_ref_other.append(f"{band}_{model}Flux")
-        config.diff_matched_catalog.columns_flux = columns_flux  
+        config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_shear_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other]
         columns_hsc_copy = [
           col for col in parameters.columns_obj_copy if not col.startswith("u_")
         ] + columns_ref_other + fluxes_ref_other + [f"{col}Err" for col in fluxes_ref_other]
-        
+
         config.diff_matched_catalog.columns_ref_copy = [
           "coord_mast_ra", "coord_mast_dec", "coord_mast_desi_ra", "coord_mast_desi_dec",
           "coord_mast_desi_hsc_ra", "coord_mast_desi_hsc_dec",

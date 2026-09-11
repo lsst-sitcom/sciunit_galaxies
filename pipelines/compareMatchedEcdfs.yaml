@@ -183,7 +183,7 @@ tasks:
       atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
       atools.matchedRefPositionSersicDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddDiffColorTool,
           MatchedRefCoaddDiffMagTool,
@@ -231,8 +231,8 @@ tasks:
             vectorKeys=["patch", "refcat_patch"],
             values=values,
           )
-          selector_candidate = selector_candidate_new 
-        
+          selector_candidate = selector_candidate_new
+
         ref_matched = FluxConfig(
             key_flux="refcat_f_f775w",
             name_flux="F775W Auto",

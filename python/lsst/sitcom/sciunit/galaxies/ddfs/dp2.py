@@ -1,9 +1,10 @@
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import pydantic
 
 from lsst.analysis.tools.actions.plot.patchActionSkyPlot import PerPatchPropertyMapPlot
 from lsst.multiprofit.utils import arbitrary_allowed_config
+
 
 class DeepFieldInfoDp2(pydantic.BaseModel):
     """Assorted useful properties for deep fields."""
@@ -19,15 +20,14 @@ class DeepFieldInfoDp2(pydantic.BaseModel):
         default=(None, None),
     )
     metrics_plot_band: dict[str, dict[str, dict[str, float]]] = pydantic.Field(
-        title="Dict by band of dicts by metric suffix with key-value pairs "
-              "relevant for plots of that metric."
+        title="Dict by band of dicts by metric suffix with key-value pairs relevant for plots of that metric."
     )
     refcat_names: list[str] = pydantic.Field(
         title="Dataset type names for useful external reference catalogs",
     )
     tract_patches: dict[int, None | tuple[int, ...]] = pydantic.Field(
         title="Dict of patches by tract which have enough coverage to at"
-              " least attempt to measure most useful metrics",
+        " least attempt to measure most useful metrics",
     )
 
     def apply(self, action: PerPatchPropertyMapPlot, band):
@@ -63,7 +63,7 @@ CosmosInfo = DeepFieldInfoDp2(
             72, 73, 74, 75, 76, 77, 78, 82, 83, 84, 85, 86, 87, 88,
         ),
     },
-)
+)  # fmt: skip
 
 EcdfsInfo = DeepFieldInfoDp2(
     limits_ra=(50.7, 55.2),
@@ -126,28 +126,31 @@ EcdfsInfo = DeepFieldInfoDp2(
             49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99,
         ),
         5062: (
-            0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 36,
-            40, 41, 42, 43, 44, 45, 46, 50, 51, 52, 53, 54, 55, 60, 61, 62, 63, 64, 65,
-            70, 71, 72, 73, 74, 75, 80, 81, 82, 83, 84, 90, 91, 92, 93
+            0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25,
+            30, 31, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 50, 51, 52, 53, 54, 55,
+            60, 61, 62, 63, 64, 65, 70, 71, 72, 73, 74, 75, 80, 81, 82, 83, 84, 90, 91, 92, 93,
         ),
         5063: None,
         5064: (
+            # fmt: off
             4, 5, 6, 7, 8, 9, 14, 15, 16, 17, 18, 19,
             24, 25, 26, 27, 28, 29, 34, 35, 36, 37, 38, 39,
             44, 45, 46, 47, 48, 49, 54, 55, 56, 57, 58, 59,
-            65, 66, 67, 68, 69, 75, 76, 77, 78, 79, 86, 87, 88, 89, 97, 98, 99
+            65, 66, 67, 68, 69, 75, 76, 77, 78, 79, 86, 87, 88, 89, 97, 98, 99,
+            # fmt: on
         ),
         5279: (
             0, 1, 10, 11,
         ),
         5280: (
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+            20, 21, 22, 23, 24, 25, 26,
         ),
         5281: (
             4, 5, 6, 7, 8, 9, 16, 17, 18, 19, 28, 29,
         ),
     },
-)
+)  # fmt: skip
 
 EdfsInfo = DeepFieldInfoDp2(
     limits_dec=(-51.5, -45.2),
@@ -269,7 +272,7 @@ EdfsInfo = DeepFieldInfoDp2(
             8, 9, 18, 19, 28, 29,
         ),
     },
-)
+)  # fmt: skip
 
 ElaisInfo = DeepFieldInfoDp2(
     limits_ra=(6.7, 12.4),
@@ -361,7 +364,7 @@ ElaisInfo = DeepFieldInfoDp2(
             48, 49, 59,
         ),
     },
-)
+)  # fmt: skip
 
 all_ddfs = {
     "cosmos": CosmosInfo,

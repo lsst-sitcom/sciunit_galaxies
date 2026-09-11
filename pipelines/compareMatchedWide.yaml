@@ -238,7 +238,7 @@ tasks:
       atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
       atools.matchedRefPositionSersicDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -252,9 +252,9 @@ tasks:
           CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, MatchedTractSelector,
           RangeSelector, SetSelector, StarSelector,
         )
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
-        
+
         selector_all = RangeSelector(vectorKey="objectId")
         if parameters.use_extendedness_for_des_y6gold:
           from lsst.analysis.tools.actions.vector.selectors import (
@@ -509,7 +509,7 @@ tasks:
       atools.matchedRefSizeRatioSersic.produce.plot.yLims: (-1, 1)
       atools.matchedRefSizeRatioSersic.produce.plot.yAxisLabel: "log10($R_{eff,major,Rubin}$/$R_{eff,major,Euclid}$) (Sérsic)"
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddDiffColorTool,
           MatchedRefCoaddDiffMagTool,
@@ -528,17 +528,17 @@ tasks:
           CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, MatchedTractSelector,
           RangeSelector, SetSelector, StarSelector,
         )
-        
+
         CompletenessHist.mag_ref_label.default = "Sersic VIS (mag)"
         CompletenessHist.mag_target_label.default = "{name_flux} {band} (mag)"
-        
+
         selector_all = SetSelector(vectorKeys=["match_candidate", "refcat_match_candidate"], values=[1])
         selector_galaxy = ReferenceGalaxySelector(
           plotLabelValue="Euclid mumax_minus_mag >= -2.6",
           vectorKey="refcat_mumax_minus_mag", threshold=-2.6, op="ge",
         )
         selector_obj = ReferenceObjectSelector(vectorKey="refcat_spurious_prob", minimum=0, maximum=0.1)
-        selector_star = ReferenceStarSelector( 
+        selector_star = ReferenceStarSelector(
           plotLabelValue="Euclid mumax_minus_mag < -2.6",
           vectorKey="refcat_mumax_minus_mag",
           threshold=-2.6, op="le",
@@ -788,7 +788,7 @@ tasks:
       atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
       atools.matchedRefPositionSersicDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -802,9 +802,9 @@ tasks:
           CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
           SetSelector, StarSelector,
         )
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
-        
+
         selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = GalaxySelector(
           plotLabelKey="Selection: galaxies", vectorKey="refcat_refExtendedness",
@@ -1065,7 +1065,7 @@ tasks:
       atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
       atools.matchedRefPositionSersicDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -1079,7 +1079,7 @@ tasks:
           CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
           SetSelector, StarSelector,
         )
-        
+
         selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = GalaxySelector(
           plotLabelKey="Selection: galaxies", vectorKey="refcat_refExtendedness",
@@ -1356,7 +1356,7 @@ tasks:
       atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
       atools.matchedRefPositionSersicDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -1370,9 +1370,9 @@ tasks:
           CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
           SetSelector, StarSelector,
         )
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z"}
-        
+
         selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = RangeSelector(
           plotLabelKey="Selection: galaxies", vectorKey="shear_gauss_T", minimum=0.01,
@@ -1410,7 +1410,7 @@ tasks:
             key_flux_error=None,
         )
         fluxes_dict = {"ref_matched": gauss_flux, "pgauss": pgauss_flux}
-        
+
         lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
         lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
         lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)

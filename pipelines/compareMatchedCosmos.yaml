@@ -21,6 +21,7 @@ parameters:
   # These are not complete. Avg is ~20k
   # for complete patches
   patches_hsc: [
+    # yamllint disable
         12, 13, 14, 15, 16, 17, 18,
     21, 22, 23, 24, 25, 26, 27, 28, 29,
     31, 32, 33, 34, 35, 36, 37, 38, 39,
@@ -29,8 +30,10 @@ parameters:
     61, 62, 63, 64, 65, 66, 67, 68, 69,
     71, 72, 73, 74, 75, 76, 77, 78, 79,
         82, 83, 84, 85, 86, 87, 88,
+    # yamllint enable
   ]
   patches_hst: [
+    # yamllint disable
         12, 13, 14, 15, 16, 17, 18,
         22, 23, 24, 25, 26, 27, 28,
         32, 33, 34, 35, 36, 37, 38,
@@ -39,6 +42,7 @@ parameters:
         62, 63, 64, 65, 66, 67, 68,
         72, 73, 74, 75, 76, 77, 78,
         82, 83, 84, 85, 86, 87, 88,
+    # yamllint enable
   ]
   pos_diff_min: -200
   pos_diff_max: 200
@@ -270,7 +274,7 @@ tasks:
       atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
       atools.matchedRefPositionSersicDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -287,9 +291,9 @@ tasks:
           CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
           SetSelector, StarSelector,
         )
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
-        
+
         selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = ReferenceGalaxySelector(
           plotLabelKey="Selection: unflagged", vectorKey="refcat_FLAG_HSC",
@@ -318,7 +322,7 @@ tasks:
             vectorKeys=["patch", "refcat_patch"],
             values=parameters.patches_hst,
           )
-          selector_candidate = selector_candidate_new 
+          selector_candidate = selector_candidate_new
 
         ref_matched = FluxConfig(
             key_flux="refcat_HSC_{band}_FLUX_AUTO",
@@ -564,7 +568,7 @@ tasks:
       atools.matchedRefSizeRatioSersic.produce.plot.yLims: (-1, 1)
       atools.matchedRefSizeRatioSersic.produce.plot.yAxisLabel: "log10($R_{eff,major,Rubin}$/$R_{eff,major,JWST}$) (Sérsic)"
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -582,9 +586,9 @@ tasks:
           CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector,
           SetSelector, StarSelector,
         )
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
-        
+
         selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = ReferenceGalaxySelector(
           plotLabelKey="Selection: LePhare galaxies", vectorKey="refcat_type",
@@ -613,7 +617,7 @@ tasks:
             vectorKeys=["patch", "refcat_patch"],
             values=parameters.patches_hst,
           )
-          selector_candidate = selector_candidate_new 
+          selector_candidate = selector_candidate_new
 
         ref_matched = FluxConfig(
             key_flux="refcat_flux_model_hsc-{band}",
@@ -796,7 +800,7 @@ tasks:
             vectorKeys=["patch", "refcat_patch"],
             values=parameters.patches_hst,
           )
-          selector_candidate = selector_candidate_new 
+          selector_candidate = selector_candidate_new
 
         ref_matched = FluxConfig(
             key_flux="refcat_flux_auto",
@@ -935,7 +939,7 @@ tasks:
       atools.matchedRefPositionDecChi.scale_factor: 3600000
       atools.matchedRefPositionDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddDiffMagTool,
           MatchedRefCoaddDiffPositionTool,
@@ -982,7 +986,7 @@ tasks:
             vectorKeys=["patch", "refcat_patch"],
             values=parameters.patches_hst,
           )
-          selector_candidate = selector_candidate_new 
+          selector_candidate = selector_candidate_new
 
         ref_matched = FluxConfig(
             key_flux="refcat_flux_auto",
@@ -1172,7 +1176,7 @@ tasks:
       atools.matchedRefPositionDecDiff.produce.plot.yLims: lims_pos_diff
       atools.matchedRefPositionDecDiff.scale_factor: 3600000
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -1187,9 +1191,9 @@ tasks:
           ReferenceGalaxySelector, ReferenceObjectSelector, ReferenceStarSelector,
           SetSelector, StarSelector,
         )
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z"}
-        
+
         selector_all = RangeSelector(vectorKey="shearObjectId")
         selector_galaxy = ReferenceGalaxySelector(
           plotLabelKey="Selection: HST galaxies", vectorKey="hst_mu_class", threshold=1,

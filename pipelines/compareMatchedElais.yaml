@@ -130,7 +130,7 @@ tasks:
       atools.matchedRefPositionDecChi.scale_factor: 3600000
       atools.matchedRefPositionDecChi.compute_chi: true
 
-      python: |        
+      python: |
         from lsst.analysis.tools.atools.diffMatched import (
           MatchedRefCoaddCompurityTool,
           MatchedRefCoaddDiffColorTool,
@@ -147,9 +147,9 @@ tasks:
           GalaxySelector,
           StarSelector,
         )
-        
+
         bands_color = {"g": "r", "r": "i", "i": "z", "z": "y"}
-        
+
         selector_all = RangeSelector(vectorKey="objectId")
         selector_galaxy = StringSetSelector(vectorKeys=["refcat_SourceModel"], values=["ExpGal", "DevGal"])
         selector_obj = StringSetSelector(vectorKeys=["refcat_SourceModel"], values=["PtSrc", "ExpGal", "DevGal"])

@@ -15,4 +15,3 @@ data:
     data_id: {}
     path: COSMOSWeb_mastercatalog_v1.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
-

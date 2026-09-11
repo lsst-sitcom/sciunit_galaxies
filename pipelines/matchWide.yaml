@@ -173,7 +173,7 @@ tasks:
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
 
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         coords_err = [parameters.object_ra_err, parameters.object_dec_err]
         fluxes_ref = [f"bdf_flux_{band}_corrected" for band in parameters.bands_match_des_y6gold]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -260,7 +260,7 @@ tasks:
               fluxes_meas_other.append(column)
               if model != "exponential":
                 fluxes_ref_other.append(column)
-        config.diff_matched_catalog.columns_flux = columns_flux  
+        config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ]
@@ -288,9 +288,9 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         coords_err = [parameters.object_ra_err, parameters.object_dec_err]
         fluxes_ref = ["flux_vis_sersic"]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -347,9 +347,9 @@ tasks:
         # Target settings are likely common to all object tables
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         coords_err = [parameters.object_ra_err, parameters.object_dec_err]
         fluxes_ref = [f"{band}_sersicFlux" for band in parameters.bands_match_hsc]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -378,7 +378,7 @@ tasks:
               fluxes_meas_other.append(column)
               if band in ("g", "r", "i", "z", "y"):
                 fluxes_ref_other.append(column)
-        config.diff_matched_catalog.columns_flux = columns_flux  
+        config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other
         ]
@@ -412,9 +412,9 @@ tasks:
       python: |
         from lsst.pipe.tasks.match_tract_catalog_probabilistic import MatchTractCatalogProbabilisticTask
         from lsst.pipe.tasks.diff_matched_tract_catalog import MatchedCatalogFluxesConfig
-        
+
         config.match_tract_catalog.retarget(MatchTractCatalogProbabilisticTask)
-        
+
         coords_err = [parameters.object_ra_err, parameters.object_dec_err]
         fluxes_ref = [f"{band}_pgaussFlux" for band in parameters.bands_shear if band in parameters.bands_lsst]
         config.match_tract_catalog.columns_ref_flux = fluxes_ref
@@ -445,7 +445,7 @@ tasks:
             for model in parameters.models_other_shear:
               column = f"{band}_{model}Flux"
               fluxes_ref_other.append(column)
-        config.diff_matched_catalog.columns_flux = columns_flux  
+        config.diff_matched_catalog.columns_flux = columns_flux
         config.diff_matched_catalog.columns_target_copy = parameters.columns_obj_copy + fluxes_meas_other + [
           f"{col}Err" for col in fluxes_meas_other] + (
           parameters.columns_exponential_copy if "exponential" in parameters.models_other else []

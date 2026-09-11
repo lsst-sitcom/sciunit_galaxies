@@ -83,4 +83,3 @@ sp.ax.scatter(ra[list(idx_d2.keys())], dec[list(idx_d2.keys())], s=130, marker="
 sp.ax.scatter(radec_dupe[:, 0], radec_dupe[:, 1], s=150, marker="o", edgecolor="purple", facecolor="None")
 fig.tight_layout()
 plt.show()
-
