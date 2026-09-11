@@ -2,16 +2,16 @@ description: Import external catalogs
 version: 1.0.0
 data:
 - type: dataset_type
-  name: cosmos_acs_iphot_200709
+  name: cosmos_desi_v2p0
   dimensions: []
   storage_class: ArrowAstropy
   is_calibration: false
 - type: dataset
-  dataset_type: cosmos_acs_iphot_200709
-  run: u/dtaranu/DM-50135/cosmos_acs
+  dataset_type: cosmos_desi_v2p0
+  run: u/dtaranu/DM-50135/cosmos_desi
   records:
   - dataset_id:
-    - !uuid 'fc471bbc-02fb-4fc3-aab7-fd2f8e046e4a'
-    data_id: {}
-    path: cosmos_acs_iphot_200709.parq
+    - !uuid 'e3a08884-12bc-4847-8ce8-90a2aeaff8ef'
+    data_id: {'skymap': 'lsst_cells_v2'}
+    path: DESI-COSMOS-v2.0.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter

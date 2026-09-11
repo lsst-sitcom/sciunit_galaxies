@@ -1,8 +1,10 @@
 import argparse
+import glob
 import logging
 import os.path
 
 import astropy.units as u
+from astropy.table import Column
 from lsst.daf.butler.formatters.parquet import astropy_to_arrow, compute_row_group_size, pq
 import lsst.daf.butler as dafButler
 import lsst.skymap as skymap
@@ -25,6 +27,9 @@ if __name__ == '__main__':
     tracts = [int(x) for x in args.tracts.split(",")]
 
     for tract in tracts:
+        tmpFiles = glob.glob(f"{args.save_directory}/tmp*")
+        for tmpFile in tmpFiles:
+            os.remove(tmpFile)
         table, queries, jobs = query_tract_catalog(
             tractInfo=skymap[tract],
             name_skymap=args.skymap_name,
@@ -41,6 +46,15 @@ if __name__ == '__main__':
                 table[column_error] = np.full(len(table), 0.005/3600, dtype=np.float32)
                 table[column_error].description = f"Placeholder {column_error} error (constant 5 mas)"
                 table[column_error].unit = u.deg
+
+            # Remove unnecessary masks
+            for colname in table.colnames:
+                if (
+                    (mask := getattr(column := table[colname], "mask", None) is not None)
+                    and (np.sum(mask) == 0)
+                ):
+                    table[colname] = Column(column)
+            table.sort("object_id")
 
             directory = f"{args.save_directory}/{tract}"
             if not os.path.isdir(directory):

@@ -10,7 +10,7 @@ parameters:
     "sersic_index", "sersic_indexErr", "sersic_rho", "sersic_rhoErr",
     "sersic_reff_x", "sersic_reff_xErr", "sersic_reff_y", "sersic_reff_yErr",
   ]
-  models_other: ["psf", "gaap1p0", "gaap3p0", "kron", "sersic"]
+  models_other: ["psf", "gaap1p0", "kron", "sersic"]
 tasks:
   matchObjectToCdfsDecals:
     class: lsst.pipe.tasks.match_tract_catalog.MatchTractCatalogTask

@@ -1,0 +1,35 @@
+description:
+  Multitract version of CDFS matched difference
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/compareMatchedWide.yaml
+    labeledSubsetModifyMode: EDIT
+    rename:
+      compareMatchedDesY6Gold: compareMatchedDesY6Gold_multitract
+      compareMatchedDp1: compareMatchedDp1_multitract
+      compareMatchedEuclid: compareMatchedEuclid_multitract
+      compareMatchedShear: compareMatchedShear_multitract
+tasks:
+  compareMatchedDesY6Gold_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.outputName: diff_matched_des_y6gold_multitract
+
+      load_multiple: True
+  compareMatchedDp1_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.outputName: diff_matched_dp1_object_object_multitract
+
+      load_multiple: True
+  compareMatchedEuclid_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.outputName: diff_matched_euclid_q1_object_multitract
+
+      load_multiple: True
+  compareMatchedShear_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      connections.outputName: diff_matched_object_shear_object_multitract
+
+      load_multiple: True

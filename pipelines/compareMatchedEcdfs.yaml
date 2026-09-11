@@ -1,0 +1,247 @@
+description: |
+  Matched difference (measured vs reference) plots/metrics for CDFS
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/compareMatchedWide.yaml
+    labeledSubsetModifyMode: EDIT
+    include:
+      - diff_matched_cdfs_des_y6gold
+      - diff_matched_cdfs_euclid
+parameters:
+  patches_hst: ""
+tasks:
+  compareMatchedCdfsAcs:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      bands: ["i"]
+      connections.inputName: matched_cdfs_hlf_v2p1_object
+      connections.outputName: diff_matched_cdfs_hlf_v2p1_object
+
+      atools.matchedRefCompleteness: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompleteness.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompleteness.selector_all: selector_all
+      atools.matchedRefCompleteness.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompleteness.selector_ref_all: selector_obj
+      atools.matchedRefCompleteness.selector_ref_star: selector_star
+
+      atools.matchedRefCompletenessModelExtend: MatchedRefCoaddCompurityTool
+      atools.matchedRefCompletenessModelExtend.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCompletenessModelExtend.selector_all: selector_all
+      atools.matchedRefCompletenessModelExtend.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCompletenessModelExtend.selector_ref_all: selector_obj
+      atools.matchedRefCompletenessModelExtend.selector_ref_star: selector_star
+      atools.matchedRefCompletenessModelExtend.selector_galaxy: selector_galaxy_mod
+      atools.matchedRefCompletenessModelExtend.selector_star: selector_star_mod
+      atools.matchedRefCompletenessModelExtend.mag_target: sersic_err
+
+      atools.matchedRefAngularSeparationDiff: MatchedRefCoaddDiffDistanceTool
+      atools.matchedRefAngularSeparationDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefAngularSeparationDiff.selector_all: selector_all
+      atools.matchedRefAngularSeparationDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefAngularSeparationDiff.selector_ref_all: selector_obj
+      atools.matchedRefAngularSeparationDiff.selector_ref_star: selector_star
+      atools.matchedRefAngularSeparationDiff.produce.plot.xLims: lims_mag_x
+
+      atools.matchedRefCModelMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCModelMagDiff.selector_all: selector_all
+      atools.matchedRefCModelMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefCModelMagDiff.selector_ref_star: selector_star
+      atools.matchedRefCModelMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefCModelMagDiff.fluxes_default.ref_matched: ref_matched
+
+      atools.matchedRefCModelMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefCModelMagChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefCModelMagChi.compute_chi: true
+      atools.matchedRefCModelMagChi.selector_all: selector_all
+      atools.matchedRefCModelMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefCModelMagChi.selector_ref_all: selector_obj
+      atools.matchedRefCModelMagChi.selector_ref_star: selector_star
+      atools.matchedRefCModelMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefCModelMagChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefSersicMagDiff: MatchedRefCoaddDiffMagTool
+      atools.matchedRefSersicMagDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicMagDiff.mag_y: sersic_err
+      atools.matchedRefSersicMagDiff.selector_all: selector_all
+      atools.matchedRefSersicMagDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicMagDiff.selector_ref_all: selector_obj
+      atools.matchedRefSersicMagDiff.selector_ref_star: selector_star
+      atools.matchedRefSersicMagDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicMagDiff.produce.plot.yLims: lims_mag_diff
+      atools.matchedRefSersicMagDiff.fluxes_default.ref_matched: ref_matched
+
+      atools.matchedRefSersicMagChi: MatchedRefCoaddDiffMagTool
+      atools.matchedRefSersicMagChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefSersicMagChi.mag_y: sersic_err
+      atools.matchedRefSersicMagChi.compute_chi: true
+      atools.matchedRefSersicMagChi.selector_all: selector_all
+      atools.matchedRefSersicMagChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefSersicMagChi.selector_ref_all: selector_obj
+      atools.matchedRefSersicMagChi.selector_ref_star: selector_star
+      atools.matchedRefSersicMagChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefSersicMagChi.produce.plot.yLims: lims_mag_chi
+
+      atools.matchedRefPositionRaDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionRaDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionRaDiff.coord_meas: coord_ra
+      atools.matchedRefPositionRaDiff.coord_ref: refcat_ra_gaia
+      atools.matchedRefPositionRaDiff.selector_all: selector_all
+      atools.matchedRefPositionRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionRaChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionRaChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionRaChi.coord_meas: coord_ra
+      atools.matchedRefPositionRaChi.coord_ref: refcat_ra_gaia
+      atools.matchedRefPositionRaChi.selector_all: selector_all
+      atools.matchedRefPositionRaChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionRaChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionRaChi.selector_ref_star: selector_star
+      atools.matchedRefPositionRaChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionRaChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionRaChi.scale_factor: 3600000
+      atools.matchedRefPositionRaChi.compute_chi: true
+
+      atools.matchedRefPositionDecDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionDecDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionDecDiff.coord_meas: coord_dec
+      atools.matchedRefPositionDecDiff.coord_ref: refcat_dec_gaia
+      atools.matchedRefPositionDecDiff.selector_all: selector_all
+      atools.matchedRefPositionDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionDecDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionDecChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionDecChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionDecChi.coord_meas: coord_dec
+      atools.matchedRefPositionDecChi.coord_ref: refcat_dec_gaia
+      atools.matchedRefPositionDecChi.selector_all: selector_all
+      atools.matchedRefPositionDecChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionDecChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionDecChi.selector_ref_star: selector_star
+      atools.matchedRefPositionDecChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionDecChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionDecChi.scale_factor: 3600000
+      atools.matchedRefPositionDecChi.compute_chi: true
+
+      atools.matchedRefPositionSersicRaDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionSersicRaDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicRaDiff.coord_meas: sersic_ra
+      atools.matchedRefPositionSersicRaDiff.coord_ref: refcat_ra_gaia
+      atools.matchedRefPositionSersicRaDiff.selector_all: selector_all
+      atools.matchedRefPositionSersicRaDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicRaDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicRaDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicRaDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicRaDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionSersicRaDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionSersicRaChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionSersicRaChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicRaChi.coord_meas: sersic_ra
+      atools.matchedRefPositionSersicRaChi.coord_ref: refcat_ra_gaia
+      atools.matchedRefPositionSersicRaChi.selector_all: selector_all
+      atools.matchedRefPositionSersicRaChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicRaChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicRaChi.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicRaChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicRaChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionSersicRaChi.scale_factor: 3600000
+      atools.matchedRefPositionSersicRaChi.compute_chi: true
+
+      atools.matchedRefPositionSersicDecDiff: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionSersicDecDiff.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicDecDiff.coord_meas: sersic_dec
+      atools.matchedRefPositionSersicDecDiff.coord_ref: refcat_dec_gaia
+      atools.matchedRefPositionSersicDecDiff.selector_all: selector_all
+      atools.matchedRefPositionSersicDecDiff.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicDecDiff.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicDecDiff.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicDecDiff.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicDecDiff.produce.plot.yLims: lims_pos_diff
+      atools.matchedRefPositionSersicDecDiff.scale_factor: 3600000
+
+      atools.matchedRefPositionSersicDecChi: MatchedRefCoaddDiffPositionTool
+      atools.matchedRefPositionSersicDecChi.prep.selectors.match_candidate: selector_candidate
+      atools.matchedRefPositionSersicDecChi.coord_meas: sersic_dec
+      atools.matchedRefPositionSersicDecChi.coord_ref: refcat_dec_gaia
+      atools.matchedRefPositionSersicDecChi.selector_all: selector_all
+      atools.matchedRefPositionSersicDecChi.selector_ref_galaxy: selector_galaxy
+      atools.matchedRefPositionSersicDecChi.selector_ref_all: selector_obj
+      atools.matchedRefPositionSersicDecChi.selector_ref_star: selector_star
+      atools.matchedRefPositionSersicDecChi.produce.plot.xLims: lims_mag_x
+      atools.matchedRefPositionSersicDecChi.produce.plot.yLims: lims_pos_chi
+      atools.matchedRefPositionSersicDecChi.scale_factor: 3600000
+      atools.matchedRefPositionSersicDecChi.compute_chi: true
+
+      python: |
+        from lsst.analysis.tools.atools.diffMatched import (
+          MatchedRefCoaddDiffColorTool,
+          MatchedRefCoaddDiffMagTool,
+          MatchedRefCoaddDiffPositionTool,
+          MatchedRefCoaddCompurityTool,
+          MatchedRefCoaddDiffDistanceTool,
+          ReferenceGalaxySelector,
+          ReferenceObjectSelector,
+          ReferenceStarSelector,
+        )
+        from lsst.analysis.tools.actions.vector import SetSelector
+        from lsst.analysis.tools.atools.genericBuild import FluxConfig
+        from lsst.analysis.tools.actions.vector import (
+          CoaddPlotFlagSelector, CompositeSelector, FlagSelector, GalaxySelector, RangeSelector, SetSelector,
+          StarSelector,
+        )
+
+        selector_all = SetSelector(vectorKeys=["match_candidate", "refcat_match_candidate"], values=[1])
+        selector_galaxy = ReferenceGalaxySelector(
+          vectorKey="refcat_class_star", threshold=0.5, op="lt",
+        )
+        selector_obj = ReferenceObjectSelector(vectorKey="refcat_class_star", minimum=0)
+        selector_star = ReferenceStarSelector(
+          plotLabelKey="Star: HST class_star >= 0.5", vectorKey="refcat_class_star",
+          threshold=0.5, op="ge",
+        )
+        selector_galaxy_mod = GalaxySelector(
+          vectorKey="griz_model_extendedness", extendedness_minimum=0.2,
+        )
+        selector_star_mod = StarSelector(
+          vectorKey="griz_model_extendedness", extendedness_maximum=0.2,
+        )
+        selector_candidate = CompositeSelector(combine_by_and=False)
+        selector_candidate.selectors.ref = FlagSelector(selectWhenTrue=["refcat_match_candidate"])
+        selector_candidate.selectors.target = CoaddPlotFlagSelector(
+          bands=config.bands,
+          selectWhenFalse=parameters.select_target_false.split(",") if parameters.select_target_false else [],
+          selectWhenTrue=parameters.select_target_true.split(",") if parameters.select_target_true else [],
+        )
+        if parameters.patches_hst:
+          values = [int(x) for x in parameters.patches_hst.split(",")]
+          selector_candidate_new = CompositeSelector(combine_by_and=True)
+          selector_candidate_new.selectors.flag = selector_candidate
+          selector_candidate_new.patch = SetSelector(
+            vectorKeys=["patch", "refcat_patch"],
+            values=values,
+          )
+          selector_candidate = selector_candidate_new
+
+        ref_matched = FluxConfig(
+            key_flux="refcat_f_f775w",
+            name_flux="F775W Auto",
+            name_flux_short="F775W",
+            key_flux_error=None,
+        )
+        lims_color_diff = (parameters.color_diff_min, parameters.color_diff_max)
+        lims_mag_x = (parameters.mag_x_min, parameters.mag_x_max)
+        lims_mag_chi = (parameters.mag_chi_min, parameters.mag_chi_max)
+        lims_mag_diff = (parameters.mag_diff_min, parameters.mag_diff_max)
+        lims_pos_chi = (parameters.pos_chi_min, parameters.pos_chi_max)
+        lims_pos_diff = (parameters.pos_diff_min, parameters.pos_diff_max)

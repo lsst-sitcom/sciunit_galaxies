@@ -2,29 +2,97 @@ import astropy.table as apTab
 import astropy.units as u
 import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import astropy_to_arrow, compute_row_group_size
-from lsst.geom import degrees, SpherePoint
+from lsst.sphgeom import Angle, LonLat, NormalizedAngle
 import numpy as np
 import pyarrow.parquet as pq
 
-# from https://datalab.noirlab.edu/query.php?name=des_dr1.y3_gold
-# downloaded in nine chunks because the whole query didn't work
-# ra: 52.14077598745257, 54.03427611473381 (1.89)
-
-# dec: -28.35063896360024, -27.8, -27.25, -26.684313552983653 (1.666)
-# (dec >= -27.25) AND (dec < -26.684313552983653)
-
+# from https://datalab.noirlab.edu/query.php?name=des_dr1.y6_gold
+# log in to download full files to vospace - the download link will not appear
+# to anonymous users for files larger than ~100M whereas a full tract is >1GB
+#
+# ELAIS
+# -46.11570247933884 -44.628099173553714
+# 2702
+# select * from des_dr2.y6_gold WHERE (ra > 5.202) AND (ra < 7.284) #
+# AND (dec > -46.116) AND (dec < -44.6281)
+#
+# 2703
+# select * from des_dr2.y6_gold WHERE (ra > 7.1198) AND (ra < 9.52746) #
+# AND (dec > -46.198831) AND (dec < -44.53263)
+#
+# 2704
+# select * from des_dr2.y6_gold WHERE (ra > 9.20078) AND (ra < 11.60839) #
+# AND (dec > -46.19883) AND (dec < -44.53263)
+#
+# 2705
+# select * from des_dr2.y6_gold WHERE (ra > 11.2817) AND (ra < 13.68931) #
+# AND (dec > -46.198831) AND (dec < -44.53264)
+#
+# 2875 = neglected to save, but as expected
+#
+# 2876
+# select * from des_dr2.y6_gold WHERE (ra > 6.96309) AND (ra < 9.308011) #
+# AND (dec > -44.71155) AND (dec < -43.0453)
+#
+# 2877
+# select * from des_dr2.y6_gold WHERE (ra > 8.9969) AND (ra < 11.3191)
+# AND (dec > -44.71155) AND (dec < -43.0453)
+#
+# 2878
+# select * from des_dr2.y6_gold WHERE (ra > 11.03089) AND (ra < 13.37581)
+# AND (dec > -44.71155) AND (dec < -43.0453)
+#
+# 3053
+# select * from des_dr2.y6_gold WHERE (ra > 6.8123) AND (ra < 9.09922)
+# AND (dec > -43.2243) AND (dec < -41.5581)
+#
+# 3054
+# select * from des_dr2.y6_gold WHERE (ra > 8.80125) AND (ra < 11.0887)
+# AND (dec > -43.2243) AND (dec < -41.5581)
+#
+# 3055
+# select * from des_dr2.y6_gold WHERE (ra > 10.7902) AND (ra < 13.07712)
+# AND (dec > -43.2243) AND (dec < -41.5581)
+#
+# ECDFS
+#
+# 4848:
+# select * from des_dr2.y6_gold WHERE (ra >= 51.30841) AND (ra < 52.99066) #
+# AND (dec >= -29.75207) AND (dec < -28.26446)
+#
+# 4849:
+# select * from des_dr2.y6_gold WHERE (ra >= 52.99065) AND (ra < 54.67290) #
+# AND (dec >= -29.75207) AND (dec < -28.26446)
+#
+# 5062:
+# select * from des_dr2.y6_gold WHERE (ra > 50.59907834101) AND (ra < 52.25806451613) #
+# AND (dec > -28.264462809918) AND (dec < -26.77685950414)
+#
+# 5063:
 # select * from des_dr2.y6_gold WHERE (ra > 52.14077598745257) AND (ra < 54.03427611473381) #
 # AND (dec > -28.35063896360024) AND (dec < -26.684313552983653)
+#
+# 5064:
+# select * from des_dr2.y6_gold WHERE (ra > 53.917050691244235) AND (ra < 55.576036866359445) #
+# AND (dec > -28.264462809918) AND (dec < -26.77685950414)
+#
+# 5279:
+# select * from des_dr2.y6_gold WHERE (ra > 50.1369863013698) AND (ra < 51.7808219178083) #
+# AND (dec > -26.776859504133) AND (dec < -25.2892561983)
+#
+# 5280:
+# select * from des_dr2.y6_gold WHERE (ra > 51.780821917808) AND (ra < 53.42465753425) #
+# AND (dec > -26.776859504133) AND (dec < -25.2892561983)
+#
+# 5281:
+# select * from des_dr2.y6_gold WHERE (ra > 53.42465753424) AND (ra < 55.068493150685) #
+# AND (dec > -26.776859504133) AND (dec < -25.2892561983)
+#
 
 skymap = "lsst_cells_v1"
-tract = 5063
-name_tab = f"des_y6gold_{skymap}_{tract}"
-butler = dafButler.Butler("/repo/main", collections="skymaps")
-tractInfo = butler.get("skyMap", skymap=skymap)[tract]
-
-tab_ap = apTab.Table.read(f"{name_tab}.csv")
-# I can't figure out how to specify csv with commented header
-tab_ap.rename_columns(("# a_fiducial_g",), ("a_fiducial_g",))
+butler = dafButler.Butler("main", collections="skymaps")
+skymapInfo = butler.get("skyMap", skymap=skymap)
+deg2rad = np.pi/180
 
 columns = (
     ("bdf_mag_err_z", "mag", "double", "Uncertainty on BDF_MAG_Z"),
@@ -381,71 +449,92 @@ units = {
     "pixels": "pix",
 }
 
-for values in columns:
-    if len(values) != 4:
-        print(f"{values[0]} len={len(values)}")
-        continue
-    name, unit, dtype, desc = values
-    if name in tab_ap.colnames:
-        column = tab_ap[name]
-        if dtype.startswith("char"):
-            print(f"{dtype=} vs {column.dtype=}")
-        else:
-            dtype_spec = np.dtype(dtype)
-            if column.dtype != dtype_spec:
-                try:
-                    # This seems to change the dtype without changing
-                    # anything in memory and does bad things to ints
-                    # column.dtype = dtype_spec
-                    tab_ap[name] = tab_ap[name].astype(dtype_spec)
-                except Exception as e:
-                    print(f"Couldn't set {name=} dtype to {dtype_spec=} due to:\n{e}")
-                print(f"{name} {column.dtype=} != {dtype=}")
+ids = []
 
-        unit_new = units.get(unit, unit)
-        unit_obj = u.Unit(unit_new)
-        if unit_obj.is_equivalent(u.nJy):
-            column *= (unit_obj/u.nJy).scale
-            unit_new = u.nJy
-        elif unit_obj.is_equivalent(u.nJy**2):
-            column *= (unit_obj / u.nJy**2).scale
-            unit_new = u.nJy**2
-
-        column.unit = unit_new
-        column.description = desc
-    else:
-        print(f"{name} column not found")
-
-# This catalog doesn't seem to have RA/dec errors
-# The BDF fits have errors on the x/y centroids (which hopefully are RA/dec)
-# Add a systematic term and a maximum error (some are huge)
-bdf_cen_err_sys_asec = 1e-3
-bdf_cen_err_max_asec = 1.0
-
-for col_in, col_out, desc in (
-    ("bdf_pars_err_1", "ra_err", "Right Ascension"),
-    ("bdf_pars_err_2", "dec_err", "Declination"),
+for tract in (
+    2702, 2703, 2704, 2705, 2875, 2876, 2877, 2878, 3053, 3054, 3055, # ELAIS
+    4848, 4849, 5062, 5063, 5064, 5279, 5280, 5281, # ECDFS
 ):
-    tab_ap[col_out] = np.clip(
-        np.sqrt(tab_ap[col_in]**2 + bdf_cen_err_sys_asec**2), 0, bdf_cen_err_max_asec
-    ).to(u.degree)
-    tab_ap[col_out].description = (f'{desc} error, estimated as clip(sqrt({col_in}**2 + '
-                                   f'{bdf_cen_err_sys_asec}"**2), 0", 1"')
+    name_tab = f"des_y6gold_{skymap}_{tract}"
+    tractInfo = skymapInfo[tract]
 
-coords = [
-    SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["alphawin_j2000"], tab_ap["deltawin_j2000"])
-]
-within = np.array([tractInfo.contains(coord) for coord in coords])
-if np.sum(within) != len(within):
-    tab_ap = tab_ap[within]
-    coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
-patches = np.array(
-    [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
-    dtype=np.int16,
-)
-tab_ap["patch"] = patches
+    tab_ap = apTab.Table.read(f"{name_tab}.csv")
 
-tab_arrow = astropy_to_arrow(tab_ap)
-row_group_size = compute_row_group_size(tab_arrow.schema)
+    for values in columns:
+        if len(values) != 4:
+            print(f"{values[0]} len={len(values)}")
+            continue
+        name, unit, dtype, desc = values
+        if name in tab_ap.colnames:
+            column = tab_ap[name]
+            if dtype.startswith("char"):
+                print(f"{dtype=} vs {column.dtype=}")
+            else:
+                dtype_spec = np.dtype(dtype)
+                if column.dtype != dtype_spec:
+                    try:
+                        # This seems to change the dtype without changing
+                        # anything in memory and does bad things to ints
+                        # column.dtype = dtype_spec
+                        tab_ap[name] = tab_ap[name].astype(dtype_spec)
+                    except Exception as e:
+                        print(f"Couldn't set {name=} dtype to {dtype_spec=} due to:\n{e}")
+                    print(f"{name} {column.dtype=} != {dtype=}")
 
-pq.write_table(tab_arrow, f"{name_tab}.parq")
+            unit_new = units.get(unit, unit)
+            unit_obj = u.Unit(unit_new)
+            if unit_obj.is_equivalent(u.nJy):
+                column *= (unit_obj/u.nJy).scale
+                unit_new = u.nJy
+            elif unit_obj.is_equivalent(u.nJy**2):
+                column *= (unit_obj / u.nJy**2).scale
+                unit_new = u.nJy**2
+
+            column.unit = unit_new
+            column.description = desc
+        else:
+            print(f"{name} column not found")
+
+    # This catalog doesn't seem to have RA/dec errors
+    # The BDF fits have errors on the x/y centroids (which hopefully are RA/dec)
+    # Add a systematic term and a maximum error (some are huge)
+    bdf_cen_err_sys_asec = 1e-3
+    bdf_cen_err_max_asec = 1.0
+
+    for col_in, col_out, desc in (
+        ("bdf_pars_err_1", "ra_err", "Right Ascension"),
+        ("bdf_pars_err_2", "dec_err", "Declination"),
+    ):
+        tab_ap[col_out] = np.clip(
+            np.sqrt(tab_ap[col_in]**2 + bdf_cen_err_sys_asec**2), 0, bdf_cen_err_max_asec
+        ).to(u.degree)
+        tab_ap[col_out].description = (f'{desc} error, estimated as clip(sqrt({col_in}**2 + '
+                                       f'{bdf_cen_err_sys_asec}"**2), 0", 1"')
+
+    coords = [
+        LonLat(NormalizedAngle(ra*deg2rad), Angle(dec*deg2rad))
+        for ra, dec in zip(tab_ap["alphawin_j2000"], tab_ap["deltawin_j2000"])
+    ]
+    region = tractInfo.inner_sky_region
+    within = np.array([region.contains(coord) for coord in coords])
+    if np.sum(within) != len(within):
+        tab_ap = tab_ap[within]
+        coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
+    patches = np.array(
+        [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
+        dtype=np.int16,
+    )
+    tab_ap["patch"] = patches
+    tab_ap["patch"].description = f"{skymap} patch index"
+
+    tab_ap.sort("coadd_object_id")
+    ids.append(tab_ap["coadd_object_id"])
+
+    tab_arrow = astropy_to_arrow(tab_ap)
+    row_group_size = compute_row_group_size(tab_arrow.schema)
+
+    pq.write_table(tab_arrow, f"{name_tab}.parq", row_group_size=row_group_size)
+
+ids = np.concatenate(ids)
+dupes = {k: v for k, v in zip(*np.unique(ids, return_counts=True)) if v > 1}
+print(f"{dupes=}")

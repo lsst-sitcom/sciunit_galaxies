@@ -1,12 +1,20 @@
 import astropy.table as apTab
 import astropy.units as u
+import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import astropy_to_arrow, compute_row_group_size
+from lsst.geom import degrees, SpherePoint
 import numpy as np
 import pyarrow.parquet as pq
 
+skymap = "lsst_cells_v1"
+tract = 5063
 name_tab = "hlsp_hlf_hst_60mas_goodss_v2.1_catalog"
+butler = dafButler.Butler("/repo/main", collections="skymaps")
+tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 
 tab_ap = apTab.Table.read(f"{name_tab}.fits")
+# The ID is an integer; unsure how it ended up as a float
+tab_ap["id"] = tab_ap["id"].astype(int)
 
 # The ID is an integer; unsure how it ended up as a float
 tab_ap["id"] = tab_ap["id"].astype(int)
@@ -75,6 +83,20 @@ for column in ["ra_gaia", "dec_gaia"]:
     tab_ap[column_error] = np.full(len(tab_ap), 0.01 / 3600, dtype=np.float32)
     tab_ap[column_error].description = f"Placeholder {column_error} error (constant 10 mas)"
     tab_ap[column_error].unit = u.deg
+
+coords = [
+    SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["ra_gaia"], tab_ap["dec_gaia"])
+]
+within = np.array([tractInfo.contains(coord) for coord in coords])
+if np.sum(within) != len(within):
+    tab_ap = tab_ap[within]
+    coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
+patches = np.array(
+    [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
+    dtype=np.int16,
+)
+tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
 
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)

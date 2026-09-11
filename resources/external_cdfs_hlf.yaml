@@ -8,10 +8,10 @@ data:
   is_calibration: false
 - type: dataset
   dataset_type: cdfs_hlf_v2p1
-  run: u/dtaranu/DM-50091/cdfs_hlf
+  run: u/dtaranu/DM-50135/cdfs_hlf_v2
   records:
   - dataset_id:
-    - !uuid 'ed3840fd-4655-4ccf-b533-eccf6a5ed2b0'
+    - !uuid '1c927927-2a3b-4b5d-9c98-ac05825387c0'
     data_id: {}
     path: hlsp_hlf_hst_60mas_goodss_v2.1_catalog.parq
     formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter

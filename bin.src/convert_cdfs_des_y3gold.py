@@ -1,12 +1,20 @@
 import astropy.table as apTab
 import astropy.units as u
+import lsst.daf.butler as dafButler
 from lsst.daf.butler.formatters.parquet import astropy_to_arrow, compute_row_group_size
+from lsst.geom import degrees, SpherePoint
+import numpy as np
 import pyarrow.parquet as pq
 
 # from https://datalab.noirlab.edu/query.php?name=des_dr1.y3_gold
 # downloaded in four chunks because the whole query didn't work
 # ra: 52.14077598745257, 54.03427611473381
 # dec: -28.35063896360024, -26.684313552983653
+
+skymap = "lsst_cells_v1"
+tract = 5063
+butler = dafButler.Butler("/repo/main", collections="skymaps")
+tractInfo = butler.get("skyMap", skymap=skymap)[tract]
 
 name_tab = "des_y3gold_lsst_cells_v1_5063"
 
@@ -441,7 +449,21 @@ tab_ap["dec_gaia"] = tab_ap["deltawin_j2000"] + (-0.039*u.arcsec).to(unit_dec).v
 tab_ap["dec_gaia"].description = "deltawin_j2000 -0.039 arcsec (empirical Gaia correction)"
 tab_ap["dec_gaia"].unit = unit_dec
 
+coords = [
+    SpherePoint(ra, dec, degrees) for ra, dec in zip(tab_ap["RA"], tab_ap["DEC"])
+]
+within = np.array([tractInfo.contains(coord) for coord in coords])
+if np.sum(within) != len(within):
+    tab_ap = tab_ap[within]
+    coords = [coord for coord, in_tract in zip(coords, within) if in_tract]
+patches = np.array(
+    [tractInfo.findPatch(coord).getSequentialIndex() for coord in coords],
+    dtype=np.int16,
+)
+tab_ap["patch"] = patches
+tab_ap["patch"].description = f"{skymap} patch index"
+
 tab_arrow = astropy_to_arrow(tab_ap)
 row_group_size = compute_row_group_size(tab_arrow.schema)
 
-pq.write_table(tab_arrow, f"{name_tab}.parq")
+pq.write_table(tab_arrow, f"{name_tab}.parq", row_group_size=row_group_size)

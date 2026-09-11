@@ -1,0 +1,46 @@
+description:
+  Matched difference (measured vs reference) multitract plots/metrics for EDFS
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/compareMatchedWide_multitract.yaml
+    labeledSubsetModifyMode: EDIT
+    include:
+      - compareMatchedDp1_multitract
+      - compareMatchedEuclid_multitract
+      - compareMatchedShear_multitract
+tasks:
+  compareMatchedEuclid_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      atools.matchedRefCompleteness.make_patch_sky_plots: True
+
+      python:
+        from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EdfsInfo
+
+        EdfsInfo.apply(
+          config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
+          "vis",
+        )
+  compareMatchedDp1_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      atools.matchedRefCompleteness.make_patch_sky_plots: True
+
+      python:
+        from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EdfsInfo
+
+        EdfsInfo.apply(
+          config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
+          "dp1",
+        )
+  compareMatchedShear_multitract:
+    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+    config:
+      atools.matchedRefCompleteness.make_patch_sky_plots: True
+
+      python:
+        from lsst.sitcom.sciunit.galaxies.ddfs.dp2 import EdfsInfo
+
+        EdfsInfo.apply(
+          config.atools.matchedRefCompleteness.produce.plot.actions.patch_sky_plots,
+          "dp2",
+        )

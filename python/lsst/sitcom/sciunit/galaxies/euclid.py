@@ -374,10 +374,11 @@ def make_patch_cutouts(
 def query_tract_catalog(
     tractInfo: lsst.skymap.tractInfo.TractInfo,
     name_skymap: str,
-    n_patches: int = 5,
+    n_patches: int = 10,
     tmpFile: str | None = None,
     skip_existing: bool = True,
     verbose: bool = True,
+    max_retry: int = 2,
 ) -> tuple[astropy.table.Table | None, list[str], list[Any]]:
     """Query Euclid for tract-level catalogs.
 
@@ -390,7 +391,7 @@ def query_tract_catalog(
     n_patches
         The number of "patches" per axis to split the tract into for querying.
         This does not need to match the skymap's patch size and is needed only
-        for submitting request without authentication as there is a file size
+        for submitting requests without authentication as there is a file size
         limit.
     tmpFile
         A filename to save downloaded patch catalogs to. May contain
@@ -400,6 +401,8 @@ def query_tract_catalog(
         Look for existing tmp files and try to load them.
     verbose
         Passed to astroquery launch_job.
+    max_retry
+        Max number of retries on query failure.
 
     Returns
     -------
@@ -591,13 +594,19 @@ def query_tract_catalog(
                     objects = astropy.table.Table.read(filename)
                 else:
                     _log.info(f"Launching query for {idx_patch=} to {filename=}")
-                    job = Euclid.launch_job(
-                        query_patch,
-                        verbose=verbose,
-                        output_format="votable",
-                        dump_to_file=tmpFile is not None,
-                        output_file=filename,
-                    )
+                    n_retry = 0
+                    while n_retry < (max_retry + 1):
+                        job = Euclid.launch_job(
+                            query_patch,
+                            verbose=verbose,
+                            output_format="votable",
+                            dump_to_file=tmpFile is not None,
+                            output_file=filename,
+                        )
+                        if not job.failed:
+                            n_retry = np.nan
+                        else:
+                            n_retry += 1
                     jobs.append(job)
                     objects = job.get_results() if (job is not None) else None
 

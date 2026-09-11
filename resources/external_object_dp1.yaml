@@ -1,0 +1,57 @@
+description: Import external catalogs
+version: 1.0.0
+data:
+- type: dataset_type
+  name: dp1_object
+  dimensions: [skymap, tract]
+  storage_class: ArrowAstropy
+  is_calibration: false
+- type: dataset
+  dataset_type: dp1_object
+  run: u/dtaranu/DM-50135/lsst_dp1
+  records:
+  - dataset_id:
+    - !uuid '8f802dc8-9626-40d5-8649-5ee98ef237b5'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2234}
+    path: object_2234_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'bb30b983-595f-45e9-8c37-2c29019f1e48'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2235}
+    path: object_2235_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'ec701f35-0777-4e17-926f-bc1b39a900a0'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2393}
+    path: object_2393_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '0e7dfa86-cc6a-490e-8db6-6bef609e468d'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 2394}
+    path: object_2394_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid 'f24ef3e7-a949-462a-8e89-51c4d277c8cf'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4848}
+    path: object_4848_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '1054258a-61fe-4729-8642-948760dd02b1'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 4849}
+    path: object_4849_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '302a5872-55e3-4082-9be1-8cb82bb0e5df'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5062}
+    path: object_5062_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '1c154dc3-0a4c-48e9-be6b-dc88e1636dae'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5063}
+    path: object_5063_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter
+  - dataset_id:
+    - !uuid '8350e43b-1d3f-4bb2-8068-bde0e350aa12'
+    data_id: {'skymap': 'lsst_cells_v2', 'tract': 5064}
+    path: object_5064_lsst_cells_v1_LSSTComCam_runs_DRP_DP1_v29_0_0_DM-50260_20250417T034317Z.parq
+    formatter: lsst.daf.butler.formatters.parquet.ParquetFormatter

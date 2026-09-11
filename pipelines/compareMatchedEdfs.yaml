@@ -1,0 +1,9 @@
+description: |
+  Matched difference (measured vs reference) plots/metrics for EDFS
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/compareMatchedWide.yaml
+    labeledSubsetModifyMode: EDIT
+    include:
+      - compareMatchedDp1
+      - compareMatchedEuclid
+      - compareMatchedShear

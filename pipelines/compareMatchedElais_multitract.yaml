@@ -1,0 +1,20 @@
+description:
+  Multitract version of CDFS matched difference
+imports:
+  - location: $SCIUNIT_GALAXIES_DIR/pipelines/coaddDiffMatchedWide_multitract.yaml
+    labeledSubsetModifyMode: EDIT
+    include:
+      diff_matched_des_y6gold_multitract
+#  - location: $SCIUNIT_GALAXIES_DIR/pipelines/coaddDiffMatchedElais.yaml
+#    labeledSubsetModifyMode: EDIT
+#    include:
+#      diff_matched_elais_tractor_zou21
+#    rename:
+#      diff_matched_elais_tractor_zou21: diff_matched_elais_tractor_zou21_multitract
+#tasks:
+#  diff_matched_elais_tractor_zou21_multitract:
+#    class: lsst.analysis.tools.tasks.DiffMatchedAnalysisTask
+#    config:
+#     connections.outputName: diff_matched_elais_tractor_zou21_object_multitract
+#
+#     load_multiple: True
